@@ -1,0 +1,228 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * RoadmapTimeline: the P0-P7 plan as an ordered list, with a marigold "You are here" marker on the
+ * current phase (marigold means "here" in this brand). Done phases read as done, future phases are quieter.
+ * Props:
+ *  - compact?: boolean   false (default) = the full vertical timeline with what each phase delivers and its
+ *                        milestone. true = a horizontal strip of the 8 phases with the marker, for the landing
+ *                        page; it fits 360px with no horizontal scroll (names appear from 640px up).
+ *  - headingLevel?: 3 | 4   level for phase names in the full variant (default 3)
+ *  - cta?: boolean       compact only: show a "See the roadmap" link under the strip (default false)
+ * Data: src/data/roadmap.ts.
+ */
+import '../../styles/area-s3.css';
+import Icon from '../ui/Icon.astro';
+import Button from '../ui/Button.astro';
+import { PHASES, type PhaseState } from '../../data/roadmap';
+
+interface Props {
+  compact?: boolean;
+  headingLevel?: 3 | 4;
+  cta?: boolean;
+}
+const { compact = false, headingLevel = 3, cta = false } = Astro.props;
+const Heading = `h${headingLevel}` as 'h3';
+const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are here', future: 'Not started' };
+---
+{compact ? (
+  <div class="strip-wrap">
+    <ol class="strip" aria-label="Cutweave roadmap, phases 0 to 7">
+      {PHASES.map((p) => (
+        <li class:list={['cell', `cell-${p.state}`]} aria-current={p.state === 'current' ? 'step' : undefined}>
+          {p.state === 'current' ? <span class="here">You are here</span> : <span class="here-gap" aria-hidden="true"></span>}
+          <span class="dot" aria-hidden="true">
+            {p.state === 'done' && <Icon name="check" size="sm" />}
+          </span>
+          <span class="pid">{p.id}</span>
+          <span class="pname">{p.name}</span>
+          <span class="sr-only">. {stateWord[p.state]}. {p.duration}.</span>
+        </li>
+      ))}
+    </ol>
+    {cta && <div class="cta"><Button href="/roadmap/" iconEnd="arrow-right">See the roadmap</Button></div>}
+  </div>
+) : (
+  <ol class="timeline">
+    {PHASES.map((p) => (
+      <li class:list={['phase', `phase-${p.state}`]} aria-current={p.state === 'current' ? 'step' : undefined} id={`phase-${p.id.toLowerCase()}`}>
+        <div class="rail" aria-hidden="true">
+          <span class="marker">
+            {p.state === 'done' && <Icon name="check" size="md" />}
+            {p.state === 'current' && <span class="ping"></span>}
+          </span>
+        </div>
+        <div class="content">
+          <div class="meta">
+            <span class="pid">{p.id}</span>
+            <span class="dur">{p.duration}</span>
+            {p.state === 'current' && <span class="tag-here"><Icon name="loader" size="sm" /> You are here</span>}
+            {p.state === 'done' && <span class="tag-done"><Icon name="circle-check" size="sm" /> Done, provisional</span>}
+          </div>
+          <Heading class="name">{p.name}</Heading>
+          <p class="delivers">{p.delivers}</p>
+          <p class="milestone"><span class="mlabel">Milestone and exit</span> {p.milestone}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+)}
+
+<style>
+  /* ---------- Full timeline ---------- */
+  .timeline { display: flex; flex-direction: column; }
+  .phase {
+    display: grid;
+    grid-template-columns: var(--s3-marker) minmax(0, 1fr);
+    column-gap: var(--space-4);
+    padding-bottom: var(--space-8);
+  }
+  .phase:last-child { padding-bottom: 0; }
+  .rail { position: relative; display: flex; justify-content: center; }
+  /* The line runs the full height of each item, so items join into one rail. */
+  .rail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: var(--s3-rail-width);
+    transform: translateX(-50%);
+    background: var(--border-default);
+  }
+  .phase:first-child .rail::before { top: var(--s3-marker); }
+  .phase:last-child .rail::before { bottom: auto; height: var(--s3-marker); }
+  .phase-done .rail::before { background: var(--success); }
+  .marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: var(--s3-marker);
+    height: var(--s3-marker);
+    border-radius: var(--radius-full);
+    border: var(--border-thick) dashed var(--border-control);
+    background: var(--surface-0);
+  }
+  .phase-done .marker { border: var(--border-thick) solid var(--success); background: var(--success); color: var(--surface-0); }
+  .phase-current .marker { border: var(--border-thick) solid var(--marigold); background: var(--marigold); }
+  .ping { width: var(--space-2); height: var(--space-2); border-radius: var(--radius-full); background: var(--on-marigold); }
+
+  .content { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: var(--s3-marker); }
+  .pid { font-family: var(--font-mono); font-size: var(--s3-text-sm); font-weight: 600; letter-spacing: 0.02em; }
+  .dur { color: var(--text-secondary); font-size: var(--s3-text-sm); }
+  .tag-here, .tag-done {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    height: calc(var(--hit-min) - var(--space-1));
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: var(--s3-text-xs);
+    line-height: var(--s3-text-xs-line);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  /* Marigold = "here". Only the current phase uses it. */
+  .tag-here { background: var(--marigold); color: var(--on-marigold); }
+  .tag-done { color: var(--success); border: var(--border-thin) solid var(--border-default); }
+  .name { font-family: var(--font-display); font-size: 24px; line-height: 30px; font-weight: 700; }
+  .delivers { max-width: var(--prose-max); }
+  .milestone { max-width: var(--prose-max); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .mlabel {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--s3-text-xs);
+    line-height: var(--s3-text-xs-line);
+    font-weight: 650;
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: uppercase;
+  }
+
+  /* The current phase sits on a raised card with a marigold edge. */
+  .phase-current .content {
+    padding: var(--space-4) var(--space-6) var(--space-6);
+    border: var(--border-thin) solid var(--marigold);
+    border-radius: var(--radius-lg);
+    background: var(--marigold-subtle);
+  }
+  .phase-current .milestone { color: var(--text-primary); }
+
+  /* Future phases are quieter: no weight on the name, secondary text. */
+  .phase-future .name { font-weight: 600; color: var(--s3-future-text); }
+  .phase-future .delivers { color: var(--s3-future-text); }
+  .phase-future .pid { color: var(--text-muted); }
+
+  /* ---------- Compact strip ---------- */
+  .strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1-5);
+    min-width: 0;
+    text-align: center;
+  }
+  /* "You are here" is left-aligned over its cell and may spill rightwards across the empty cells. */
+  .here, .here-gap { align-self: flex-start; height: var(--s3-text-xs-line); }
+  .here {
+    position: relative;
+    z-index: 2;
+    margin-left: calc(var(--space-1) * -1);
+    padding-inline: var(--space-1-5);
+    border-radius: var(--radius-sm);
+    background: var(--marigold);
+    color: var(--on-marigold);
+    font-size: var(--s3-text-xs);
+    line-height: var(--s3-text-xs-line);
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  .dot {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: var(--s3-marker);
+    height: var(--s3-marker);
+    border-radius: var(--radius-full);
+    border: var(--border-thick) dashed var(--border-control);
+    background: var(--surface-0);
+  }
+  /* The connecting line passes behind the dots. */
+  .cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--s3-text-xs-line) + var(--space-1-5) + var(--s3-marker) / 2);
+    height: var(--s3-rail-width);
+    background: var(--border-default);
+  }
+  .cell:first-child::before { left: 50%; }
+  .cell:last-child::before { right: 50%; }
+  .cell-done::before { background: var(--success); }
+  .cell-done .dot { border: var(--border-thick) solid var(--success); background: var(--success); color: var(--surface-0); }
+  .cell-current .dot { border: var(--border-thick) solid var(--marigold); background: var(--marigold); }
+  .strip .pid { font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); }
+  .cell-future .pid { color: var(--text-muted); }
+  .pname {
+    display: none;
+    color: var(--s3-future-text);
+    font-size: var(--s3-text-xs);
+    line-height: var(--s3-text-xs-line);
+    padding-inline: var(--space-1);
+    overflow-wrap: anywhere;
+  }
+  .cell-current .pname, .cell-done .pname { color: var(--text-primary); }
+  .cta { margin-top: var(--space-6); }
+
+  @media (min-width: 640px) {
+    .pname { display: block; }
+  }
+  @media (max-width: 719px) {
+    .phase-current .content { padding-inline: var(--space-4); }
+  }
+</style>

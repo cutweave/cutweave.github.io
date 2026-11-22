@@ -1,20 +1,191 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Placeholder: another agent replaces this page. Keep the layout, one h1 and the title/description props.
+// /open-source/: license model, plugin layers, files and keys, how it is built, how to contribute.
+// Facts: docs/content-inventory.md sections 2.5, 2.6, 7 and 11.
+// GAP-17: the plugin exception is a draft pending legal review. State it as in effect once ADR-0011 review closes.
+// GAP-15: short privacy note only; a full privacy page arrives with WP-7F.04.
+// GAP-11: GitHub is the only community channel; Discussions and a chat link arrive with WP-7G.03.
+import '../../styles/area-s3.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
+import Section from '../../components/ui/Section.astro';
+import Card from '../../components/ui/Card.astro';
+import StatusChip from '../../components/ui/StatusChip.astro';
+import Button from '../../components/ui/Button.astro';
+import Icon from '../../components/ui/Icon.astro';
+import PluginLayers from '../../components/oss/PluginLayers.astro';
+import { LINKS } from '../../site';
+
+const BLOB = `${LINKS.repo}/blob/main`;
+const contribute = [
+  { label: 'CONTRIBUTING.md', href: LINKS.contributing, text: 'How to propose a change, including the rules for AI-assisted work.' },
+  { label: 'Issue forms', href: `${LINKS.issues}/new/choose`, text: 'Bug, feature and work-package forms.' },
+  { label: 'AGENTS.md', href: `${BLOB}/AGENTS.md`, text: 'The instruction file every AI coding agent reads first.' },
+  { label: 'SECURITY.md', href: `${BLOB}/SECURITY.md`, text: 'Report a vulnerability privately, through GitHub Security Advisories.' },
+  { label: 'CODE_OF_CONDUCT.md', href: `${BLOB}/CODE_OF_CONDUCT.md`, text: 'How we treat each other.' },
+  { label: 'Decision records', href: `${BLOB}/docs/adr/README.md`, text: 'The index of architecture decisions and their status.' },
+];
 ---
-<BaseLayout title="Open source" description="Cutweave is free software under the GPL-3.0 license.">
-  <Container>
-    <div class="stub">
-      <h1>Open source</h1>
-      <p>This page is coming soon: licensing, governance and how to contribute.</p>
+<BaseLayout
+  title="Yours, and open"
+  description="Cutweave is GPL-3.0 open source with no account, no telemetry by default and an open project format. How it is licensed, how plugins work, and how to contribute."
+>
+  <header class="hero">
+    <Container>
+      <div class="hero-inner">
+        <p class="eyebrow">Open source</p>
+        <h1>Yours, and open</h1>
+        <p class="lede">
+          The core is GPL-3.0. You will not need an account, telemetry is off by default, and the project format is an
+          open folder of files you can read.
+        </p>
+        <p class="stamp">
+          <StatusChip status="in-progress" label="Pre-alpha · Phase 1 of 7" />
+          <span>The license and the code are real today. Most of the product promises below are plans.</span>
+        </p>
+        <div class="actions">
+          <Button href={LINKS.repo} variant="primary" external icon="github">Follow on GitHub</Button>
+          <Button href="#contribute" iconEnd="arrow-right">Find a way to contribute</Button>
+        </div>
+      </div>
+    </Container>
+  </header>
+
+  <Section id="license" eyebrow="Licensing" title="License model" lede="Each part of the project uses the license that fits its job.">
+    <ul class="cards">
+      <Card as="li">
+        <div><StatusChip status="built" /></div>
+        <h3 class="card-title">The core: GPL-3.0-or-later</h3>
+        <p class="card-text">The engine, the editor and the tools. Every source file carries an SPDX header, and a check enforces it. <a href={LINKS.license}>Read the license</a>.</p>
+      </Card>
+      <Card as="li">
+        <div><StatusChip status="built" label="Built · license files" /></div>
+        <h3 class="card-title">Plugin SDK and interfaces: MIT OR Apache-2.0</h3>
+        <p class="card-text">The plugin SDK, the WIT interface definitions and the composition runtime. The dual license files are in those directories now.</p>
+      </Card>
+      <Card as="li">
+        <div><StatusChip status="in-progress" label="Draft" /></div>
+        <h3 class="card-title">The plugin exception</h3>
+        <p class="card-text">
+          The plan lets plugins that use only the published interfaces carry any license, including proprietary. The
+          text is a <strong>draft pending legal review and is not yet in effect</strong>.
+          <a href={`${BLOB}/LICENSE-PLUGIN-EXCEPTION.md`}>Read the draft</a>.
+        </p>
+      </Card>
+      <Card as="li">
+        <div><StatusChip status="built" /></div>
+        <h3 class="card-title">GPL-compatible dependencies only</h3>
+        <p class="card-text">Checked in CI with cargo-deny and a JavaScript license check. AGPL, GPL-2.0-only and non-commercial models are excluded.</p>
+      </Card>
+    </ul>
+  </Section>
+
+  <Section id="plugins" tone="raised" eyebrow="Extensibility" title="Plugins at every layer" lede="From a folder of LUTs to a WASM provider adapter, each layer has one job and its own sandbox. You can see what you would build at each one.">
+    <div class="status-line"><StatusChip status="planned" label="Planned · Phase 6" /><span>No plugin can be installed or run today. This is the design.</span></div>
+    <PluginLayers headingLevel={3} />
+  </Section>
+
+  <Section id="yours" eyebrow="Ownership" title="Your files, your keys" lede="These are design commitments from the architecture. Each shows how far it has got.">
+    <ul class="cards">
+      <Card as="li">
+        <div><StatusChip status="built" label="Built · format" /></div>
+        <h3 class="card-title">An open project folder</h3>
+        <p class="card-text">A JSON document, a journal and rotating backups, in a folder you can open, copy and version. Saving is atomic today. The journal and backups are planned for Phase 1.</p>
+      </Card>
+      <Card as="li">
+        <div><StatusChip status="planned" label="Planned · P5" /></div>
+        <h3 class="card-title">Keys in your OS keychain</h3>
+        <p class="card-text">Provider keys will live in the operating system&rsquo;s keychain and never leave the engine. They are not passed to plugins, logs or agents.</p>
+      </Card>
+      <Card as="li">
+        <div><StatusChip status="planned" label="Planned · P3" /></div>
+        <h3 class="card-title">Opt-in crash reports</h3>
+        <p class="card-text">Reports will be off until you turn them on, scrubbed of personal data, and sent to a self-hosted collector.</p>
+      </Card>
+      <Card as="li">
+        <div><StatusChip status="planned" /></div>
+        <h3 class="card-title">Update checks you can turn off</h3>
+        <p class="card-text">When there are installers, update checks will have a switch in settings.</p>
+      </Card>
+    </ul>
+  </Section>
+
+  <Section id="built-how" tone="raised" eyebrow="Process" title="How it’s built">
+    <div class="split">
+      <ul class="facts">
+        <li><strong>Work packages.</strong> Each change is one work package on its own branch, written down in the open before anyone starts.</li>
+        <li><strong>Decision records.</strong> Architecture decisions are ADRs with a status. A proposed ADR is not decided.</li>
+        <li><strong>A DCO, not a CLA.</strong> You sign off your commits with <code>git commit -s</code>.</li>
+        <li><strong>Conventional commits</strong> and squash merges, with short-lived branches.</li>
+        <li><strong>One local check.</strong> <code>just check</code> runs everything CI runs.</li>
+      </ul>
+      <div class="callout">
+        <h3 class="card-title">Most of the code is written by AI agents</h3>
+        <p class="card-text">
+          Most of this code is written by AI coding agents working from public work packages. People review it, and
+          human review capacity is the bottleneck. AI-assisted contributions are welcome under the rules in
+          <a href={LINKS.contributing}>CONTRIBUTING.md</a>.
+        </p>
+      </div>
     </div>
-  </Container>
+  </Section>
+
+  <Section id="contribute" eyebrow="Join in" title="Contribute" lede="Everything lives on GitHub, in one repository.">
+    <ul class="cards">
+      {contribute.map((c) => (
+        <Card as="li" href={c.href}>
+          <h3 class="card-title link-title">{c.label} <Icon name="external-link" size="sm" /></h3>
+          <p class="card-text">{c.text}</p>
+        </Card>
+      ))}
+    </ul>
+    <div class="actions">
+      <Button href={LINKS.repo} variant="primary" external icon="github">Open the repository</Button>
+      <Button href={`${LINKS.repo}/security/advisories/new`} external>Report a vulnerability privately</Button>
+    </div>
+  </Section>
+
+  <Section id="notes" tone="raised" width="narrow" eyebrow="Plain notes" title="Privacy and community">
+    <div class="notes">
+      <p>
+        <strong>Privacy.</strong> You will not need an account. Telemetry is off by default, crash reports are opt-in,
+        and this website uses no analytics and no third-party requests. A full privacy page will come with the product.
+      </p>
+      <p>
+        <strong>Community.</strong> For now, GitHub is the only place: the repository and its issues. Discussions and a
+        chat channel will come later.
+      </p>
+    </div>
+  </Section>
 </BaseLayout>
 
 <style>
-  .stub { padding-block: var(--section-space); display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
-  h1 { font-family: var(--font-display); font-size: var(--display-section-size); line-height: var(--display-section-line); font-weight: 700; letter-spacing: -0.02em; }
-  p { color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
+  .hero { padding-block: var(--section-space) var(--space-8); background: var(--glow-marigold); }
+  .hero-inner { display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
+  .eyebrow { font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); font-weight: 650; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); }
+  h1 { font-family: var(--font-display); font-size: var(--display-hero-size); line-height: var(--display-hero-line); font-weight: 700; letter-spacing: -0.02em; }
+  .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
+  .stamp { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
+  .hero .actions { margin-top: var(--space-2); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-4); }
+  .card-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .link-title { display: flex; align-items: center; gap: var(--space-2); }
+  .card-text { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .card-text a { color: var(--text-primary); }
+  .status-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6); color: var(--text-secondary); font-size: var(--s3-text-sm); }
+
+  .split { display: grid; gap: var(--space-8); grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .facts { display: flex; flex-direction: column; gap: var(--space-3); max-width: var(--prose-max); }
+  .facts li { padding-left: var(--space-4); border-left: var(--border-thick) solid var(--border-default); }
+  .facts code { font-size: var(--s3-text-sm); }
+  .callout { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-6); border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-2); }
+  .callout a { color: var(--text-primary); }
+  .notes { display: flex; flex-direction: column; gap: var(--space-4); color: var(--text-secondary); }
+  .notes strong { color: var(--text-primary); }
+
+  @media (min-width: 900px) {
+    .split { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  }
 </style>

@@ -1,0 +1,162 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * CompareTable: CapCut versus the Cutweave 1.0 plan, one row per thing a creator cares about.
+ * Each Cutweave cell carries a StatusChip. At 720px and wider it is a table; below that every row
+ * becomes a stacked card, so there is no horizontal page scroll on phones.
+ * Props:
+ *  - variant?: 'full' | 'teaser'   full = all rows grouped under headings (default).
+ *                                  teaser = only rows flagged `teaser` in src/data/compare.ts, no group headings,
+ *                                  plus a "Read the full comparison" link. For the landing page.
+ *  - limit?: number                cap the number of rows shown (applied after the teaser filter)
+ *  - rows?: string[]               explicit row ids to show, in this order (overrides the teaser filter)
+ *  - headingLevel?: 2 | 3 | 4      level for the group headings in the full variant (default 3)
+ *  - cta?: boolean                 show the link to /compare/ under a teaser (default true)
+ */
+import '../../styles/area-s3.css';
+import StatusChip from '../ui/StatusChip.astro';
+import Button from '../ui/Button.astro';
+import { ROWS, GROUPS, type CellStatus, type CompareRow } from '../../data/compare';
+
+interface Props {
+  variant?: 'full' | 'teaser';
+  limit?: number;
+  rows?: string[];
+  headingLevel?: 2 | 3 | 4;
+  cta?: boolean;
+}
+const { variant = 'full', limit, rows: rowIds, headingLevel = 3, cta = true } = Astro.props;
+
+let shown: CompareRow[] = rowIds
+  ? rowIds.map((id) => ROWS.find((r) => r.id === id)).filter((r): r is CompareRow => Boolean(r))
+  : variant === 'teaser'
+    ? ROWS.filter((r) => r.teaser)
+    : ROWS;
+if (limit) shown = shown.slice(0, limit);
+
+const grouped = variant === 'full' && !rowIds;
+const sections = grouped
+  ? GROUPS.map((g) => ({ title: g.title, id: g.id, rows: shown.filter((r) => r.group === g.id) })).filter((s) => s.rows.length > 0)
+  : [{ title: '', id: 'all', rows: shown }];
+
+const chipFor = (status: CellStatus, phase?: string): { status: 'built' | 'in-progress' | 'planned' | 'later'; label?: string } => {
+  switch (status) {
+    case 'built': return { status: 'built' };
+    case 'in-progress': return phase ? { status: 'in-progress', label: `In progress · ${phase}` } : { status: 'in-progress' };
+    case 'planned': return phase ? { status: 'planned', label: `Planned · ${phase}` } : { status: 'planned' };
+    case 'later': return { status: 'later' };
+    case 'not-planned': return { status: 'later', label: 'Not planned' };
+  }
+};
+const Heading = `h${headingLevel}` as 'h3';
+---
+<div class:list={['compare', `compare-${variant}`]}>
+  <table class="table">
+    <caption class="sr-only">CapCut compared with the Cutweave 1.0 plan. Each Cutweave cell shows its status.</caption>
+    <thead>
+      <tr>
+        <th scope="col">What you care about</th>
+        <th scope="col">CapCut</th>
+        <th scope="col">Cutweave 1.0 plan</th>
+      </tr>
+    </thead>
+    {sections.map((section) => (
+      <tbody>
+        {grouped && (
+          <tr class="group-row">
+            <th scope="colgroup" colspan="3"><Heading class="group-title">{section.title}</Heading></th>
+          </tr>
+        )}
+        {section.rows.map((row) => {
+          const chip = chipFor(row.cutweave.status, row.cutweave.phase);
+          return (
+            <tr class="row" id={grouped ? `row-${row.id}` : undefined}>
+              <th scope="row" class="topic">{row.topic}</th>
+              <td class="capcut" data-label="CapCut">{row.capcut}</td>
+              <td class="cw" data-label="Cutweave 1.0 plan">
+                <StatusChip {...chip} />
+                <span class="cw-text">{row.cutweave.text}</span>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    ))}
+  </table>
+  {variant === 'teaser' && cta && (
+    <div class="cta"><Button href="/compare/" iconEnd="arrow-right">Read the full comparison</Button></div>
+  )}
+</div>
+
+<style>
+  .compare { width: 100%; }
+  .table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--s3-text-sm);
+    line-height: var(--s3-text-sm-line);
+    text-align: start;
+  }
+  thead th {
+    padding: var(--space-2) var(--space-4);
+    border-bottom: var(--border-thick) solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: var(--s3-text-xs);
+    line-height: var(--s3-text-xs-line);
+    font-weight: 650;
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: uppercase;
+    text-align: start;
+  }
+  .group-row th {
+    padding: var(--space-8) var(--space-4) var(--space-2);
+    border-bottom: var(--border-thin) solid var(--border-default);
+    text-align: start;
+  }
+  .group-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 700;
+  }
+  .row > * {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+    vertical-align: top;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+  .topic { font-weight: 600; width: 26%; }
+  .capcut { color: var(--text-secondary); width: 24%; }
+  .cw-text { display: block; margin-top: var(--space-1-5); }
+  .cta { margin-top: var(--space-6); }
+
+  /* Phones: each row is a stacked card, labelled cell by cell. */
+  @media (max-width: 719px) {
+    .table, .table tbody, .table tr, .table th, .table td { display: block; width: auto; }
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .group-row th { padding: var(--space-6) 0 var(--space-2); }
+    .row {
+      margin-bottom: var(--space-3);
+      border: var(--border-thin) solid var(--border-default);
+      border-radius: var(--radius-lg);
+      background: var(--surface-2);
+      overflow: hidden;
+    }
+    .row > * { padding: var(--space-2) var(--space-4); border-bottom: 0; width: auto; }
+    .topic { padding-top: var(--space-4); font-size: 16px; line-height: 24px; }
+    .capcut::before, .cw::before {
+      display: block;
+      content: attr(data-label);
+      color: var(--text-muted);
+      font-size: var(--s3-text-xs);
+      line-height: var(--s3-text-xs-line);
+      font-weight: 650;
+      letter-spacing: var(--eyebrow-tracking);
+      text-transform: uppercase;
+    }
+    .cw { padding-bottom: var(--space-4); }
+    .cw :global(.chip) { margin-top: var(--space-1); }
+  }
+</style>

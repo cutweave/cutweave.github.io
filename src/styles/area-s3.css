@@ -1,0 +1,24 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Area S3 tokens (compare, roadmap, open-source pages). Imported by the S3 components.
+ * Each value is built from existing design tokens where possible, with a usage note.
+ */
+:root {
+  /* Small text on dense tables, notes and footnotes (the editor's 13px scale is too small for the site). */
+  --s3-text-sm: 14px;
+  --s3-text-sm-line: 22px;
+  /* Micro labels: phase tags, "Illustrative" chips, table row labels on phones. */
+  --s3-text-xs: 12px;
+  --s3-text-xs-line: 16px;
+  /* Big measured numbers in ProofStrip. Display font, tabular figures. */
+  --s3-stat-size: clamp(32px, 6vw, 48px);
+  --s3-stat-line: 1;
+  /* Roadmap marker: the dot on the timeline rail and in the compact strip. */
+  --s3-marker: calc(var(--space-4) + var(--space-2));
+  /* Roadmap rail: the vertical line between phase markers. */
+  --s3-rail-width: var(--border-thick);
+  /* Quiet text for future phases: secondary text, never below AA. */
+  --s3-future-text: var(--text-secondary);
+  /* Minimum card width for auto-fit grids. */
+  --s3-card-min: 15rem;
+}

@@ -1,20 +1,139 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Placeholder: another agent replaces this page. Keep the layout, one h1 and the title/description props.
+// /compare/: an honest CapCut comparison. Facts come from docs/content-inventory.md section 4.
+import '../../styles/area-s3.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
+import Section from '../../components/ui/Section.astro';
+import Card from '../../components/ui/Card.astro';
+import StatusChip from '../../components/ui/StatusChip.astro';
+import Button from '../../components/ui/Button.astro';
+import CompareTable from '../../components/compare/CompareTable.astro';
+import { AS_OF, AS_OF_ISO, CAPCUT_BETTER, DIFFERENCES, NOT_YET, GLOSSARY } from '../../data/compare';
+import { LINKS } from '../../site';
+
+const chipFor = (d: (typeof DIFFERENCES)[number]): { status: 'built' | 'in-progress' | 'planned' | 'later'; label?: string } => {
+  const status = d.status === 'not-planned' ? ('later' as const) : d.status;
+  const label = d.statusLabel ?? (d.phase ? `${d.status === 'in-progress' ? 'In progress' : 'Planned'} · ${d.phase}` : undefined);
+  return label ? { status, label } : { status };
+};
 ---
-<BaseLayout title="Compare" description="How Cutweave compares with other video editors.">
-  <Container>
-    <div class="stub">
-      <h1>Compare</h1>
-      <p>This page is coming soon: an honest comparison with other editors.</p>
+<BaseLayout
+  title="Cutweave and CapCut, honestly"
+  description="An honest comparison of Cutweave and CapCut. What CapCut does better today, what Cutweave plans for 1.0, and who should not switch yet. Cutweave is pre-alpha."
+>
+  <header class="hero">
+    <Container>
+      <div class="hero-inner">
+        <p class="eyebrow">Compare</p>
+        <h1>Cutweave and CapCut, honestly</h1>
+        <p class="lede">
+          CapCut is a finished product. Cutweave is a plan and a growing codebase. This page says where each one stands,
+          so you can decide for yourself.
+        </p>
+        <p class="stamp">
+          <StatusChip status="in-progress" label="Pre-alpha" />
+          <span>As of <time datetime={AS_OF_ISO}>{AS_OF}</time>.</span>
+        </p>
+        <p class="note">
+          The Cutweave column is the <strong>1.0 plan</strong>, not what exists. Every cell shows its status, and nothing
+          here can be downloaded yet. CapCut statements come from the project&rsquo;s own feature research and are not
+          independently verified; check CapCut&rsquo;s own terms and pricing before you decide.
+        </p>
+      </div>
+    </Container>
+  </header>
+
+  <Section id="capcut-better" eyebrow="First, the plain part" title="What CapCut does better today" lede="If you need to edit a video this week, this is the section that matters.">
+    <ul class="cards">
+      {CAPCUT_BETTER.map((c) => (
+        <Card as="li">
+          <h3 class="card-title">{c.title}</h3>
+          <p class="card-text">{c.text}</p>
+        </Card>
+      ))}
+    </ul>
+  </Section>
+
+  <Section id="table" tone="raised" eyebrow="Side by side" title="The comparison" lede="Grouped by what you care about. Cutweave cells show where each item stands: built, in progress, planned with a phase, later, or not planned.">
+    <CompareTable headingLevel={3} />
+    <p class="foot">
+      Phases (P1 to P7) and milestones (M1) are on the <a href="/roadmap/">roadmap</a>. The plan is public in the
+      <a href={LINKS.docs}>docs folder</a>, and dates are rough.
+    </p>
+  </Section>
+
+  <Section id="differ" eyebrow="On purpose" title="Where we differ on purpose" lede="These are design commitments. Each one carries its status, and most are not built yet.">
+    <ul class="cards">
+      {DIFFERENCES.map((d) => {
+        const chip = chipFor(d);
+        return (
+          <Card as="li">
+            <h3 class="card-title">{d.title}</h3>
+            <p class="card-text">{d.text}</p>
+            <div><StatusChip {...chip} /></div>
+          </Card>
+        );
+      })}
+    </ul>
+  </Section>
+
+  <Section id="not-yet" tone="raised" eyebrow="Honest advice" title="Who should not switch yet" lede="Stay where you are if any of these is you. We would rather you finish your video.">
+    <ul class="cards">
+      {NOT_YET.map((n) => (
+        <Card as="li">
+          <h3 class="card-title">{n.title}</h3>
+          <p class="card-text">{n.text}</p>
+        </Card>
+      ))}
+    </ul>
+  </Section>
+
+  <Section id="glossary" eyebrow="Translating" title="Coming from CapCut" lede="The words change a little. The ideas do not.">
+    <dl class="glossary">
+      <div class="gl-head" aria-hidden="true"><span>In CapCut</span><span>In Cutweave</span></div>
+      {GLOSSARY.map((g) => (
+        <div class="gl-row">
+          <dt>{g.capcut}</dt>
+          <dd>{g.cutweave}</dd>
+        </div>
+      ))}
+    </dl>
+  </Section>
+
+  <Section id="peers" tone="raised" width="narrow" eyebrow="Good company" title="Other open-source editors">
+    <p class="prose">
+      Kdenlive, Shotcut and OpenCut are open-source video editors made by people who care about the same things. They
+      are peers, not targets. If you want a free, open editor you can use today, look at them first.
+    </p>
+    <div class="actions">
+      <Button href="/roadmap/" iconEnd="arrow-right">See where Cutweave is</Button>
+      <Button href={LINKS.repo} variant="secondary" external icon="github">Follow on GitHub</Button>
     </div>
-  </Container>
+  </Section>
 </BaseLayout>
 
 <style>
-  .stub { padding-block: var(--section-space); display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
-  h1 { font-family: var(--font-display); font-size: var(--display-section-size); line-height: var(--display-section-line); font-weight: 700; letter-spacing: -0.02em; }
-  p { color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
+  .hero { padding-block: var(--section-space) var(--space-8); background: var(--glow-marigold); }
+  .hero-inner { display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
+  .eyebrow { font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); font-weight: 650; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); }
+  h1 { font-family: var(--font-display); font-size: var(--display-hero-size); line-height: var(--display-hero-line); font-weight: 700; letter-spacing: -0.02em; }
+  .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
+  .stamp { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: var(--s3-text-sm); }
+  .note { padding: var(--space-3) var(--space-4); border: var(--border-thin) dashed var(--border-control); border-radius: var(--radius-md); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-4); }
+  .card-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .card-text { color: var(--text-secondary); }
+  .foot { margin-top: var(--space-6); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); max-width: var(--prose-max); }
+
+  .glossary { display: flex; flex-direction: column; max-width: var(--layer-width-lg); margin: 0; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-lg); background: var(--surface-2); overflow: hidden; }
+  .gl-head, .gl-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: var(--space-4); padding: var(--space-3) var(--space-4); }
+  .gl-head { color: var(--text-muted); font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); font-weight: 650; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; border-bottom: var(--border-thin) solid var(--border-default); }
+  .gl-row + .gl-row { border-top: var(--border-thin) solid var(--border-subtle); }
+  dt { font-weight: 600; }
+  dd { margin: 0; color: var(--text-secondary); }
+
+  .prose { max-width: var(--prose-max); color: var(--text-secondary); }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
 </style>
