@@ -1,71 +1,127 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Placeholder home page. Another agent replaces the content; keep BaseLayout, a single h1,
-// and the #features anchor that the header links to.
+// Landing page (docs/site-plan.md section 5, work package S4). One h1 (in HomeHero); every section has an id.
+// Sections alternate default and raised tones. Facts: docs/content-inventory.md. Gaps: GAP-01, GAP-02, GAP-03, GAP-09.
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Container from '../components/ui/Container.astro';
 import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
-import Card from '../components/ui/Card.astro';
-import StatusChip from '../components/ui/StatusChip.astro';
-import AgentBadge from '../components/ui/AgentBadge.astro';
+import AgentDemo from '../components/demo/AgentDemo.astro';
+import ArchitectureDiagram from '../components/engine/ArchitectureDiagram.astro';
+import PluginLayers from '../components/oss/PluginLayers.astro';
+import CompareTable from '../components/compare/CompareTable.astro';
+import ProofStrip from '../components/roadmap/ProofStrip.astro';
+import RoadmapTimeline from '../components/roadmap/RoadmapTimeline.astro';
+import HomeHero from '../components/home/HomeHero.astro';
+import Pillars from '../components/home/Pillars.astro';
+import CreatorVignettes from '../components/home/CreatorVignettes.astro';
+import AiLockIn from '../components/home/AiLockIn.astro';
+import Faq from '../components/home/Faq.astro';
 import { LINKS } from '../site';
 ---
-<BaseLayout>
-  <div class="hero">
-    <Container>
-      <div class="hero-inner">
-        <AgentBadge label="Built for agents" />
-        <h1>Edit video with your hands and your agents.</h1>
-        <p class="sub">
-          Cutweave is an open-source desktop video editor. A fast engine, full MCP control and
-          plugins at every layer, with every agent edit visible and reversible.
-        </p>
-        <div class="cta">
-          <Button variant="primary" size="lg" href="/roadmap/" iconEnd="arrow-right">See the roadmap</Button>
-          <Button size="lg" href={LINKS.repo} icon="github" external>View source</Button>
-        </div>
-      </div>
-    </Container>
-  </div>
+<BaseLayout
+  description="Cutweave is an open-source video editor for creators and their AI agents, in pre-alpha. Every edit is a command, agents see rendered frames, and there is no account, no watermark and no paywall."
+>
+  <HomeHero />
 
-  <Section id="features" eyebrow="Features" title="Placeholder content" lede="The home page sections are built by another work package.">
-    <ul class="grid">
-      <Card as="li">
-        <StatusChip status="in-progress" />
-        <h3>Headless engine</h3>
-        <p>A Rust engine renders the same project in the app, the CLI and for agents.</p>
-      </Card>
-      <Card as="li">
-        <AgentBadge label="Agent edit" size="sm" />
-        <h3>Visible agent work</h3>
-        <p>Proposals stay pending until you accept them, and history shows who made each edit.</p>
-      </Card>
-      <Card as="li" href="/open-source/">
-        <StatusChip status="planned" />
-        <h3>Plugins everywhere</h3>
-        <p>Extend effects, panels and models without forking the editor.</p>
-      </Card>
-    </ul>
+  <Section
+    id="features"
+    tone="raised"
+    eyebrow="Why Cutweave"
+    title="One editor. You and your agent on the same timeline."
+  >
+    <Pillars />
+  </Section>
+
+  <Section
+    id="demo"
+    eyebrow="Watch it work"
+    title="Watch an agent edit"
+    lede="A scripted session with real tool names and invented values. Press Accept or Reject at the end."
+  >
+    <AgentDemo id="home-demo" />
+  </Section>
+
+  <Section
+    id="creators"
+    tone="raised"
+    eyebrow="Made for creators"
+    title="The workflow you know from CapCut"
+    lede="Short-form and long-form, with the tools creators reach for. These are design previews of what is planned, not screenshots of a build."
+  >
+    <CreatorVignettes />
+  </Section>
+
+  <Section
+    id="how-it-works"
+    eyebrow="How it works"
+    title="One engine, many clients"
+    lede="The interface, your agent, the command line and plugins all send the same commands to one Rust engine. That is why anything you can do, they can do."
+  >
+    <ArchitectureDiagram compact idPrefix="home-arch" />
+    <div class="more"><Button href="/how-it-works/" iconEnd="arrow-right">See how it works</Button></div>
+  </Section>
+
+  <Section
+    id="ai"
+    tone="raised"
+    eyebrow="AI without lock-in"
+    title="Your keys. Your models. Your budget."
+    lede="Use the leading models without a credits system. Say what it costs before it runs."
+  >
+    <AiLockIn />
+  </Section>
+
+  <Section
+    id="plugins"
+    eyebrow="Plugins at every layer"
+    title="Extend it with data, shaders, TypeScript or WASM"
+    lede="Built-in effects use the same interfaces a third party does. A plugin command shows up in the palette, the CLI and MCP on its own."
+  >
+    <PluginLayers compact cta />
+  </Section>
+
+  <Section
+    id="compare"
+    tone="raised"
+    eyebrow="Compared with CapCut"
+    title="What changes, and what is not built yet"
+    lede="Cutweave is pre-alpha. Every cell on the right shows how far along it is."
+  >
+    <CompareTable variant="teaser" headingLevel={3} />
+  </Section>
+
+  <Section
+    id="proof"
+    eyebrow="Proof"
+    title="Measured in spikes, not promised"
+    lede="Five Phase 0 prototypes tested the risky parts before any product code."
+  >
+    <ProofStrip variant="four" headingLevel={3} />
+  </Section>
+
+  <Section
+    id="roadmap"
+    tone="raised"
+    eyebrow="Roadmap"
+    title="Phase 1 of 7"
+    lede="The work is in the open. Phase 1 builds the walking skeleton: import, cut and export, from the interface and from an agent."
+  >
+    <RoadmapTimeline compact cta />
+  </Section>
+
+  <Section id="faq" eyebrow="Questions" title="Frequently asked questions">
+    <Faq />
+  </Section>
+
+  <Section id="follow" tone="raised" align="center" eyebrow="Open source" title="Follow the build" lede="Cutweave is built in public. Star the repository to follow along, or read the architecture to see how it fits together.">
+    <div class="close-actions">
+      <Button variant="primary" size="lg" href={LINKS.repo} icon="github" external>Follow on GitHub</Button>
+      <Button size="lg" href={LINKS.architecture} external iconEnd="external-link">Read the architecture</Button>
+    </div>
   </Section>
 </BaseLayout>
 
 <style>
-  .hero {
-    background: var(--glow-marigold), var(--glow-agent);
-    padding-block: var(--section-space);
-  }
-  .hero-inner { display: flex; flex-direction: column; align-items: flex-start; gap: var(--stack-lg); max-width: 52rem; }
-  h1 {
-    font-family: var(--font-display);
-    font-size: var(--display-hero-size);
-    line-height: var(--display-hero-line);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-  }
-  .sub { max-width: var(--prose-max); color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
-  .cta { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-  .grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-  h3 { font-size: var(--display-card-size); line-height: 1.25; font-weight: 600; }
-  .grid p { color: var(--text-secondary); }
+  .more { margin-top: var(--stack-lg); }
+  .close-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
 </style>

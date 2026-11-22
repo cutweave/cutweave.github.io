@@ -1,0 +1,114 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Hidden (noindex, excluded from the sitemap) 1200 x 630 social card. scripts/make-og.mjs captures this page to
+// public/og.png. Dark theme, tokens and fonts only.
+// GAP-13: this card is generated from the mark, tokens and the pitch line. Replace it with a designed card that
+// uses real editor screenshots once GAP-01 closes.
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const clips = [
+  { family: 'media', x: 0, w: 22 },
+  { family: 'graphics', x: 24, w: 12 },
+  { family: 'media', x: 38, w: 16 },
+  { family: 'effects', x: 56, w: 10 },
+  { family: 'captions', x: 68, w: 14 },
+  { family: 'media', x: 84, w: 16 },
+];
+const audio = [
+  { x: 0, w: 48 },
+  { x: 50, w: 50 },
+];
+---
+<BaseLayout title="Social card" noindex bare>
+  <div class="card" data-og-card>
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="6" y="10" width="24" height="12" rx="6" />
+          <rect x="36" y="10" width="22" height="12" rx="6" />
+          <rect x="6" y="26" width="14" height="12" rx="6" />
+          <rect x="26" y="26" width="32" height="12" rx="6" />
+          <rect x="6" y="42" width="34" height="12" rx="6" />
+          <rect x="46" y="42" width="12" height="12" rx="6" />
+        </g>
+      </svg>
+      <span class="word">Cutweave</span>
+    </div>
+
+    <h1>Edit by hand. Or hand it to an agent.</h1>
+
+    <div class="tl" aria-hidden="true">
+      <div class="lane">
+        {clips.map((c) => <span class={`clip clip-${c.family}`} style={`--x: ${c.x}; --w: ${c.w}`}></span>)}
+      </div>
+      <div class="lane">
+        {audio.map((c) => <span class="clip clip-audio" style={`--x: ${c.x}; --w: ${c.w}`}></span>)}
+      </div>
+      <span class="playhead"></span>
+    </div>
+
+    <p class="line">Open source · Agent-native · No account</p>
+  </div>
+  <script is:inline>document.documentElement.setAttribute('data-theme', 'dark');</script>
+</BaseLayout>
+
+<style is:global>
+  /* The page is exactly the card: fixed 1200 x 630, no header, footer or scroll. */
+  body:has([data-og-card]) { margin: 0; overflow: hidden; }
+  body:has([data-og-card]) .skip { display: none; }
+</style>
+
+<style>
+  .card {
+    position: relative;
+    box-sizing: border-box;
+    width: 1200px;
+    height: 630px;
+    padding: var(--space-12) calc(var(--space-12) + var(--space-4));
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--glow-marigold), var(--glow-agent), var(--surface-0);
+    color: var(--text-primary);
+    overflow: hidden;
+  }
+  .brand { display: flex; align-items: center; gap: var(--space-4); color: var(--marigold); }
+  .mark { width: var(--space-12); height: var(--space-12); }
+  .word { font-family: var(--font-display); font-size: 40px; line-height: 1; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+  h1 {
+    max-width: 900px;
+    font-family: var(--font-display);
+    font-size: 84px;
+    line-height: 1.02;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .tl {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--timeline-lane);
+  }
+  .lane { position: relative; height: var(--space-6); }
+  .clip {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--x) * 1%);
+    width: calc(var(--w) * 1% - var(--space-0-5));
+    border-radius: var(--radius-xs);
+    border-top: var(--clip-strip) solid transparent;
+  }
+  .clip-media { background: var(--clip-media-body); border-top-color: var(--clip-media); }
+  .clip-audio { background: var(--clip-audio-body); border-top-color: var(--clip-audio); }
+  .clip-graphics { background: var(--clip-graphics-body); border-top-color: var(--clip-graphics); }
+  .clip-captions { background: var(--clip-captions-body); border-top-color: var(--clip-captions); }
+  .clip-effects { background: var(--clip-effects-body); border-top-color: var(--clip-effects); }
+  .playhead { position: absolute; top: var(--space-1); bottom: var(--space-1); left: 36%; width: var(--border-thick); background: var(--playhead); }
+  .line { font-size: 26px; line-height: 32px; font-weight: 600; color: var(--text-secondary); }
+</style>

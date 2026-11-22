@@ -1,0 +1,257 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * CreatorVignettes: four small design-preview vignettes of the CapCut-familiar workflow (site plan section 5.4):
+ * caption styles, text-based editing, the magnetic timeline, and 9:16 beside 16:9.
+ * Each is HTML/CSS drawn from tokens, labelled "Design preview", with a planned StatusChip from
+ * docs/content-inventory.md sections 3.1, 3.2 and 2.2 (captions and text editing P3, timeline and workspaces P2).
+ * GAP-01: replace with real editor screenshots once the editor exists.
+ * No props. Headings are h3.
+ */
+import '../../styles/area-s4.css';
+import Card from '../ui/Card.astro';
+import StatusChip from '../ui/StatusChip.astro';
+
+const captionStyles = [
+  { id: 'plain', name: 'Plain' },
+  { id: 'box', name: 'Box' },
+  { id: 'outline', name: 'Outline' },
+  { id: 'active', name: 'Active word' },
+];
+const words = [
+  { t: 'So', cut: false },
+  { t: 'um', cut: true },
+  { t: 'the', cut: false },
+  { t: 'first', cut: false },
+  { t: 'thing', cut: false },
+  { t: 'is', cut: false },
+  { t: 'like', cut: true },
+  { t: 'the', cut: false },
+  { t: 'hook', cut: false },
+  { t: 'uh', cut: true },
+];
+// Magnetic timeline: three clips on the main track with a dashed slot where a removed clip closes up.
+const main = [
+  { family: 'media', w: 34, label: 'Interview' },
+  { family: 'media', w: 22, label: 'B-roll' },
+  { family: 'media', w: 30, label: 'Outro' },
+];
+---
+<div class="grid">
+  <Card as="article" tone="raised" class="card" aria-labelledby="v-captions">
+    <header class="top">
+      <h3 id="v-captions">Styled captions</h3>
+      <span class="meta"><span class="preview">Design preview</span><StatusChip status="planned" label="Planned · Phase 3" /></span>
+    </header>
+    <p class="desc">Pick a look once. Captions follow the clip when you move it.</p>
+    <div class="screen" data-theme="dark" aria-hidden="true">
+      {captionStyles.map((s) => (
+        <p class={`cap cap-${s.id}`}>
+          <span class="cap-name">{s.name}</span>
+          {s.id === 'active'
+            ? <span class="cap-text">Cut it <span class="hl">here</span></span>
+            : <span class="cap-text">Cut it here</span>}
+        </p>
+      ))}
+    </div>
+    <p class="sr-only">Four caption styles on a dark frame: plain, box, outline and active word.</p>
+  </Card>
+
+  <Card as="article" tone="raised" class="card" aria-labelledby="v-text">
+    <header class="top">
+      <h3 id="v-text">Edit from the transcript</h3>
+      <span class="meta"><span class="preview">Design preview</span><StatusChip status="planned" label="Planned · Phase 3" /></span>
+    </header>
+    <p class="desc">Strike a word and the clip is cut. Filler words are marked for you to review.</p>
+    <p class="transcript">
+      {words.map((w) => (w.cut
+        ? <><del class="filler">{w.t}<span class="sr-only"> (filler word, marked for removal)</span></del>{' '}</>
+        : <>{w.t}{' '}</>))}
+    </p>
+    <p class="note"><span class="swatch" aria-hidden="true"></span>3 filler words marked. Nothing is removed until you accept.</p>
+  </Card>
+
+  <Card as="article" tone="raised" class="card" aria-labelledby="v-timeline">
+    <header class="top">
+      <h3 id="v-timeline">Magnetic timeline</h3>
+      <span class="meta"><span class="preview">Design preview</span><StatusChip status="planned" label="Planned · Phase 2" /></span>
+    </header>
+    <p class="desc">Delete a clip and the ones after it close the gap. Everything stays in sync.</p>
+    <div class="tl" aria-hidden="true">
+      <div class="lane lane-top">
+        <span class="seg seg-graphics" style="--w: 38; --x: 6">Title</span>
+        <span class="seg seg-captions" style="--w: 40">Captions</span>
+      </div>
+      <div class="lane">
+        {main.map((c) => <span class={`seg seg-${c.family}`} style={`--w: ${c.w}`}>{c.label}</span>)}
+        <span class="gap" style="--w: 8"></span>
+      </div>
+      <div class="lane">
+        <span class="seg seg-audio" style="--w: 96">Music</span>
+      </div>
+      <span class="head"></span>
+    </div>
+    <p class="sr-only">A timeline with a title and captions above three video clips, and a music clip below.</p>
+  </Card>
+
+  <Card as="article" tone="raised" class="card" aria-labelledby="v-formats">
+    <header class="top">
+      <h3 id="v-formats">Short and long form</h3>
+      <span class="meta"><span class="preview">Design preview</span><StatusChip status="planned" label="Planned · Phase 2" /></span>
+    </header>
+    <p class="desc">One workspace for 9:16 shorts, one for 16:9 YouTube. Same project, same timeline.</p>
+    <div class="formats" aria-hidden="true">
+      <div class="shape shape-v" data-theme="dark"><span class="ratio">9:16</span><span class="bar"></span></div>
+      <div class="shape shape-h" data-theme="dark"><span class="ratio">16:9</span><span class="bar"></span></div>
+    </div>
+    <p class="sr-only">A tall 9 by 16 frame next to a wide 16 by 9 frame.</p>
+  </Card>
+</div>
+
+<style>
+  .grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr)); }
+  .card { height: 100%; }
+  .top { display: flex; flex-direction: column; gap: var(--space-2); }
+  .top h3 { font-size: var(--display-card-size); line-height: 1.25; font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .preview {
+    display: inline-flex;
+    align-items: center;
+    height: calc(var(--hit-min) - var(--space-1));
+    padding-inline: var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+  .desc { color: var(--text-secondary); font-size: 15px; line-height: 24px; }
+
+  /* Dark frame: a data-theme="dark" scope re-points tokens for text and surfaces. Custom properties are resolved where they are
+     defined, so a frame must name the token itself (var(--surface-preview)) rather than use a root alias. */
+  .screen {
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--surface-preview);
+    color: var(--text-primary);
+  }
+  .cap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: calc(var(--space-12) * 1.5);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    text-align: center;
+  }
+  .cap-name { color: var(--text-muted); font-size: 11px; line-height: 14px; }
+  .cap-text { font-family: var(--font-display); font-size: var(--home-caption-size); line-height: 1.2; font-weight: 800; }
+  .cap-box .cap-text { padding: var(--space-0-5) var(--space-2); background: var(--surface-0); border-radius: var(--radius-xs); }
+  .cap-outline .cap-text { color: transparent; -webkit-text-stroke: var(--border-thin) var(--text-primary); }
+  /* Active word uses the captions clip family color, not marigold: it marks a caption, not "here". */
+  .hl { color: var(--clip-captions); }
+
+  /* Transcript */
+  .transcript {
+    margin-top: auto;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    border: var(--border-thin) solid var(--border-subtle);
+    font-size: 17px;
+    line-height: 32px;
+  }
+  .filler {
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-xs);
+    background: var(--agent-subtle);
+    color: var(--agent-text);
+    text-decoration: line-through;
+    text-decoration-thickness: var(--border-thick);
+  }
+  .note { display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary); font-size: 14px; line-height: 20px; }
+  .swatch { flex: none; width: var(--space-3); height: var(--space-3); border-radius: var(--radius-xs); background: var(--agent-subtle); border: var(--border-thin) dashed var(--agent); }
+
+  /* Magnetic timeline: widths are percentages via the unitless --w. */
+  .tl {
+    position: relative;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1-5);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--timeline-lane);
+    border: var(--border-thin) solid var(--border-subtle);
+  }
+  .lane { position: relative; display: flex; align-items: stretch; gap: var(--space-0-5); height: var(--track-md); }
+  .seg {
+    display: flex;
+    align-items: center;
+    width: calc(var(--w) * 1%);
+    min-width: 0;
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-xs);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--text-primary);
+    border-top: var(--clip-strip) solid transparent;
+  }
+  .seg-media { background: var(--clip-media-body); border-top-color: var(--clip-media); }
+  .seg-audio { background: var(--clip-audio-body); border-top-color: var(--clip-audio); }
+  .seg-graphics { background: var(--clip-graphics-body); border-top-color: var(--clip-graphics); }
+  .seg-captions { background: var(--clip-captions-body); border-top-color: var(--clip-captions); }
+  .lane-top .seg:first-child { margin-left: calc(var(--x) * 1%); }
+  .gap {
+    width: calc(var(--w) * 1%);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-xs);
+  }
+  /* Playhead: marigold = "here". */
+  .head {
+    position: absolute;
+    top: var(--space-1);
+    bottom: var(--space-1);
+    left: 28%;
+    width: var(--border-thick);
+    background: var(--playhead);
+  }
+
+  /* Formats */
+  .formats {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-6);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    border: var(--border-thin) solid var(--border-subtle);
+  }
+  .shape {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface-preview);
+    color: var(--text-primary);
+    border: var(--border-thin) solid var(--border-control);
+  }
+  .shape-v { width: var(--home-portrait-width); aspect-ratio: 9 / 16; flex: none; }
+  .shape-h { flex: 1; min-width: 0; aspect-ratio: 16 / 9; }
+  .ratio { font-family: var(--font-mono); font-size: 12px; line-height: 16px; color: var(--text-secondary); }
+  .bar { align-self: center; width: 70%; height: var(--space-3); border-radius: var(--radius-xs); background: var(--clip-captions-body); border-top: var(--clip-strip) solid var(--clip-captions); }
+</style>

@@ -1,0 +1,94 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * AiLockIn: "AI without lock-in" (site plan section 5.6). Provider names as plain text (no logos), the brand-format
+ * cost chip, three bullet facts (keys in the OS keychain, the engine makes every call, local models optional) and
+ * BudgetTiers compact. Facts: docs/content-inventory.md sections 2.3 and 6. Status: planned, Phase 5 (nothing in
+ * the AI gateway is built). The chip value is invented, so it is labelled as an example.
+ * Props:
+ *  - headingLevel?: 3 | 4   level of the sub-headings and BudgetTiers (default 3)
+ */
+import '../../styles/area-s4.css';
+import Icon from '../ui/Icon.astro';
+import StatusChip from '../ui/StatusChip.astro';
+import BudgetTiers from '../agents/BudgetTiers.astro';
+
+interface Props { headingLevel?: 3 | 4 }
+const { headingLevel = 3 } = Astro.props;
+const H = `h${headingLevel}` as 'h3';
+
+const groups = [
+  { id: 'agg', name: 'Aggregators', names: ['fal', 'Replicate', 'OpenRouter', 'Higgsfield'] },
+  { id: 'direct', name: 'Direct', names: ['Anthropic', 'OpenAI-compatible', 'Google Gemini', 'ElevenLabs', 'Runway', 'Deepgram', 'AssemblyAI'] },
+  { id: 'local', name: 'Local, optional', names: ['whisper.cpp', 'ONNX Runtime'] },
+];
+const facts = [
+  { icon: 'shield-check' as const, text: 'Your keys live in the OS keychain. The engine makes every provider call, so keys never reach plugins or agents.' },
+  { icon: 'terminal' as const, text: 'Models come from a signed catalog, so new ones can appear without an app update.' },
+  { icon: 'book-open' as const, text: 'Local models run as a plugin, for the features that can work offline.' },
+];
+---
+<div class="ai">
+  <div class="left">
+    <p class="status"><StatusChip status="planned" label="Planned · Phase 5" /><span>Nothing in the AI gateway is built yet.</span></p>
+
+    <div class="providers">
+      <H class="sub">Bring the models you already use</H>
+      {groups.map((g) => (
+        <div class="group">
+          <p class="gname">{g.name}</p>
+          <ul class="names">{g.names.map((n) => <li>{n}</li>)}</ul>
+        </div>
+      ))}
+      <p class="foot">Example models the plan names: Kling 3.0, Veo 3.1, Nano Banana Pro, FLUX.2. Examples, not a promise.</p>
+    </div>
+
+  </div>
+
+  <div class="right">
+    <p class="chip-row">
+      <span class="chip"><Icon name="sparkles" size="sm" /><span class="mono">~$0.40 · Kling 3.0 via fal</span></span>
+      <span class="eg">Example. Every run shows its price first.</span>
+    </p>
+    <ul class="facts">
+      {facts.map((f) => (
+        <li><Icon name={f.icon} size="lg" /><span>{f.text}</span></li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="tiers">
+    <BudgetTiers compact headingLevel={headingLevel} showStatus={false} />
+  </div>
+</div>
+
+<style>
+  .ai { display: grid; gap: var(--stack-lg); grid-template-columns: minmax(0, 1fr); align-items: start; }
+  @media (min-width: 960px) { .ai { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .left, .right { display: flex; flex-direction: column; gap: var(--stack-lg); min-width: 0; }
+  .tiers { grid-column: 1 / -1; }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: 14px; }
+  .sub { font-size: var(--display-card-size); line-height: 1.25; font-weight: 600; margin-bottom: var(--space-3); }
+  .providers { display: flex; flex-direction: column; gap: var(--space-3); }
+  .group { display: flex; flex-direction: column; gap: var(--space-1); }
+  .gname { color: var(--text-secondary); font-size: 12px; line-height: 16px; font-weight: 650; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; }
+  .names { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); font-size: 17px; line-height: 28px; color: var(--text-primary); }
+  .foot { color: var(--text-secondary); font-size: 14px; line-height: 22px; }
+  .chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--control-lg);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--agent-subtle);
+    color: var(--agent-text);
+    font-weight: 600;
+  }
+  .mono { font-family: var(--font-mono); font-size: 14px; }
+  .eg { color: var(--text-secondary); font-size: 14px; }
+  .facts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+  .facts li { display: grid; grid-template-columns: auto 1fr; gap: var(--space-3); align-items: start; color: var(--text-secondary); font-size: var(--text-body-size); line-height: var(--text-body-line); }
+  .facts :global(svg) { margin-top: var(--space-1); color: var(--text-primary); }
+</style>
