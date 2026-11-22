@@ -1,0 +1,192 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * FlicksExplainer: pick a frame rate or audio rate and see the exact integer flicks per frame or
+ * sample. 1 flick = 1/705,600,000 s. Values are computed (see ./flicks.ts), not typed in.
+ * Base state without JS: a static table of every rate. With JS: a picker and a readout that also
+ * compares integer flicks with float64 seconds over ten minutes.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+import { RATES, FLICKS_PER_SECOND, flicksPerUnit, fmt, fraction, unitWord } from './flicks';
+
+const rows = RATES.map((r) => {
+  const { flicks, remainder } = flicksPerUnit(r);
+  return { r, flicks, exact: remainder === 0, fraction: fraction(r), unit: unitWord(r) };
+});
+---
+<div class="flicks" data-flicks>
+  <div class="intro">
+    <p>A flick is 1/{fmt(FLICKS_PER_SECOND)} of a second. Cutweave stores every time as a whole number of flicks in an <code>i64</code>. The number was chosen so that every common frame rate and audio sample rate divides it exactly.</p>
+  </div>
+
+  <div class="live" data-live hidden>
+    <div class="picker">
+      <label for="flicks-rate">Choose a rate</label>
+      <select id="flicks-rate" data-rate>
+        <optgroup label="Frame rates">
+          {rows.filter((x) => x.r.kind === 'video').map((x) => <option value={x.r.id} selected={x.r.id === 'v2997'}>{x.r.label}</option>)}
+        </optgroup>
+        <optgroup label="Audio sample rates">
+          {rows.filter((x) => x.r.kind === 'audio').map((x) => <option value={x.r.id}>{x.r.label}</option>)}
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="readout" role="status" aria-live="polite" data-out></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Flicks per frame or sample, for every supported rate</caption>
+      <thead>
+        <tr><th scope="col">Rate</th><th scope="col">Exact rate</th><th scope="col">Flicks per frame or sample</th><th scope="col">Divides exactly</th></tr>
+      </thead>
+      <tbody>
+        {rows.map((x) => (
+          <tr data-row={x.r.id}>
+            <th scope="row">{x.r.label}</th>
+            <td class="mono">{x.fraction} per second</td>
+            <td class="mono num">{fmt(x.flicks)}</td>
+            <td>{x.exact ? 'Yes' : 'No'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  import { RATES, FLICKS_PER_SECOND, flicksPerUnit, drift, fmt, fraction, unitWord } from './flicks';
+
+  const TEN_MINUTES = 600;
+
+  document.querySelectorAll<HTMLElement>('[data-flicks]').forEach((root) => {
+    const live = root.querySelector<HTMLElement>('[data-live]');
+    const select = root.querySelector<HTMLSelectElement>('[data-rate]');
+    const out = root.querySelector<HTMLElement>('[data-out]');
+    if (!live || !select || !out) return;
+    live.hidden = false;
+
+    const el = (tag: string, text: string, cls?: string) => {
+      const n = document.createElement(tag);
+      n.textContent = text;
+      if (cls) n.className = cls;
+      return n;
+    };
+
+    const render = () => {
+      const rate = RATES.find((r) => r.id === select.value) ?? RATES[0]!;
+      const unit = unitWord(rate);
+      const { flicks, remainder } = flicksPerUnit(rate);
+      const d = drift(rate, TEN_MINUTES);
+      const ns = (Math.abs(d.errorFlicks) * 1e9) / FLICKS_PER_SECOND;
+
+      root.querySelectorAll('tr[data-row]').forEach((tr) => tr.classList.toggle('on', (tr as HTMLElement).dataset.row === rate.id));
+
+      const sum = document.createElement('p');
+      sum.className = 'big';
+      const strong = el('strong', fmt(flicks), 'mono');
+      sum.append(strong, document.createTextNode(` flicks per ${unit}`));
+
+      const eq = el(
+        'p',
+        `${fmt(FLICKS_PER_SECOND)} × ${fmt(rate.den)} ÷ ${fmt(rate.num)} = ${fmt(flicks)}, remainder ${remainder}`,
+        'mono eq',
+      );
+      const rateLine = el('p', `Exact rate: ${fraction(rate)} per second.`, 'small');
+
+      const cmp = document.createElement('div');
+      cmp.className = 'cmp';
+      const a = document.createElement('div');
+      a.append(
+        el('p', 'Integer flicks', 'k'),
+        el('p', `${fmt(d.units)} ${unit}s = ${fmt(d.exactFlicks)} flicks`, 'mono v'),
+        el('p', 'Error: 0', 'small'),
+      );
+      const b = document.createElement('div');
+      b.append(
+        el('p', 'Float64 seconds, added one by one', 'k'),
+        el('p', `${fmt(d.floatFlicks)} flicks`, 'mono v'),
+        el(
+          'p',
+          d.errorFlicks === 0 ? 'Error: 0 here, but not in general' : `Error: ${d.errorFlicks > 0 ? '+' : ''}${fmt(d.errorFlicks)} flicks (about ${ns.toFixed(ns < 10 ? 1 : 0)} ns)`,
+          'small',
+        ),
+      );
+      cmp.append(a, b);
+
+      const note = el(
+        'p',
+        `Over ten minutes of ${unit}s. The float error is tiny, but it is not zero, it depends on the order you add in, and two systems can disagree about which side of a frame boundary a time falls on. Integers compare with ==.`,
+        'small',
+      );
+      out.replaceChildren(sum, eq, rateLine, cmp, note);
+    };
+
+    select.addEventListener('change', render);
+    render();
+  });
+</script>
+
+<style>
+  .flicks { display: flex; flex-direction: column; gap: var(--space-6); }
+  .intro { color: var(--text-secondary); max-width: var(--prose-max); }
+  .intro code { color: var(--text-primary); font-size: var(--mono-small); }
+
+  .live {
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: 1fr;
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  .live[hidden] { display: none; }
+  @media (min-width: 840px) { .live { grid-template-columns: minmax(0, 16rem) 1fr; } }
+
+  .picker { display: flex; flex-direction: column; gap: var(--space-2); align-self: start; }
+  .picker label { font-weight: 600; font-size: 14px; }
+  select {
+    height: var(--button-height-md);
+    padding-inline: var(--space-3);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--mono-small);
+  }
+
+  .readout { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .readout :global(.big) { font-size: 20px; line-height: 28px; }
+  .readout :global(.big strong) { font-size: 28px; line-height: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .readout :global(.mono) { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .readout :global(.eq) { font-size: var(--mono-small); color: var(--text-secondary); overflow-wrap: anywhere; }
+  .readout :global(.small) { color: var(--text-secondary); font-size: 14px; line-height: 21px; }
+  .readout :global(.cmp) { display: grid; gap: var(--space-3); grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .readout :global(.cmp) { grid-template-columns: 1fr 1fr; } }
+  .readout :global(.cmp > div) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    min-width: 0;
+  }
+  .readout :global(.k) { font-size: 12px; line-height: 16px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); font-weight: 650; }
+  .readout :global(.v) { font-size: var(--mono-small); overflow-wrap: anywhere; }
+
+  .table-wrap { overflow-x: auto; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-md); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  caption { text-align: start; padding: var(--space-3) var(--space-4); color: var(--text-secondary); font-size: 14px; }
+  th, td { text-align: start; padding: var(--space-2) var(--space-4); border-top: var(--border-thin) solid var(--border-subtle); white-space: nowrap; }
+  thead th { font-size: 12px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); background: var(--surface-1); }
+  tbody th { font-weight: 600; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--mono-small); }
+  .num { text-align: end; }
+  tr.on { background: var(--marigold-subtle); }
+</style>

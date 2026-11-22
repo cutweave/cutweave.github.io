@@ -1,0 +1,113 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * EngineFacts: engineering facts with status and source, performance budgets (targets) and spike
+ * measurements. Data: src/data/engine-facts.ts (docs/content-inventory.md §9).
+ * GAP-09: spike numbers are informal; replace with formal runs when reference hardware exists.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+import StatusChip from '../ui/StatusChip.astro';
+import Icon from '../ui/Icon.astro';
+import { ENGINE_FACTS, FACT_GROUPS, BUDGETS, SPIKE_RESULTS, SPIKE_FOOTNOTE } from '../../data/engine-facts';
+---
+<div class="facts">
+  {FACT_GROUPS.map((g, gi) => (
+    <section aria-labelledby={`facts-${gi}`}>
+      <h3 id={`facts-${gi}`} class="group">{g}</h3>
+      <ul class="list">
+        {ENGINE_FACTS.filter((f) => f.group === g).map((f) => (
+          <li class="fact">
+            <div class="top">
+              <h4>{f.title}</h4>
+              <StatusChip status={f.status} />
+            </div>
+            <p class="body">{f.body}</p>
+            {f.note && <p class="note">{f.note}</p>}
+            <p class="src"><a href={f.href} target="_blank" rel="noopener">{f.source} <Icon name="external-link" size="sm" /></a></p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <section aria-labelledby="budgets">
+    <h3 id="budgets" class="group">Performance budgets <span class="tag">Targets</span></h3>
+    <p class="blurb">Budgets are features: each is benchmarked in CI on reference machines. These are targets. Not all of them are measured yet.</p>
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">Performance budgets</caption>
+        <thead><tr><th scope="col">What</th><th scope="col">Target</th></tr></thead>
+        <tbody>
+          {BUDGETS.map((b) => <tr><th scope="row">{b.what}</th><td class="mono">{b.target}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="spikes">
+    <h3 id="spikes" class="group">Spike numbers <span class="tag">Measured in a spike</span></h3>
+    {/* GAP-09: informal numbers. Replace with formal runs on the reference machines. */}
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">Results from Phase 0 spikes</caption>
+        <thead><tr><th scope="col">Spike</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+          {SPIKE_RESULTS.map((s) => <tr><th scope="row">{s.spike}</th><td>{s.result}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">{SPIKE_FOOTNOTE}</p>
+  </section>
+</div>
+
+<style>
+  .facts { display: flex; flex-direction: column; gap: var(--space-12); }
+  .group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--display-card-size);
+    line-height: 28px;
+    font-weight: 650;
+    margin-bottom: var(--space-4);
+  }
+  .tag {
+    padding: 0 var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 22px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .list { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .list { grid-template-columns: repeat(2, 1fr); } }
+  .fact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  .top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-3); }
+  h4 { font-size: 17px; line-height: 24px; font-weight: 650; flex: 1 1 12rem; }
+  .body { color: var(--text-secondary); font-size: 15px; line-height: 23px; }
+  .note { font-size: 14px; line-height: 21px; }
+  .src { margin-top: auto; padding-top: var(--space-1); font-family: var(--font-mono); font-size: 12px; }
+  .src a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--text-secondary); }
+  .src a:hover { color: var(--text-primary); }
+
+  .blurb { color: var(--text-secondary); max-width: var(--prose-max); margin-bottom: var(--space-4); }
+  .table-wrap { overflow-x: auto; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-2); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: start; vertical-align: top; padding: var(--space-3) var(--space-4); border-top: var(--border-thin) solid var(--border-subtle); }
+  thead th { border-top: 0; font-size: 12px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); background: var(--surface-1); }
+  tbody th { font-weight: 600; width: 34%; }
+  td { color: var(--text-secondary); }
+  .mono { font-family: var(--font-mono); font-size: var(--mono-small); color: var(--text-primary); }
+  .foot { margin-top: var(--space-3); color: var(--text-secondary); font-size: 14px; }
+</style>
