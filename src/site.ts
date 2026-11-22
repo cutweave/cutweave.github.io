@@ -6,7 +6,7 @@ export const SITE = {
   url: 'https://cutweave.github.io',
   tagline: 'An open-source video editor for creators and the AI agents that work with them.',
   description:
-    'Cutweave is a free, open-source desktop video editor with a fast engine, full MCP control for AI agents, and plugins at every layer.',
+    'Cutweave is an open-source desktop video editor in development: CapCut-class editing, full MCP control for AI agents, your own AI keys and plugins at every layer.',
 } as const;
 
 const REPO = 'https://github.com/cutweave/cutweave';
@@ -23,8 +23,8 @@ export const LINKS = {
 } as const;
 
 export const NAV = [
-  { label: 'Features', href: '/#features' },
   { label: 'Agents', href: '/agents/' },
+  { label: 'How it works', href: '/how-it-works/' },
   { label: 'Compare', href: '/compare/' },
   { label: 'Roadmap', href: '/roadmap/' },
   { label: 'Open source', href: '/open-source/' },
@@ -36,6 +36,7 @@ export const FOOTER_COLUMNS = [
     links: [
       { label: 'Features', href: '/#features' },
       { label: 'Agents and MCP', href: '/agents/' },
+      { label: 'How it works', href: '/how-it-works/' },
       { label: 'Compare', href: '/compare/' },
       { label: 'Roadmap', href: '/roadmap/' },
     ],
