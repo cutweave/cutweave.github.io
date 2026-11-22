@@ -19,6 +19,13 @@ export const LINKS = {
   issues: `${REPO}/issues`,
   license: `${REPO}/blob/main/LICENSE`,
   contributing: `${REPO}/blob/main/CONTRIBUTING.md`,
+  codeOfConduct: `${REPO}/blob/main/CODE_OF_CONDUCT.md`,
+  security: `${REPO}/blob/main/SECURITY.md`,
+  securityAdvisory: `${REPO}/security/advisories/new`,
+  agentsMd: `${REPO}/blob/main/AGENTS.md`,
+  pluginException: `${REPO}/blob/main/LICENSE-PLUGIN-EXCEPTION.md`,
+  adrs: `${REPO}/blob/main/docs/adr/README.md`,
+  architecture: `${REPO}/blob/main/docs/01-architecture.md`,
   siteRepo: 'https://github.com/cutweave/cutweave.github.io',
 } as const;
 
