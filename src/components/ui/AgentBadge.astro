@@ -1,0 +1,40 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * AgentBadge: marks AI or agent content. Agent blue is reserved for this; never use it
+ * for ordinary actions. Always sparkles icon + word.
+ * Props:
+ *  - label?: string        word shown (default 'Agent'), e.g. 'Agent proposal', 'AI generated'
+ *  - size?: 'sm' | 'md'    default 'md'
+ *  - class?: string
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  label?: string;
+  size?: 'sm' | 'md';
+  class?: string;
+}
+const { label = 'Agent', size = 'md', class: className } = Astro.props;
+---
+<span class:list={['badge', `badge-${size}`, className]}>
+  <Icon name="sparkles" size="sm" />
+  <span>{label}</span>
+</span>
+
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--agent-subtle);
+    color: var(--agent-text);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-md { height: calc(var(--hit-min) - var(--space-1)); font-size: 12px; line-height: 16px; }
+  .badge-sm { height: var(--space-4); padding-inline: var(--space-1-5); font-size: 11px; line-height: 14px; }
+</style>

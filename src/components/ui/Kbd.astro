@@ -1,0 +1,31 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Kbd: a keyboard key, set in the mono font. Slot = the key name ("Ctrl", "K", "Space").
+ * Props:
+ *  - class?: string
+ */
+interface Props { class?: string }
+const { class: className } = Astro.props;
+---
+<kbd class:list={['kbd', className]}><slot /></kbd>
+
+<style>
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--space-6);
+    height: var(--space-6);
+    padding-inline: var(--space-1-5);
+    border: var(--border-thin) solid var(--border-control);
+    border-bottom-width: var(--border-thick);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+  }
+</style>

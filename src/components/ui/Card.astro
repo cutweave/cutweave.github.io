@@ -1,0 +1,43 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Card: a bordered surface for grouped content. Renders <a> when `href` is set (the whole card
+ * is the link, with hover and focus states), otherwise a <div>.
+ * Props:
+ *  - href?: string           makes the card a link
+ *  - tone?: 'default' | 'raised'   default = surface-2, raised = surface-1
+ *  - as?: string             element when not a link (default 'div'; use 'li' or 'article')
+ *  - class?: string
+ * Slot: any content. Use a heading inside for the title.
+ */
+interface Props {
+  href?: string;
+  tone?: 'default' | 'raised';
+  as?: string;
+  class?: string;
+}
+const { href, tone = 'default', as: As = 'div', class: className } = Astro.props;
+const Tag = (href ? 'a' : As) as 'a';
+---
+<Tag href={href} class:list={['card', `card-${tone}`, href && 'card-link', className]}><slot /></Tag>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+  .card-default { background: var(--surface-2); }
+  .card-raised { background: var(--surface-1); }
+  .card-link {
+    transition:
+      background-color var(--duration-base) var(--easing-standard),
+      border-color var(--duration-base) var(--easing-standard);
+  }
+  .card-link:hover { background: var(--surface-3); border-color: var(--border-control); }
+</style>

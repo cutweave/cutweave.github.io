@@ -1,0 +1,119 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Button: renders <a> when `href` is set, otherwise <button>.
+ * Props:
+ *  - variant?: 'primary' | 'secondary' | 'ghost'   primary = marigold fill (the one main action
+ *                                                  per view; marigold means "here"), default 'secondary'
+ *  - size?: 'sm' | 'md' | 'lg'                      32 / 40 / 48px tall (default 'md')
+ *  - href?: string                                  makes it a link
+ *  - icon?: IconName                                icon before the label
+ *  - iconEnd?: IconName                             icon after the label
+ *  - external?: boolean                             adds rel="noopener" and target="_blank" for links
+ *  - disabled?: boolean                             <button disabled>, or aria-disabled on a link
+ *  - type?: 'button' | 'submit' | 'reset'           buttons only (default 'button')
+ *  - class?: string
+ * Other attributes (aria-*, data-*, id) pass through. Slot = the label (sentence case, starts with a verb).
+ */
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  icon?: IconName;
+  iconEnd?: IconName;
+  external?: boolean;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+  [attr: string]: unknown;
+}
+const {
+  variant = 'secondary',
+  size = 'md',
+  href,
+  icon,
+  iconEnd,
+  external = false,
+  disabled = false,
+  type = 'button',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const iconSize = size === 'lg' ? 'lg' : 'md';
+const classes = ['btn', `btn-${variant}`, `btn-${size}`, className];
+---
+{href ? (
+  <a
+    class:list={classes}
+    href={disabled ? undefined : href}
+    aria-disabled={disabled ? 'true' : undefined}
+    role={disabled ? 'link' : undefined}
+    target={external ? '_blank' : undefined}
+    rel={external ? 'noopener' : undefined}
+    {...rest}
+  >
+    {icon && <Icon name={icon} size={iconSize} />}<span><slot /></span>{iconEnd && <Icon name={iconEnd} size={iconSize} />}
+  </a>
+) : (
+  <button class:list={classes} type={type} disabled={disabled} {...rest}>
+    {icon && <Icon name={icon} size={iconSize} />}<span><slot /></span>{iconEnd && <Icon name={iconEnd} size={iconSize} />}
+  </button>
+)}
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--hit-min);
+    padding-inline: var(--space-4);
+    border: var(--border-thin) solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-ui);
+    font-size: var(--text-body-size);
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard);
+  }
+  .btn-sm { height: var(--button-height-sm); padding-inline: var(--space-3); font-size: 14px; }
+  .btn-md { height: var(--button-height-md); }
+  .btn-lg { height: var(--button-height-lg); padding-inline: var(--space-6); font-size: 17px; border-radius: var(--radius-md); }
+
+  /* Primary: marigold fill, on-marigold text. */
+  .btn-primary { background: var(--marigold); color: var(--on-marigold); }
+  .btn-primary:hover { background: var(--marigold-hover); }
+
+  /* Secondary: surface-2 fill, control border. */
+  .btn-secondary {
+    background: var(--surface-2);
+    color: var(--text-primary);
+    border-color: var(--border-control);
+  }
+  .btn-secondary:hover { background: var(--surface-3); }
+
+  /* Ghost: no fill until hover. */
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-ghost:hover { background: var(--surface-3); color: var(--text-primary); }
+
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    background: var(--surface-2);
+    color: var(--text-disabled);
+    border-color: var(--border-subtle);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .btn-ghost:disabled,
+  .btn-ghost[aria-disabled='true'] { background: transparent; border-color: transparent; }
+</style>

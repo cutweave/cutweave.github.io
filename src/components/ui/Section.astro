@@ -1,0 +1,72 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Section: a page band with consistent vertical rhythm, optional heading block, and content slot.
+ * Props:
+ *  - eyebrow?: string        small uppercase label above the title
+ *  - title?: string          section heading (display font)
+ *  - lede?: string           supporting paragraph under the title
+ *  - id?: string             anchor id (also labels the section for assistive tech)
+ *  - level?: 2 | 3           heading level (default 2; the page's single h1 lives in the hero)
+ *  - tone?: 'default' | 'raised'   raised = surface-1 band with hairline borders
+ *  - align?: 'start' | 'center'    heading block alignment (default 'start')
+ *  - width?: 'default' | 'narrow'
+ * Slots: default (body), "actions" (buttons shown under the lede).
+ */
+import Container from './Container.astro';
+
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  lede?: string;
+  id?: string;
+  level?: 2 | 3;
+  tone?: 'default' | 'raised';
+  align?: 'start' | 'center';
+  width?: 'default' | 'narrow';
+}
+const { eyebrow, title, lede, id, level = 2, tone = 'default', align = 'start', width = 'default' } = Astro.props;
+const Heading = `h${level}` as 'h2' | 'h3';
+const headingId = id && title ? `${id}-title` : undefined;
+const hasHead = Boolean(eyebrow || title || lede);
+---
+<section id={id} aria-labelledby={headingId} class:list={['section', `section-${tone}`]}>
+  <Container size={width}>
+    {hasHead && (
+      <header class:list={['head', `head-${align}`]}>
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        {title && <Heading id={headingId} class="title">{title}</Heading>}
+        {lede && <p class="lede">{lede}</p>}
+        {Astro.slots.has('actions') && <div class="actions"><slot name="actions" /></div>}
+      </header>
+    )}
+    <div class="body"><slot /></div>
+  </Container>
+</section>
+
+<style>
+  .section { padding-block: var(--section-space); }
+  .section-raised {
+    background: var(--surface-1);
+    border-block: var(--border-thin) solid var(--border-subtle);
+  }
+  .head { display: flex; flex-direction: column; gap: var(--stack-md); margin-bottom: var(--stack-lg); max-width: var(--prose-max); }
+  .head-center { margin-inline: auto; align-items: center; text-align: center; }
+  .eyebrow {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 650;
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .title {
+    font-family: var(--font-display);
+    font-size: var(--display-section-size);
+    line-height: var(--display-section-line);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
+</style>

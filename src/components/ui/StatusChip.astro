@@ -1,0 +1,56 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * StatusChip: roadmap/feature status. Always icon + word, never color alone.
+ * Props:
+ *  - status: 'built' | 'in-progress' | 'planned' | 'later'
+ *      built = success check, in-progress = marigold (where the work is now),
+ *      planned = secondary dashed circle, later = muted dashed chip with clock
+ *  - label?: string   override the word (default: Built, In progress, Planned, Later)
+ *  - class?: string
+ */
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+type Status = 'built' | 'in-progress' | 'planned' | 'later';
+interface Props {
+  status: Status;
+  label?: string;
+  class?: string;
+}
+const { status, label, class: className } = Astro.props;
+
+const config: Record<Status, { word: string; icon: IconName }> = {
+  built: { word: 'Built', icon: 'circle-check' },
+  'in-progress': { word: 'In progress', icon: 'loader' },
+  planned: { word: 'Planned', icon: 'circle-dashed' },
+  later: { word: 'Later', icon: 'clock' },
+};
+const { word, icon } = config[status];
+---
+<span class:list={['chip', `chip-${status}`, className]}>
+  <Icon name={icon} size="sm" />
+  <span>{label ?? word}</span>
+</span>
+
+<style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    height: calc(var(--hit-min) - var(--space-1));
+    padding-inline: var(--space-2);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-full);
+    background: var(--surface-2);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .chip-built { color: var(--success); }
+  .chip-in-progress { color: var(--marigold-text); background: var(--marigold-subtle); border-color: var(--marigold-text); }
+  .chip-planned { color: var(--text-secondary); }
+  .chip-later { color: var(--text-muted); border-style: dashed; }
+</style>

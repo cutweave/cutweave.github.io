@@ -1,0 +1,51 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * CodeBlock: monospace block, no runtime highlighter. The <pre> is focusable so wide code can
+ * be scrolled with the keyboard.
+ * Props:
+ *  - code?: string      the code text (or pass it in the default slot)
+ *  - label?: string     caption shown above the code, e.g. a file name or "Terminal"
+ *  - lang?: string      language hint, exposed as data-lang (no highlighting)
+ *  - class?: string
+ */
+interface Props {
+  code?: string;
+  label?: string;
+  lang?: string;
+  class?: string;
+}
+const { code, label, lang, class: className } = Astro.props;
+---
+<figure class:list={['code', className]}>
+  {label && <figcaption class="label">{label}</figcaption>}
+  <pre tabindex="0" data-lang={lang}><code>{code}<slot /></code></pre>
+</figure>
+
+<style>
+  .code {
+    margin: 0;
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    overflow: hidden;
+  }
+  .label {
+    padding: var(--space-2) var(--space-4);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  pre {
+    margin: 0;
+    padding: var(--space-4);
+    overflow-x: auto;
+    color: var(--text-primary);
+    font-size: var(--code-size);
+    line-height: var(--code-line);
+    tab-size: 2;
+  }
+  code { font-family: var(--font-mono); }
+</style>
