@@ -1,0 +1,485 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * EditorMock: an HTML/CSS/SVG recreation of the Cutweave editor, built from design tokens only.
+ * It is a design preview, not a screenshot: nothing here is interactive and nothing is shipped.
+ *
+ * GAP-01: replace with real editor screenshots (both themes) once WP-1M.* / WP-2H land. Until then the
+ * "Design preview" chip stays on the visual's corner (docs/site-plan.md section 3).
+ *
+ * Props:
+ *  - variant: 'hero' | 'compact'   hero shows asset strip and inspector when the container is wide enough;
+ *                                  compact is preview + transport + timeline only, shorter
+ *  - animate?: boolean             default true. A marigold playhead sweeps the timeline in a loop and the
+ *                                  timecode and caption follow. Static under prefers-reduced-motion or
+ *                                  animate={false}; paused while off-screen.
+ *
+ * Layout adapts to its own width (container queries), so it never overflows: below ~720px the asset strip and
+ * inspector are hidden; below ~520px the track headers collapse to icons.
+ * Accessibility: the whole drawing is aria-hidden; one visually hidden sentence describes it.
+ */
+import '../../styles/area-s1.css';
+import AgentBadge from '../ui/AgentBadge.astro';
+import DemoIcon from './DemoIcon.astro';
+import Clip from './Clip.astro';
+import TrackHeader from './TrackHeader.astro';
+import TimelineRuler from './TimelineRuler.astro';
+import PreviewScene from './PreviewScene.astro';
+import { wavePath } from './waveform';
+
+interface Props {
+  variant: 'hero' | 'compact';
+  animate?: boolean;
+}
+const { variant, animate = true } = Astro.props;
+
+const DURATION = 30; // seconds on the mock timeline
+const START = 0.4; // static playhead position (fraction)
+
+const pad = (n: number) => String(n).padStart(2, '0');
+function timecode(seconds: number): string {
+  const f = Math.floor(seconds * 30);
+  return `${pad(Math.floor(f / 108000))}:${pad(Math.floor(f / 1800) % 60)}:${pad(Math.floor(f / 30) % 60)}:${pad(f % 30)}`;
+}
+
+// Caption clips: start, end as fractions of the timeline; words drive the preview caption.
+const captions = [
+  { s: 0.02, e: 0.17, t: 'So here is the thing' },
+  { s: 0.19, e: 0.34, t: 'nobody told me' },
+  { s: 0.36, e: 0.52, t: 'the edit was the easy part' },
+  { s: 0.54, e: 0.7, t: 'the hard part was' },
+  { s: 0.72, e: 0.88, t: 'knowing what to cut' },
+];
+const activeCaption = captions.find((c) => START >= c.s && START < c.e) ?? { s: 0.36, e: 0.52, t: 'the edit was the easy part' };
+const activeWords = activeCaption.t.split(' ');
+const activeIndex = Math.min(activeWords.length - 1, Math.floor(((START - activeCaption.s) / (activeCaption.e - activeCaption.s)) * activeWords.length));
+
+const rulerLabels = Array.from({ length: 6 }, (_, i) => ({ at: i / 6, text: `00:${pad(i * 5)}` }));
+
+const voiceWave = wavePath(3, 120, (x) => ((x > 0.28 && x < 0.34) || (x > 0.66 && x < 0.7) ? 0.12 : 1));
+const musicWave = wavePath(11, 140, () => 0.5);
+
+const assets = [
+  { name: 'interview_A.mov', dur: '11:42', kind: 'media', icon: 'film' },
+  { name: 'broll_harbor.mp4', dur: '0:38', kind: 'media', icon: 'film' },
+  { name: 'interview_A.wav', dur: '11:42', kind: 'audio', icon: 'audio-waveform' },
+  { name: 'outro_card.mp4', dur: '0:06', kind: 'media', icon: 'film' },
+] as const;
+const props = [
+  ['Position', '0.0, 0.0'],
+  ['Scale', '100 %'],
+  ['Rotation', '0.0°'],
+  ['Opacity', '100 %'],
+  ['Speed', '1.00×'],
+];
+---
+<div
+  class="em"
+  data-em
+  data-variant={variant}
+  data-animate={animate ? 'true' : 'false'}
+  data-duration={DURATION}
+  data-start={START}
+>
+  <p class="sr-only">Design preview of the Cutweave editor: an interview frame with a caption on the preview, and a timeline with graphics, effects, video, caption and audio tracks under a marigold playhead.</p>
+
+  <div class="em__chrome" aria-hidden="true">
+    <div class="em__toolbar">
+      <DemoIcon name="film" size="md" />
+      <span class="em__project">Harbor interview</span>
+      <span class="em__toolbar-tools"><DemoIcon name="undo-2" size="md" /><DemoIcon name="redo-2" size="md" /><DemoIcon name="scissors" size="md" /></span>
+      <!-- Label required by docs/site-plan.md section 3 for HTML recreations of the editor. -->
+      <span class="cwd-chip em__label">Design preview</span>
+    </div>
+
+    <div class="em__body">
+      <div class="em__assets">
+        <div class="em__panel-head">Assets</div>
+        <div class="em__tiles">
+          {assets.map((a) => (
+            <div class="em__tile">
+              <div class={`em__thumb em__thumb--${a.kind}`}>
+                <DemoIcon name={a.icon} size="md" />
+                <span class="em__dur">{a.dur}</span>
+              </div>
+              <span class="em__tile-name">{a.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="em__pane">
+        <div class="em__frame">
+          <PreviewScene pose={2} />
+          <div class="em__caption" data-caption>
+            {activeWords.map((w, i) => <span class="em__word" data-on={i === activeIndex ? 'true' : undefined}>{w}</span>)}
+          </div>
+        </div>
+      </div>
+
+      <div class="em__inspector">
+        <div class="em__panel-head">Inspector</div>
+        <div class="em__section">
+          <div class="em__section-title"><DemoIcon name="film" /><span>interview_A.mov</span></div>
+          {props.map(([k, v]) => (
+            <div class="em__prop"><span>{k}</span><span class="em__val">{v}</span></div>
+          ))}
+        </div>
+        <div class="em__agent">
+          <AgentBadge size="sm" label="Agent" />
+          <span class="em__agent-state">No proposals</span>
+          <DemoIcon name="chevron-right" />
+        </div>
+      </div>
+    </div>
+
+    <div class="em__transport">
+      <div class="em__time">
+        <span class="timecode em__tc" data-tc>{timecode(START * DURATION)}</span>
+        <span class="timecode em__tc em__tc--dur">/ {timecode(DURATION)}</span>
+      </div>
+      <div class="em__buttons">
+        <span class="em__btn em__btn--edge"><DemoIcon name="skip-back" size="md" /></span>
+        <span class="em__btn"><DemoIcon name="step-back" size="md" /></span>
+        <span class="em__btn em__btn--play"><DemoIcon name="play" size="md" /></span>
+        <span class="em__btn"><DemoIcon name="step-forward" size="md" /></span>
+        <span class="em__btn em__btn--edge"><DemoIcon name="skip-forward" size="md" /></span>
+      </div>
+      <div class="em__zoom"><DemoIcon name="zoom-in" size="md" /><span class="em__zoom-track"><span class="em__zoom-thumb"></span></span></div>
+    </div>
+
+    <div class="cwd-tl em__tl">
+      <div class="cwd-tl__corner"></div>
+      <TimelineRuler labels={rulerLabels} minor={30} major={6} />
+
+      <TrackHeader kind="graphics" name="Text G1" icon="type" height="sm" />
+      <div class="cwd-lane" style="--h:var(--track-sm)">
+        <Clip kind="graphics" label="Lower third" icon="type" x={4} w={28} />
+        <Clip kind="graphics" label="Title card" icon="type" x={82} w={16} />
+      </div>
+
+      <TrackHeader kind="effects" name="Effects" icon="blend" height="sm" />
+      <div class="cwd-lane cwd-lane--alt" style="--h:var(--track-sm)">
+        <Clip kind="effects" label="Film grain" icon="blend" x={0} w={47} />
+        <Clip kind="effects" label="Soft vignette" icon="blend" x={48.5} w={31} />
+      </div>
+
+      <TrackHeader kind="media" name="Video V1" icon="film" />
+      <div class="cwd-lane" style="--h:var(--track-md)">
+        <Clip kind="media" label="interview_A.mov" icon="film" x={0} w={47} selected />
+        <Clip kind="media" label="broll_harbor.mp4" icon="film" x={48.5} w={31} />
+        <Clip kind="media" label="outro_card.mp4" icon="film" x={80.5} w={19.5} />
+      </div>
+
+      <TrackHeader kind="captions" name="Captions" icon="captions" height="sm" />
+      <div class="cwd-lane cwd-lane--alt" style="--h:var(--track-sm)">
+        {captions.map((c) => (
+          <Clip kind="captions" label={c.t} icon="captions" x={c.s * 100} w={(c.e - c.s) * 100} data={{ cs: String(c.s), ce: String(c.e), ct: c.t }} />
+        ))}
+      </div>
+
+      <TrackHeader kind="audio" name="Audio A1" icon="audio-waveform" />
+      <div class="cwd-lane" style="--h:var(--track-md)">
+        <Clip kind="audio" label="interview_A.wav" icon="audio-waveform" x={0} w={47}>
+          <svg class="cwd-wave" viewBox="0 0 1000 100" preserveAspectRatio="none" focusable="false"><path d={voiceWave} /></svg>
+        </Clip>
+        <Clip kind="audio" label="music_bed.wav" icon="music" x={48.5} w={51.5}>
+          <svg class="cwd-wave" viewBox="0 0 1000 100" preserveAspectRatio="none" focusable="false"><path d={musicWave} /></svg>
+        </Clip>
+      </div>
+
+      <div class="cwd-playfield" style={`--p:${START}`} data-playfield><div class="cwd-playhead"></div></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .em {
+    container-type: inline-size;
+    position: relative;
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-0);
+    box-shadow: var(--shadow-popover);
+    overflow: hidden;
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: 16px;
+    text-align: start;
+  }
+  .em__chrome { display: block; }
+
+  /* Toolbar */
+  .em__toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: var(--toolbar);
+    padding-inline: var(--space-3);
+    background: var(--surface-1);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+    color: var(--text-secondary);
+  }
+  .em__project { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); font-weight: 600; font-size: 13px; }
+  .em__toolbar-tools { display: none; gap: var(--space-3); margin-left: var(--space-3); }
+  .em__label { margin-left: auto; }
+
+  /* Body: assets | preview | inspector. Single column (preview only) until the container is wide. */
+  .em__body {
+    --ph: clamp(calc(var(--space-12) * 3), 28cqw, calc(var(--space-12) * 7.5));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .em[data-variant="compact"] .em__body { --ph: clamp(calc(var(--space-12) * 2.5), 22cqw, calc(var(--space-12) * 4.5)); }
+  .em__assets, .em__inspector { display: none; }
+
+  .em__pane {
+    display: grid;
+    place-items: center;
+    height: calc(var(--ph) + var(--space-6));
+    padding: var(--space-3);
+    background: var(--surface-preview);
+  }
+  .em__frame {
+    position: relative;
+    width: min(100%, calc(var(--ph) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 var(--border-thin) var(--border-default);
+  }
+  .em__caption {
+    position: absolute;
+    left: 50%;
+    bottom: 9%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.3em;
+    width: max-content;
+    max-width: 88%;
+    padding: 0.1em 0.55em;
+    border-radius: var(--radius-sm);
+    background: var(--demo-caption-bg);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(11px, 2.6cqw, 22px);
+    line-height: 1.3;
+    text-align: center;
+  }
+  /* The word being spoken takes the captions clip color (a caption style, not UI chrome). */
+  .em__caption :global(.em__word[data-on="true"]) { color: var(--clip-captions); }
+  .em__caption[hidden] { display: none; }
+
+  /* Side panels */
+  .em__panel-head {
+    display: flex;
+    align-items: center;
+    height: var(--panel-header);
+    padding-inline: var(--space-3);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .em__assets, .em__inspector { background: var(--surface-1); overflow: hidden; height: calc(var(--ph) + var(--space-6)); }
+  .em__assets { border-right: var(--border-thin) solid var(--border-subtle); }
+  .em__inspector { flex-direction: column; border-left: var(--border-thin) solid var(--border-subtle); }
+  .em__tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); padding: var(--space-2); }
+  .em__tile { display: grid; gap: var(--space-1); min-width: 0; }
+  .em__thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-sm);
+    border: var(--border-thin) solid var(--border-default);
+    color: var(--text-secondary);
+  }
+  .em__thumb--media { background: linear-gradient(135deg, var(--demo-film-a), var(--demo-film-b)); }
+  .em__thumb--audio { background: var(--clip-audio-body); color: var(--clip-audio); }
+  .em__dur {
+    position: absolute;
+    right: var(--space-1);
+    bottom: var(--space-1);
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-xs);
+    background: var(--demo-caption-bg);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 14px;
+  }
+  .em__tile-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: 11px; line-height: 14px; }
+
+  .em__section { display: grid; gap: var(--space-1-5); padding: var(--space-3); }
+  .em__section-title { display: flex; align-items: center; gap: var(--space-1-5); margin-bottom: var(--space-1); color: var(--clip-media); font-weight: 600; }
+  .em__section-title span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-primary); }
+  .em__prop { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--text-secondary); }
+  .em__val {
+    min-width: calc(var(--space-12) * 1.5);
+    padding: var(--space-0-5) var(--space-2);
+    border: var(--border-thin) solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Collapsed agent panel: the one place agent blue appears in the editor chrome. */
+  .em__agent {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: auto var(--space-2) var(--space-2);
+    padding: var(--space-1-5) var(--space-2);
+    border: var(--border-thin) dashed var(--agent);
+    border-radius: var(--radius-md);
+    background: var(--agent-subtle);
+    color: var(--text-secondary);
+  }
+  .em__agent-state { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Transport */
+  .em__transport {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: var(--toolbar);
+    padding-inline: var(--space-3);
+    background: var(--surface-1);
+    border-top: var(--border-thin) solid var(--border-subtle);
+    color: var(--text-secondary);
+  }
+  .em__time { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; white-space: nowrap; }
+  .em__tc { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; color: var(--text-primary); }
+  .em__tc--dur { display: none; color: var(--text-muted); }
+  .em__buttons { display: flex; align-items: center; gap: var(--space-1); }
+  .em__btn { display: grid; place-items: center; width: var(--control-lg); height: var(--control-lg); border-radius: var(--radius-sm); }
+  .em__btn--edge { display: none; }
+  .em__btn--play { background: var(--marigold); color: var(--on-marigold); }
+  .em__zoom { display: none; justify-self: end; align-items: center; gap: var(--space-2); }
+  .em__zoom-track { position: relative; width: calc(var(--space-12) * 2); height: var(--space-1); border-radius: var(--radius-full); background: var(--border-default); }
+  .em__zoom-thumb { position: absolute; top: 50%; left: 40%; width: var(--space-3); height: var(--space-3); transform: translate(-50%, -50%); border-radius: var(--radius-full); background: var(--text-secondary); }
+
+  /* Timeline: collapse the header column on narrow containers. */
+  .em__tl { --demo-hdr: var(--demo-hdr-icon); }
+  .em__tl :global(.cwd-hdr__name),
+  .em__tl :global(.cwd-hdr__toggles) { display: none; }
+  .em__tl :global(.cwd-hdr) { justify-content: center; padding-inline: 0; }
+
+  @container (min-width: 520px) {
+    .em__tl { --demo-hdr: calc(var(--space-12) * 3); }
+    .em__tl :global(.cwd-hdr__name) { display: block; }
+    .em__tl :global(.cwd-hdr) { justify-content: flex-start; padding-inline: var(--space-2); }
+    .em__toolbar-tools { display: inline-flex; }
+    .em__tc--dur { display: inline; }
+    .em__zoom { display: inline-flex; }
+    .em__btn--edge { display: grid; }
+  }
+  @container (min-width: 720px) {
+    .em__tl :global(.cwd-hdr__toggles) { display: inline-flex; }
+    .em[data-variant="hero"] .em__body {
+      grid-template-columns: calc(var(--space-12) * 3.5) minmax(0, 1fr) calc(var(--space-12) * 4);
+    }
+    .em[data-variant="hero"] .em__assets { display: block; }
+    .em[data-variant="hero"] .em__inspector { display: flex; }
+  }
+</style>
+
+<script>
+  // Moves the playhead, timecode and caption in step. Static under prefers-reduced-motion or when the
+  // component says animate={false}. Pauses while off-screen or when the tab is hidden.
+  const FPS = 30;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  function timecode(seconds: number): string {
+    const f = Math.floor(seconds * FPS);
+    return `${pad(Math.floor(f / 108000))}:${pad(Math.floor(f / 1800) % 60)}:${pad(Math.floor(f / FPS) % 60)}:${pad(f % FPS)}`;
+  }
+
+  type Cap = { s: number; e: number; words: string[] };
+
+  function init(root: HTMLElement) {
+    const duration = Number(root.dataset.duration) || 30;
+    const playfield = root.querySelector<HTMLElement>('[data-playfield]');
+    const tc = root.querySelector<HTMLElement>('[data-tc]');
+    const capEl = root.querySelector<HTMLElement>('[data-caption]');
+    if (!playfield || !tc || !capEl) return;
+    const caps: Cap[] = Array.from(root.querySelectorAll<HTMLElement>('[data-ct]')).map((el) => ({
+      s: Number(el.dataset.cs),
+      e: Number(el.dataset.ce),
+      words: (el.dataset.ct ?? '').split(' '),
+    }));
+
+    let t = (Number(root.dataset.start) || 0) * duration;
+    let last = 0;
+    let raf = 0;
+    let lastFrame = -1;
+    let capKey = '';
+
+    const render = () => {
+      const p = t / duration;
+      playfield.style.setProperty('--p', p.toFixed(4));
+      const frame = Math.floor(t * FPS);
+      if (frame !== lastFrame) {
+        lastFrame = frame;
+        tc.textContent = timecode(t);
+      }
+      const cap = caps.find((c) => p >= c.s && p < c.e);
+      const idx = cap ? Math.min(cap.words.length - 1, Math.floor(((p - cap.s) / (cap.e - cap.s)) * cap.words.length)) : -1;
+      const key = cap ? `${cap.s}:${idx}` : 'none';
+      if (key !== capKey) {
+        capKey = key;
+        capEl.replaceChildren();
+        capEl.hidden = !cap;
+        cap?.words.forEach((w, i) => {
+          const span = document.createElement('span');
+          span.className = 'em__word';
+          span.textContent = w;
+          if (i === idx) span.dataset.on = 'true';
+          capEl.append(span);
+        });
+      }
+    };
+
+    const tick = (now: number) => {
+      t = (t + (now - last) / 1000) % duration;
+      last = now;
+      render();
+      raf = requestAnimationFrame(tick);
+    };
+    const start = () => {
+      if (raf) return;
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+
+    let visible = false;
+    new IntersectionObserver(
+      (entries) => {
+        visible = entries.some((e) => e.isIntersecting);
+        visible && !document.hidden ? start() : stop();
+      },
+      { threshold: 0.1 },
+    ).observe(root);
+    document.addEventListener('visibilitychange', () => (visible && !document.hidden ? start() : stop()));
+  }
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (!reduce.matches) {
+    document.querySelectorAll<HTMLElement>('[data-em][data-animate="true"]').forEach(init);
+  }
+</script>

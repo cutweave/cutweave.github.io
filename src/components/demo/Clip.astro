@@ -1,0 +1,34 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Clip: one block on a lane, per the brand book: 3px header strip in the strong color, body color behind,
+ * type icon and label. Position and width are percentages of the lane, so it scales with any container.
+ * Props:
+ *  - kind: 'media' | 'audio' | 'graphics' | 'captions' | 'effects'
+ *  - label: string
+ *  - icon: DemoIconName
+ *  - x, w: number        start and width as percent of the lane (0..100)
+ *  - selected?: boolean  marigold outline (current selection)
+ *  - data?: Record<string,string>   extra data-* attributes (the EditorMock script reads caption times)
+ * Slot: body content (for example a waveform <svg class="cwd-wave">). Media clips get a filmstrip texture.
+ */
+import '../../styles/area-s1.css';
+import DemoIcon from './DemoIcon.astro';
+import type { DemoIconName } from './demo-icons';
+
+interface Props {
+  kind: 'media' | 'audio' | 'graphics' | 'captions' | 'effects';
+  label: string;
+  icon: DemoIconName;
+  x: number;
+  w: number;
+  selected?: boolean;
+  data?: Record<string, string>;
+}
+const { kind, label, icon, x, w, selected = false, data = {} } = Astro.props;
+const dataAttrs = Object.fromEntries(Object.entries(data).map(([k, v]) => [`data-${k}`, v]));
+---
+<div class={`cwd-clip cwd-clip--${kind}`} style={`--x:${x};--w:${w}`} data-selected={selected ? 'true' : undefined} {...dataAttrs}>
+  <div class="cwd-clip__label"><DemoIcon name={icon} /><span>{label}</span></div>
+  <div class="cwd-clip__body"><slot /></div>
+</div>

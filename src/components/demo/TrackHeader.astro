@@ -1,0 +1,27 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * TrackHeader: left cell of a timeline track (type icon, name, lock and eye toggles as pure decoration).
+ * Props:
+ *  - kind: 'media' | 'audio' | 'graphics' | 'captions' | 'effects'
+ *  - name: string
+ *  - icon: DemoIconName
+ *  - height?: 'sm' | 'md'   track-sm (32px) or track-md (48px, default)
+ */
+import '../../styles/area-s1.css';
+import DemoIcon from './DemoIcon.astro';
+import type { DemoIconName } from './demo-icons';
+
+interface Props {
+  kind: 'media' | 'audio' | 'graphics' | 'captions' | 'effects';
+  name: string;
+  icon: DemoIconName;
+  height?: 'sm' | 'md';
+}
+const { kind, name, icon, height = 'md' } = Astro.props;
+---
+<div class={`cwd-hdr cwd-hdr--${kind}`} style={`--h:var(--track-${height})`}>
+  <DemoIcon name={icon} size="md" />
+  <span class="cwd-hdr__name">{name}</span>
+  <span class="cwd-hdr__toggles"><DemoIcon name="lock" /><DemoIcon name="eye" /></span>
+</div>

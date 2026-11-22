@@ -1,0 +1,272 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Area S1 (EditorMock and AgentDemo): demo-only tokens and the shared timeline vocabulary.
+ * Everything here is built from design tokens; nothing is a literal color or font stack.
+ * Class names are prefixed cwd- ("cutweave demo") so two instances and other areas never collide.
+ * Marigold = playhead, selection and primary action only. Agent blue = agent and AI only.
+ */
+:root {
+  /* Width of the track-header column in the timeline mock. Collapses to an icon cell on narrow containers. */
+  --demo-hdr: calc(var(--space-12) * 3);
+  --demo-hdr-icon: calc(var(--space-8) + var(--space-1));
+
+  /* Height of the ruler row. Same as the product ruler (control-md). */
+  --demo-ruler: var(--control-md);
+
+  /* Ghost (proposed) clip hatch: diagonal agent-blue lines. Always paired with a dashed agent border and the
+     agent-subtle fill, per the brand book (proposals are dashed and hatched until accepted). */
+  --demo-hatch: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--agent) 34%, transparent) 0 var(--border-thin),
+    transparent var(--border-thin) var(--space-1-5)
+  );
+
+  /* Playhead cap: the small marigold flag at the top of the line. */
+  --demo-playhead-cap: calc(var(--space-2) + var(--space-0-5));
+
+  /* Filmstrip texture behind media clips (no real thumbnails): alternating tints of the media body. */
+  --demo-film-a: color-mix(in srgb, var(--clip-media) 22%, var(--clip-media-body));
+  --demo-film-b: color-mix(in srgb, var(--clip-media) 10%, var(--clip-media-body));
+  --demo-film-tile: calc(var(--space-6) + var(--space-2));
+
+  /* Preview scene: calm abstract interview frame drawn from tokens. */
+  --demo-scene-bg: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--clip-media) 26%, var(--surface-0)) 0%,
+    color-mix(in srgb, var(--clip-captions) 16%, var(--surface-0)) 100%
+  );
+  --demo-scene-figure: color-mix(in srgb, var(--surface-3) 62%, var(--clip-media));
+  --demo-scene-rim: color-mix(in srgb, var(--text-primary) 22%, transparent);
+  --demo-scene-bokeh-a: color-mix(in srgb, var(--clip-graphics) 22%, transparent);
+  --demo-scene-bokeh-b: color-mix(in srgb, var(--clip-effects) 18%, transparent);
+  --demo-scene-floor: color-mix(in srgb, var(--surface-0) 55%, transparent);
+
+  /* Caption in a caption style on the preview frame: surface fill and primary text read in both themes. */
+  --demo-caption-bg: color-mix(in srgb, var(--surface-0) 82%, transparent);
+}
+
+/* ---------- Icons ---------- */
+.cwd-icon { flex: none; }
+.cwd-icon--sm { width: var(--icon-sm); height: var(--icon-sm); }
+.cwd-icon--md { width: var(--icon-md); height: var(--icon-md); }
+.cwd-icon--lg { width: var(--icon-lg); height: var(--icon-lg); }
+
+/* ---------- Small chip: "Design preview", "Illustrative". Neutral, dashed = not shipped. ---------- */
+.cwd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: calc(var(--hit-min) - var(--space-1));
+  padding-inline: var(--space-2);
+  border: var(--border-thin) dashed var(--border-control);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ---------- Timeline grid: header column + lanes column ---------- */
+.cwd-tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--demo-hdr) minmax(0, 1fr);
+  background: var(--timeline-lane);
+  border-top: var(--border-thin) solid var(--border-default);
+  overflow: hidden;
+}
+
+.cwd-tl__corner {
+  height: var(--demo-ruler);
+  background: var(--surface-1);
+  border-bottom: var(--border-thin) solid var(--border-subtle);
+  border-right: var(--border-thin) solid var(--border-subtle);
+}
+
+/* Ruler: ticks via gradients (--cwd-minor and --cwd-major are tick counts), labels positioned by fraction. */
+.cwd-ruler {
+  position: relative;
+  height: var(--demo-ruler);
+  background:
+    repeating-linear-gradient(90deg, var(--text-muted) 0 var(--border-thin), transparent var(--border-thin) calc(100% / var(--cwd-major, 6))) bottom / 100% var(--space-2) no-repeat,
+    repeating-linear-gradient(90deg, var(--text-muted) 0 var(--border-thin), transparent var(--border-thin) calc(100% / var(--cwd-minor, 30))) bottom / 100% var(--space-1) no-repeat,
+    var(--surface-1);
+  border-bottom: var(--border-thin) solid var(--border-subtle);
+  overflow: hidden;
+}
+.cwd-ruler__label {
+  position: absolute;
+  top: 0;
+  left: calc(var(--at) * 100%);
+  padding-left: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: var(--demo-ruler);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Track header cell */
+.cwd-hdr {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  height: var(--h, var(--track-md));
+  padding-inline: var(--space-2);
+  background: var(--surface-1);
+  border-bottom: var(--border-thin) solid var(--border-subtle);
+  border-right: var(--border-thin) solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.cwd-hdr > .cwd-icon { color: var(--cwd-c); }
+.cwd-hdr__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cwd-hdr__toggles { display: inline-flex; gap: var(--space-1); color: var(--text-muted); }
+
+/* Lane */
+.cwd-lane {
+  position: relative;
+  height: var(--h, var(--track-md));
+  border-bottom: var(--border-thin) solid var(--border-subtle);
+  background: var(--timeline-lane);
+}
+.cwd-lane--alt { background: var(--timeline-lane-alt); }
+
+/* Playfield: overlays the lanes column (ruler included); only the playhead lives in it. */
+.cwd-playfield {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--demo-hdr);
+  right: 0;
+  pointer-events: none;
+}
+.cwd-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--p, 0) * 100%);
+  width: var(--border-thick);
+  margin-left: calc(var(--border-thick) / -2);
+  background: var(--playhead);
+  z-index: var(--z-playhead);
+}
+.cwd-playhead::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--demo-playhead-cap);
+  height: var(--demo-playhead-cap);
+  transform: translateX(-50%);
+  background: var(--playhead);
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 50% 100%, 0 45%);
+}
+
+/* ---------- Clips ---------- */
+.cwd-clip {
+  --cwd-c: var(--clip-media);
+  --cwd-cb: var(--clip-media-body);
+  position: absolute;
+  top: var(--space-0-5);
+  bottom: var(--space-0-5);
+  left: calc(var(--x) * 1%);
+  width: calc(var(--w) * 1%);
+  min-width: 0;
+  overflow: hidden;
+  border: var(--border-thin) solid var(--cwd-c);
+  border-radius: var(--radius-sm);
+  background: var(--cwd-cb);
+  color: var(--text-primary);
+}
+.cwd-clip--media { --cwd-c: var(--clip-media); --cwd-cb: var(--clip-media-body); }
+.cwd-clip--audio { --cwd-c: var(--clip-audio); --cwd-cb: var(--clip-audio-body); }
+.cwd-clip--graphics { --cwd-c: var(--clip-graphics); --cwd-cb: var(--clip-graphics-body); }
+.cwd-clip--captions { --cwd-c: var(--clip-captions); --cwd-cb: var(--clip-captions-body); }
+.cwd-clip--effects { --cwd-c: var(--clip-effects); --cwd-cb: var(--clip-effects-body); }
+.cwd-hdr--media { --cwd-c: var(--clip-media); }
+.cwd-hdr--audio { --cwd-c: var(--clip-audio); }
+.cwd-hdr--graphics { --cwd-c: var(--clip-graphics); }
+.cwd-hdr--captions { --cwd-c: var(--clip-captions); }
+.cwd-hdr--effects { --cwd-c: var(--clip-effects); }
+
+/* 3px header strip in the strong color. */
+.cwd-clip::before,
+.cwd-seg::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--clip-strip);
+  background: var(--cwd-c);
+  z-index: 1;
+}
+.cwd-clip[data-selected="true"] {
+  outline: var(--border-thick) solid var(--marigold);
+  outline-offset: calc(var(--border-thin) * -1);
+  z-index: 2;
+}
+
+.cwd-clip__label {
+  position: absolute;
+  inset: calc(var(--clip-strip) + var(--space-0-5)) var(--space-1) auto var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  z-index: 1;
+  pointer-events: none;
+}
+.cwd-clip__label > .cwd-icon { color: var(--cwd-c); }
+.cwd-clip__label > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Body area under the label: filmstrip texture or waveform. */
+.cwd-clip__body { position: absolute; inset: calc(var(--clip-strip) + var(--space-4)) 0 0 0; }
+.cwd-clip--media .cwd-clip__body,
+.cwd-seg--media .cwd-seg__body {
+  background: repeating-linear-gradient(90deg, var(--demo-film-a) 0 var(--demo-film-tile), var(--demo-film-b) var(--demo-film-tile) calc(var(--demo-film-tile) * 2));
+}
+
+.cwd-wave { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.cwd-wave path {
+  fill: none;
+  stroke: var(--clip-audio);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Ghost: an agent-proposed clip or region. Dashed agent border, agent-subtle fill, diagonal hatch. */
+.cwd-ghost {
+  border: var(--border-thin) dashed var(--agent);
+  background: var(--demo-hatch), var(--agent-subtle);
+  color: var(--agent-text);
+}
+
+/* ---------- Preview scene (drawn, no photography) ---------- */
+.cwd-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--demo-scene-bg);
+}
+.cwd-scene svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cwd-scene .bokeh-a { fill: var(--demo-scene-bokeh-a); }
+.cwd-scene .bokeh-b { fill: var(--demo-scene-bokeh-b); }
+.cwd-scene .floor { fill: var(--demo-scene-floor); }
+.cwd-scene .figure { fill: var(--demo-scene-figure); }
+.cwd-scene .rim { fill: none; stroke: var(--demo-scene-rim); stroke-width: 0.6; }
+
+/* Waveform drawn through <use> (AgentDemo): stroke inherits from the <use> element. */
+.cwd-wave use { fill: none; stroke: var(--clip-audio); stroke-width: 1.25; }

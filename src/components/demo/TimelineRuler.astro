@@ -1,0 +1,21 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * TimelineRuler: tick marks (drawn with gradients) and mono labels. Decorative; the parent hides it from AT.
+ * Props:
+ *  - labels: { at: number; text: string }[]   at is a fraction 0..1 of the lane width
+ *  - minor?: number    count of minor ticks across the width (default 30)
+ *  - major?: number    count of major ticks across the width (default 6)
+ */
+import '../../styles/area-s1.css';
+
+interface Props {
+  labels: { at: number; text: string }[];
+  minor?: number;
+  major?: number;
+}
+const { labels, minor = 30, major = 6 } = Astro.props;
+---
+<div class="cwd-ruler" style={`--cwd-minor:${minor};--cwd-major:${major}`}>
+  {labels.map((l) => <span class="cwd-ruler__label" style={`--at:${l.at}`}>{l.text}</span>)}
+</div>
