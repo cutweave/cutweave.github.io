@@ -9,5 +9,5 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
-  integrations: [sitemap({ filter: (page) => !page.includes('/styleguide/') })],
+  integrations: [sitemap({ filter: (page) => !page.includes('/styleguide/') && !page.includes('/og-card/') })],
 });

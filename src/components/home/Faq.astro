@@ -1,0 +1,82 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Faq: seven questions as native <details>/<summary> (works without JS, keyboard accessible).
+ * Answers are short and plain, from docs/content-inventory.md sections 2, 6, 10 and 11. Nothing here claims a
+ * feature exists that does not. No props.
+ */
+import '../../styles/area-s4.css';
+import Icon from '../ui/Icon.astro';
+import { LINKS } from '../../site';
+
+const items = [
+  {
+    q: 'Is it ready?',
+    a: 'No. Cutweave is pre-alpha, in Phase 1 of 7, and there is no download yet. The scaffold, design system and five technical spikes are done. The first working build is the Phase 1 milestone. The roadmap shows where things stand.',
+    link: { href: '/roadmap/', label: 'See the roadmap' },
+  },
+  {
+    q: 'Do I need an account?',
+    a: 'No. There is no account, no watermark and no feature tiers. Crash reports are opt-in, and update checks can be turned off. This is the plan for 1.0, written into the project principles.',
+  },
+  {
+    q: 'What do AI features cost?',
+    a: 'You bring your own keys for the providers you choose and pay them directly. Every AI run shows an estimated price first, and you can set budget caps. The AI gateway is planned for Phase 5.',
+  },
+  {
+    q: 'Why GPL?',
+    a: 'The core is GPL-3.0-or-later so it stays open for everyone who uses it. The plugin SDK is MIT or Apache-2.0, so plugin authors choose their own terms. A written plugin exception is a draft pending legal review.',
+    link: { href: '/open-source/', label: 'Read about the license' },
+  },
+  {
+    q: 'Can I build plugins?',
+    a: 'Not yet. Plugins are planned for Phase 6, in layers from data packs and GPU effects to WASM components and UI panels. The built-in effects and providers use the same interfaces.',
+  },
+  {
+    q: 'Will it run on the web or mobile?',
+    a: 'The first release is a desktop app. A browser version and a mobile companion are both on the list for after 1.0, and neither is promised.',
+  },
+  {
+    q: 'Who builds it?',
+    a: 'Mostly AI coding agents, working from public work packages, under human review. Review capacity is the bottleneck, and the project says so. Contributions from people and from agents are welcome, with a DCO sign-off on every commit.',
+    link: { href: LINKS.contributing, label: 'Read the contributing guide', external: true },
+  },
+];
+---
+<div class="faq">
+  {items.map((it) => (
+    <details class="item">
+      <summary>
+        <span class="q">{it.q}</span>
+        <Icon name="arrow-right" size="lg" class="chev" />
+      </summary>
+      <div class="a">
+        <p>{it.a}</p>
+        {it.link && <p><a href={it.link.href} target={it.link.external ? '_blank' : undefined} rel={it.link.external ? 'noopener' : undefined}>{it.link.label}</a></p>}
+      </div>
+    </details>
+  ))}
+</div>
+
+<style>
+  .faq { max-width: var(--content-narrow); border-top: var(--border-thin) solid var(--border-default); }
+  .item { border-bottom: var(--border-thin) solid var(--border-default); }
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: var(--hit-touch);
+    padding-block: var(--space-4);
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover .q { color: var(--text-primary); }
+  summary:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--border-thick); border-radius: var(--radius-sm); }
+  .q { font-size: 18px; line-height: 26px; font-weight: 600; }
+  .item :global(.chev) { color: var(--text-secondary); transition: transform var(--duration-base) var(--easing-standard); }
+  .item[open] :global(.chev) { transform: rotate(90deg); }
+  .a { padding-bottom: var(--space-4); max-width: var(--prose-max); display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-secondary); font-size: var(--text-body-size); line-height: var(--text-body-line); }
+  .a a { color: var(--text-primary); text-underline-offset: var(--space-0-5); }
+</style>

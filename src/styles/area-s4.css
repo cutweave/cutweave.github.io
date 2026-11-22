@@ -1,0 +1,21 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Area S4 (landing page): tokens used only by src/components/home. Built from existing tokens.
+ * Marigold = "here" and primary actions. Agent blue = AI and agent content only.
+ */
+:root {
+  /* Glow around the hero product shot: a faint marigold wash above and an agent wash below. Decorative only. */
+  --home-frame-glow:
+    0 0 0 var(--border-thin) var(--border-default),
+    0 calc(var(--space-12) * -0.5) calc(var(--space-12) * 1.5) calc(var(--space-6) * -1) var(--marigold-subtle),
+    0 var(--space-12) calc(var(--space-12) * 2) calc(var(--space-6) * -1) var(--agent-subtle);
+
+  /* Hero spacing: top padding shorter than a regular section so the headline sits high on the first screen. */
+  --home-hero-top: calc(var(--section-space) * 0.6);
+
+  /* Vignette caption sizing inside the dark frame. */
+  --home-caption-size: 15px;
+
+  /* Vertical aspect frame width inside the format vignette (9:16). */
+  --home-portrait-width: calc(var(--space-12) * 2);
+}

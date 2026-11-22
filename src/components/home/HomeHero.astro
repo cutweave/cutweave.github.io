@@ -1,0 +1,86 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * HomeHero: the landing hero. Status chip, display headline, subhead, creator line, two actions and the
+ * EditorMock product shot (a Design preview, GAP-01) framed with a soft marigold and agent glow.
+ * Copy is fixed by docs/site-plan.md section 2.
+ * Props:
+ *  - headingId?: string   id of the h1 (default 'home-title')
+ */
+import '../../styles/area-s4.css';
+import Container from '../ui/Container.astro';
+import Button from '../ui/Button.astro';
+import StatusChip from '../ui/StatusChip.astro';
+import EditorMock from '../demo/EditorMock.astro';
+import { LINKS } from '../../site';
+
+interface Props { headingId?: string }
+const { headingId = 'home-title' } = Astro.props;
+---
+<section class="hero" aria-labelledby={headingId}>
+  <Container>
+    <div class="copy">
+      <StatusChip status="in-progress" label="Pre-alpha · Phase 1 of 7 · No download yet" />
+      <h1 id={headingId}>Edit by hand. Or hand it to an agent.</h1>
+      <p class="sub">
+        Cutweave is an open-source video editor for creators and their AI agents. Every edit is a command, so you
+        and your agent work on the same timeline, and the agent sees rendered frames, not screenshots.
+      </p>
+      <p class="creators">CapCut-class editing you own: no account, no watermark, your own AI keys.</p>
+      <div class="actions">
+        <Button variant="primary" size="lg" href="#demo" iconEnd="arrow-right">See an agent edit</Button>
+        <Button size="lg" href={LINKS.repo} icon="github" external>Follow on GitHub</Button>
+      </div>
+    </div>
+    <div class="shot">
+      <div class="frame">
+        <EditorMock variant="hero" />
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .hero {
+    padding-top: var(--home-hero-top);
+    padding-bottom: var(--section-space);
+    background: var(--glow-marigold), var(--glow-agent);
+    overflow: clip;
+  }
+  .copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--stack-md);
+    max-width: 56rem;
+  }
+  h1 {
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--display-hero-size);
+    line-height: var(--display-hero-line);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  .sub {
+    max-width: var(--prose-max);
+    color: var(--text-secondary);
+    font-size: var(--text-lede-size);
+    line-height: var(--text-lede-line);
+  }
+  .creators {
+    max-width: var(--prose-max);
+    color: var(--text-primary);
+    font-size: var(--text-lede-size);
+    line-height: var(--text-lede-line);
+    font-weight: 600;
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
+  .shot { margin-top: calc(var(--stack-lg) * 1.5); }
+  .frame {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--home-frame-glow);
+    background: var(--surface-1);
+  }
+</style>

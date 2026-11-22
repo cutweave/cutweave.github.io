@@ -1,0 +1,69 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Pillars: the three promises, one line and one concrete fact each (site plan section 5.2).
+ * Facts come from docs/content-inventory.md sections 2.1, 2.2, 2.4 and 2.6. No props.
+ * Headings are h3 so they sit under the section's h2.
+ */
+import Card from '../ui/Card.astro';
+import Icon from '../ui/Icon.astro';
+
+const pillars = [
+  {
+    id: 'agent-native',
+    icon: 'terminal' as const,
+    name: 'Agent-native',
+    line: 'Anything you can do in the interface, an agent can do over MCP.',
+    fact: 'A CI test checks that every command is reachable as an MCP tool, with the same schema.',
+    agent: true,
+  },
+  {
+    id: 'yours',
+    icon: 'shield-check' as const,
+    name: 'Yours',
+    line: 'No account, no watermark, no paywall. Your keys, your files.',
+    fact: 'The core is GPL-3.0. A project is a folder with a documented JSON file.',
+  },
+  {
+    id: 'familiar',
+    icon: 'scissors' as const,
+    name: 'Familiar',
+    line: 'The CapCut workflow, for short-form and long-form video.',
+    fact: 'Magnetic timeline, styled captions and text-based editing are on the roadmap.',
+  },
+];
+---
+<ul class="pillars">
+  {pillars.map((p) => (
+    <Card as="li" tone="raised" class="pillar">
+      <span class:list={['mark', p.agent && 'mark-agent']}><Icon name={p.icon} size="lg" /></span>
+      <h3 id={`pillar-${p.id}`}>{p.name}</h3>
+      <p class="line">{p.line}</p>
+      <p class="fact">{p.fact}</p>
+    </Card>
+  ))}
+</ul>
+
+<style>
+  .pillars { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16.5rem, 1fr)); list-style: none; padding: 0; margin: 0; }
+  .mark {
+    display: inline-grid;
+    place-items: center;
+    width: var(--control-lg);
+    height: var(--control-lg);
+    border-radius: var(--radius-md);
+    background: var(--surface-3);
+    color: var(--text-primary);
+  }
+  .mark-agent { background: var(--agent-subtle); color: var(--agent-text); }
+  h3 { font-size: var(--display-card-size); line-height: 1.25; font-weight: 600; margin-top: var(--space-2); }
+  .line { font-size: var(--text-body-size); line-height: var(--text-body-line); color: var(--text-primary); }
+  .fact {
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: var(--border-thin) solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 22px;
+  }
+</style>
