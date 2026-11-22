@@ -1,20 +1,115 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Placeholder: another agent replaces this page. Keep the layout, one h1 and the title/description props.
+// /roadmap/: where the project is, what exists, what is measured, and what comes after 1.0.
+// Facts: docs/content-inventory.md sections 3.11, 9 and 10 (state as of HEAD 6ca1af7, 2026-11-22).
+import '../../styles/area-s3.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
+import Section from '../../components/ui/Section.astro';
+import Card from '../../components/ui/Card.astro';
+import StatusChip from '../../components/ui/StatusChip.astro';
+import Button from '../../components/ui/Button.astro';
+import RoadmapTimeline from '../../components/roadmap/RoadmapTimeline.astro';
+import ProofStrip from '../../components/roadmap/ProofStrip.astro';
+import { BUILT, NEXT_IN_P1, AFTER_1_0 } from '../../data/roadmap';
+import { LINKS } from '../../site';
 ---
-<BaseLayout title="Roadmap" description="What Cutweave has built, what is in progress and what comes next.">
-  <Container>
-    <div class="stub">
-      <h1>Roadmap</h1>
-      <p>This page is coming soon: what is built, in progress and planned.</p>
+<BaseLayout
+  title="Where Cutweave is"
+  description="The Cutweave roadmap: Phase 0 is done, Phase 1 is under way, and there is no download yet. What is built, what is measured in spikes, and what comes after 1.0."
+>
+  <header class="hero">
+    <Container>
+      <div class="hero-inner">
+        <p class="eyebrow">Roadmap</p>
+        <h1>Where Cutweave is</h1>
+        <p class="lede">
+          Phase 0 is done with a provisional go, Phase 1 is under way, and there is no download yet.
+        </p>
+        <p class="stamp">
+          <StatusChip status="in-progress" label="Pre-alpha · Phase 1 of 7" />
+          <span>State as of November 2026. Dates are rough and are re-estimated after each phase.</span>
+        </p>
+        <p class="note">
+          The plan is about 14 months to 1.0 and about 7.5 months to a Public Alpha. Human review capacity is the
+          stated bottleneck.
+        </p>
+      </div>
+    </Container>
+  </header>
+
+  <Section id="phases" eyebrow="The plan" title="Eight phases to 1.0" lede="Each phase ends at a milestone with a test you can check. The marigold marker shows the phase being worked on now.">
+    <RoadmapTimeline />
+  </Section>
+
+  <Section id="built" tone="raised" eyebrow="In the repo today" title="Built so far" lede="This is code that exists and runs in tests. None of it lets you edit a video yet: no media can be imported, played or exported.">
+    <ul class="cards">
+      {BUILT.map((b) => (
+        <Card as="li">
+          <div><StatusChip status="built" /></div>
+          <h3 class="card-title">{b.title}</h3>
+          <p class="card-text">{b.text}</p>
+        </Card>
+      ))}
+    </ul>
+
+    <h3 class="sub">Next in Phase 1</h3>
+    <p class="sub-lede">Not merged yet. Together these make up the M1 milestone.</p>
+    <ul class="cards">
+      {NEXT_IN_P1.map((n) => (
+        <Card as="li">
+          <div><StatusChip status="planned" label="Planned · P1" /></div>
+          <h4 class="card-title">{n.title}</h4>
+          <p class="card-text">{n.text}</p>
+        </Card>
+      ))}
+    </ul>
+  </Section>
+
+  <Section id="proof" eyebrow="Evidence" title="Measured in the Phase 0 spikes" lede="Throwaway prototypes tested the riskiest ideas before the product was built on them. These are the results.">
+    <ProofStrip variant="full" headingLevel={3} />
+  </Section>
+
+  <Section id="after" tone="raised" eyebrow="Beyond the plan" title="After 1.0" lede="In rough order. None of this is promised for 1.0.">
+    <ol class="later">
+      {AFTER_1_0.map((item) => (
+        <li><StatusChip status="later" /> <span>{item}</span></li>
+      ))}
+    </ol>
+  </Section>
+
+  <Section id="follow" width="narrow" eyebrow="Keep up" title="How to follow along" lede="The work happens in public on GitHub. There is no newsletter, and nothing to sign up for.">
+    <ul class="follow">
+      <li><a href={LINKS.repo}>The repository</a>: the code and its history.</li>
+      <li><a href={LINKS.issues}>Issues</a>: work packages, bugs and requests.</li>
+      <li><a href={LINKS.docs}>The docs folder</a>: the product brief, architecture, roadmap and decision records.</li>
+    </ul>
+    <div class="actions">
+      <Button href={LINKS.repo} variant="primary" external icon="github">Follow on GitHub</Button>
+      <Button href="/open-source/" iconEnd="arrow-right">See how to contribute</Button>
     </div>
-  </Container>
+  </Section>
 </BaseLayout>
 
 <style>
-  .stub { padding-block: var(--section-space); display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
-  h1 { font-family: var(--font-display); font-size: var(--display-section-size); line-height: var(--display-section-line); font-weight: 700; letter-spacing: -0.02em; }
-  p { color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
+  .hero { padding-block: var(--section-space) var(--space-8); background: var(--glow-marigold); }
+  .hero-inner { display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
+  .eyebrow { font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); font-weight: 650; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); }
+  h1 { font-family: var(--font-display); font-size: var(--display-hero-size); line-height: var(--display-hero-line); font-weight: 700; letter-spacing: -0.02em; }
+  .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
+  .stamp { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .note { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-4); }
+  .card-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .card-text { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .sub { margin-top: var(--space-12); font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 700; }
+  .sub-lede { margin: var(--space-2) 0 var(--space-6); color: var(--text-secondary); }
+
+  .later { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-3); counter-reset: later; }
+  .later li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border: var(--border-thin) dashed var(--border-default); border-radius: var(--radius-md); color: var(--text-secondary); }
+
+  .follow { display: flex; flex-direction: column; gap: var(--space-3); color: var(--text-secondary); }
+  .follow a { color: var(--text-primary); font-weight: 600; }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-6); }
 </style>

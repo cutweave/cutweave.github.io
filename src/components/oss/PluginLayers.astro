@@ -1,0 +1,151 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * PluginLayers: the plugin layers L0 to L4 as a visual stack (an ordered list, lowest layer first).
+ * Each layer says what a third party builds there. Everything here is planned (Phase 6); L4 is later (v2 and up).
+ * Source: docs/content-inventory.md section 7.1 (arch section 15, ADR-0010).
+ * Props:
+ *  - compact?: boolean   false (default) = full stack with mechanism and sandbox per layer, the manifest snippet
+ *                        (labelled Illustrative) and the "plugin commands appear everywhere" note.
+ *                        true = the six layers as a short stack with one line each, no snippet, for the landing page.
+ *  - headingLevel?: 3 | 4   level of the snippet heading in the full variant (default 3)
+ *  - cta?: boolean       compact only: link to /open-source/ (default false)
+ */
+import '../../styles/area-s3.css';
+import StatusChip from '../ui/StatusChip.astro';
+import CodeBlock from '../ui/CodeBlock.astro';
+import Button from '../ui/Button.astro';
+
+interface Props {
+  compact?: boolean;
+  headingLevel?: 3 | 4;
+  cta?: boolean;
+}
+const { compact = false, headingLevel = 3, cta = false } = Astro.props;
+const Heading = `h${headingLevel}` as 'h3';
+
+const layers = [
+  { id: 'L0', name: 'Data packs', builds: 'LUTs, fonts, stickers, music, caption styles, text presets, templates and export presets.',
+    how: 'Files and a manifest. Data only, validated.', status: 'planned' as const, label: 'Planned · P6' },
+  { id: 'L1', name: 'GPU effects', builds: 'Effects, transitions, blend modes and generators in WGSL.',
+    how: 'A shader plus an effect.toml. Validated, with a GPU time budget and auto-disable.', status: 'planned' as const, label: 'Planned · P6' },
+  { id: 'L1.5', name: 'Compositions', builds: 'Animated text, motion graphics and code templates in TypeScript and JSX.',
+    how: 'Run in QuickJS with no I/O, no clock, a seeded random generator and CPU and memory limits.', status: 'planned' as const, label: 'Planned · P6' },
+  { id: 'L2', name: 'WASM components', builds: 'AI provider adapters, importers and exporters, publishers, command handlers and audio effects.',
+    how: 'wasmtime with WIT interfaces. Capability permissions: a network allowlist, scoped files, no keys.', status: 'planned' as const, label: 'Planned · P6' },
+  { id: 'L3', name: 'UI panels', builds: 'Panels, inspectors and dialogs.',
+    how: 'Each panel runs in its own OS-sandboxed view, with a CSP, no Node, and permissioned RPC.', status: 'planned' as const, label: 'Planned · P6' },
+  { id: 'L4', name: 'Native', builds: 'CLAP and VST3 plugins, OFX, and codecs.',
+    how: 'A separate process with IPC. Native code is never loaded into the editor.', status: 'later' as const, label: 'Later · v2+' },
+];
+
+const manifest = `# cutweave-plugin.toml
+id = "example.lower-thirds"
+version = "0.1.0"
+host_api = "^1"
+
+[[contributions]]
+kind = "composition"
+id = "lower-third"
+
+[permissions]
+network = []   # none requested`;
+---
+<div class:list={['layers', compact && 'layers-compact']}>
+  <ol class="stack" aria-label="Plugin layers, from data packs up to native code">
+    {layers.map((l) => (
+      <li class:list={['layer', l.status === 'later' && 'layer-later']}>
+        <span class="tag">{l.id}</span>
+        <div class="body">
+          <p class="name">{l.name}</p>
+          <p class="builds">{l.builds}</p>
+          {!compact && <p class="how">{l.how}</p>}
+        </div>
+        {!compact && <StatusChip status={l.status} label={l.label} />}
+      </li>
+    ))}
+  </ol>
+  {compact ? (
+    <p class="status-note"><StatusChip status="planned" label="Planned · P6" /> <span>Built-in effects and transitions are meant to use the same interfaces.</span></p>
+  ) : (
+    <>
+      <p class="note">
+        A plugin command is registered in the same registry as the built-ins, so it shows up in the command palette, the
+        command line and MCP with no extra work. Built-in effects, transitions and providers are meant to use the same
+        interfaces that third parties do.
+      </p>
+      <div class="snippet">
+        <div class="snippet-head">
+          <Heading class="snippet-title">What a plugin declares</Heading>
+          <span class="illustrative">Illustrative</span>
+        </div>
+        <CodeBlock code={manifest} lang="toml" label="cutweave-plugin.toml" />
+        <p class="foot">Field names follow the planned manifest; the values are invented. No plugin runs today.</p>
+      </div>
+    </>
+  )}
+  {compact && cta && <div class="cta"><Button href="/open-source/#plugins" iconEnd="arrow-right">See the plugin layers</Button></div>}
+</div>
+
+<style>
+  .layers { display: flex; flex-direction: column; gap: var(--space-6); }
+  .stack { display: flex; flex-direction: column; gap: var(--space-2); }
+  .layer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-2) var(--space-4);
+    align-items: start;
+    padding: var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-left-width: var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+  }
+  .layer-later { background: transparent; border-style: dashed; }
+  .tag {
+    display: inline-grid;
+    place-items: center;
+    min-width: var(--space-12);
+    height: var(--control-md);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface-3);
+    font-family: var(--font-mono);
+    font-size: var(--s3-text-sm);
+    font-weight: 600;
+  }
+  .body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .name { font-weight: 650; }
+  .builds { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .how { color: var(--text-muted); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  /* The chip sits under the text on phones and at the end of the row from tablet up. */
+  .layer > :global(.chip) { grid-column: 2; justify-self: start; }
+  /* A stack that widens upwards: each higher layer is indented a little, like steps. */
+  @media (min-width: 720px) {
+    .layer { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
+    .layer > :global(.chip) { grid-column: auto; justify-self: end; }
+    .layer:nth-child(2) { margin-left: var(--space-3); }
+    .layer:nth-child(3) { margin-left: var(--space-6); }
+    .layer:nth-child(4) { margin-left: calc(var(--space-6) + var(--space-3)); }
+    .layer:nth-child(5) { margin-left: var(--space-8); }
+    .layer:nth-child(6) { margin-left: calc(var(--space-8) + var(--space-3)); }
+  }
+  .layers-compact .layer { padding: var(--space-3) var(--space-4); }
+  .layers-compact .layer:nth-child(n) { margin-left: 0; }
+  .note { max-width: var(--prose-max); color: var(--text-secondary); }
+  .status-note { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .snippet { display: flex; flex-direction: column; gap: var(--space-2); max-width: var(--layer-width-lg); }
+  .snippet-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .snippet-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .illustrative {
+    padding-inline: var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: var(--s3-text-xs);
+    line-height: var(--s3-text-xs-line);
+    font-weight: 600;
+  }
+  .foot { color: var(--text-muted); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .cta { margin-top: var(--space-2); }
+</style>
