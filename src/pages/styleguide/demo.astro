@@ -1,0 +1,34 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Hidden (noindex, excluded from the sitemap) review page for the S1 demo components.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/ui/Section.astro';
+import Container from '../../components/ui/Container.astro';
+import EditorMock from '../../components/demo/EditorMock.astro';
+import AgentDemo from '../../components/demo/AgentDemo.astro';
+---
+<BaseLayout title="Demo components" description="Internal review page for EditorMock and AgentDemo." noindex>
+  <Section eyebrow="Internal" title="Demo components" lede="EditorMock (hero, compact, static) and AgentDemo. Switch theme with the header toggle; resize to 360 px; try reduced motion.">
+    <p class="note">Hidden from search and the sitemap. Source: <code>src/components/demo/</code>, script data in <code>src/data/agent-demo.ts</code>.</p>
+  </Section>
+
+  <Section tone="raised" level={2} title="EditorMock, hero" id="editor-hero">
+    <EditorMock variant="hero" />
+  </Section>
+
+  <Section level={2} title="EditorMock, compact" id="editor-compact">
+    <Container size="narrow"><EditorMock variant="compact" /></Container>
+  </Section>
+
+  <Section tone="raised" level={2} title="EditorMock, static (animate=false)" id="editor-static">
+    <Container size="narrow"><EditorMock variant="compact" animate={false} /></Container>
+  </Section>
+
+  <Section level={2} title="Watch an agent edit" id="demo" lede="A scripted, illustrative MCP session beside a timeline that changes in step.">
+    <AgentDemo />
+  </Section>
+</BaseLayout>
+
+<style>
+  .note { color: var(--text-secondary); }
+</style>

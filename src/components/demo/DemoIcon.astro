@@ -1,0 +1,34 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * DemoIcon: same drawing rules as ui/Icon (24-unit grid, 1.75 stroke, currentColor) with the
+ * extra transport and clip-type glyphs the demo needs. Decorative only (aria-hidden).
+ * Props:
+ *  - name: DemoIconName
+ *  - size?: 'sm' | 'md' | 'lg'   14 / 16 / 20 px (default 'sm')
+ */
+import { demoIcons, type DemoIconName } from './demo-icons';
+
+interface Props {
+  name: DemoIconName;
+  size?: 'sm' | 'md' | 'lg';
+}
+const { name, size = 'sm' } = Astro.props;
+const inner = demoIcons[name]
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace(/^[\s\S]*?<svg[^>]*>/, '')
+  .replace(/<\/svg>\s*$/, '')
+  .trim();
+---
+<svg
+  class:list={['cwd-icon', `cwd-icon--${size}`]}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.75"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  focusable="false"
+><Fragment set:html={inner} /></svg>

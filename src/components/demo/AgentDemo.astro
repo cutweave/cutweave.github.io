@@ -1,0 +1,807 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * AgentDemo: the "Watch an agent edit" player. A scripted, replayable MCP session on the left and a timeline
+ * that changes in step on the right. Data-driven from src/data/agent-demo.ts.
+ *
+ * Props:
+ *  - id?: string        unique per instance on a page (default 'agent-demo'); scopes element ids
+ *  - script?: DemoScript   defaults to the bundled script
+ *
+ * Behaviour (see the <script> below): play, pause, previous, next and replay buttons; autoplay only when
+ * scrolled into view and only without prefers-reduced-motion (otherwise it waits on step 1); at the end the
+ * visitor presses Accept or Reject on the proposal bar. Without JavaScript the full transcript and the final
+ * proposal state render statically (controls and Accept/Reject are hidden because they could not work).
+ *
+ * GAP-02: replace the scripted player with a captioned screen recording of an agent over MCP once
+ *         WP-1O.04 / WP-7G.02 exist.
+ * GAP-03: the script uses real planned tool names with invented values; regenerate src/data/agent-demo.ts from a
+ *         real `cutweave mcp --headless` run (WP-1J, WP-2I) and nothing here needs to change.
+ * Honesty: carries an "Illustrative" chip and a footnote linking the real Phase 0 spike run
+ *          (docs/site-plan.md section 3).
+ *
+ * Accessibility: transcript is an ordered list in a labelled, focusable scroll region; one polite live region
+ * announces a one-line summary per step (never per token); the timeline drawing is aria-hidden and has a text
+ * summary; every control is a real <button>.
+ */
+import '../../styles/area-s1.css';
+import AgentBadge from '../ui/AgentBadge.astro';
+import Icon from '../ui/Icon.astro';
+import DemoIcon from './DemoIcon.astro';
+import TimelineRuler from './TimelineRuler.astro';
+import TrackHeader from './TrackHeader.astro';
+import PreviewScene from './PreviewScene.astro';
+import { wavePath } from './waveform';
+import { agentDemo, type DemoScript } from '../../data/agent-demo';
+
+interface Props {
+  id?: string;
+  script?: DemoScript;
+}
+const { id = 'agent-demo', script = agentDemo } = Astro.props;
+const { steps, proposal, cuts, captions, sequence } = script;
+const last = steps.length - 1;
+const SPIKE_REPORT = 'https://github.com/cutweave/cutweave/blob/main/spikes/s5-command-bus/AGENT-RUN-REPORT.md';
+
+// Segments of the interview clip: kept pieces and cut pieces (percent of the original duration).
+type Seg = { cut: boolean; kind?: string; start: number; end: number };
+const segs: Seg[] = [];
+let pos = 0;
+for (const c of cuts) {
+  if (c.start > pos) segs.push({ cut: false, start: pos, end: c.start });
+  segs.push({ cut: true, kind: c.kind, start: c.start, end: c.start + c.len });
+  pos = c.start + c.len;
+}
+if (pos < 100) segs.push({ cut: false, start: pos, end: 100 });
+const removed = cuts.reduce((sum, c) => sum + c.len, 0);
+const keptPct = 100 - removed;
+
+const wave = wavePath(5, 360, (x) => {
+  const c = cuts.find((k) => x * 100 >= k.start && x * 100 < k.start + k.len);
+  return c ? (c.kind === 'silence' ? 0.06 : 0.4) : 1;
+});
+
+const rulerLabels = Array.from({ length: 6 }, (_, i) => ({ at: (i * 120) / 702, text: `${i * 2}:00` }));
+const proposalParts = proposal.title.split(': ');
+const lead = proposalParts.length > 1 ? `${proposalParts[0]}:` : '';
+const rest = proposalParts.length > 1 ? proposalParts.slice(1).join(': ') : proposal.title;
+
+const config = {
+  steps: steps.map((s) => ({
+    silences: s.timeline.silences,
+    captions: s.timeline.captions,
+    summary: s.summary,
+    timeline: s.timelineSummary,
+    dwell: s.dwell ?? 2800,
+  })),
+  proposal: {
+    history: proposal.historyText,
+    reject: proposal.rejectText,
+    after: sequence.after,
+    before: sequence.before,
+  },
+};
+const finalState = steps[last]?.timeline ?? { silences: 'none', captions: 'none' };
+---
+<section
+  class="ad"
+  data-ad
+  data-phase="proposal"
+  data-silences={finalState.silences}
+  data-captions={finalState.captions}
+  aria-label="Watch an agent edit: a scripted, illustrative session"
+>
+  <div class="ad__grid">
+    <!-- Transcript -->
+    <div class="ad__panel ad__chat">
+      <div class="ad__head">
+        <span class="ad__title" id={`${id}-chat`}>MCP session</span>
+        <span class="cwd-chip">Illustrative</span>
+      </div>
+      <div class="ad__scroll" data-scroll tabindex="0" role="region" aria-labelledby={`${id}-chat`}>
+        <ol class="ad__steps">
+          {steps.map((step, i) => {
+            const hasAgent = step.entries.some((e) => e.type !== 'user');
+            let agentStarted = false;
+            return (
+              <li class="ad__step" data-step={i}>
+                {step.entries.map((e) => {
+                  if (e.type === 'user') {
+                    return (
+                      <div class="ad__user">
+                        <p class="ad__who">You <span>in {e.client}</span></p>
+                        <p class="ad__user-text">{e.text}</p>
+                      </div>
+                    );
+                  }
+                  const showBadge = hasAgent && !agentStarted;
+                  agentStarted = true;
+                  return (
+                    <div class="ad__agent">
+                      {showBadge && <AgentBadge size="sm" label="Agent" />}
+                      {e.type === 'agent' && <p class="ad__prose">{e.text}</p>}
+                      {e.type === 'call' && (
+                        <p class="ad__call"><span class="ad__tool">{e.tool}</span> <span class="ad__args">{e.args}</span></p>
+                      )}
+                      {e.type === 'result' && (
+                        <p class="ad__result">
+                          <span>{e.text}</span>
+                          {e.cost && <span class="ad__cost"><Icon name="sparkles" size="sm" /><span>{e.cost}</span></span>}
+                        </p>
+                      )}
+                      {e.type === 'image' && (
+                        <figure class="ad__sheet">
+                          <div class="ad__frames" role="img" aria-label={e.alt}>
+                            {e.frames.map((f) => (
+                              <div class="ad__frame"><PreviewScene pose={f.pose} /><span class="ad__ftime">{f.time}</span></div>
+                            ))}
+                          </div>
+                          <figcaption class="ad__fcap">{e.caption}</figcaption>
+                        </figure>
+                      )}
+                    </div>
+                  );
+                })}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="ad__panel ad__side">
+      <div class="ad__head">
+        <span class="ad__title" id={`${id}-tl`}>Timeline <span class="ad__seq">{sequence.name}</span></span>
+        <span class="ad__len timecode" data-len>{sequence.before}</span>
+      </div>
+
+      <div class="ad__pane" aria-hidden="true">
+        <div class="ad__pframe">
+          <PreviewScene pose={2} />
+          <div class="ad__pcap">{captions[0]}</div>
+        </div>
+      </div>
+
+      <!-- One slot, four phases: nothing yet, proposal bar, accepted history, rejected history. -->
+      <div class="ad__slot">
+        <p class="ad__idle" data-for="working">No proposal yet. The agent is still working.</p>
+
+        <div class="ad__bar" data-for="proposal" role="region" aria-label="Agent proposal">
+          <div class="ad__bar-row">
+            <AgentBadge label="Agent" />
+            <p class="ad__bar-title">{lead && <strong>{lead}</strong>} {rest}</p>
+          </div>
+          <p class="ad__bar-cost">{proposal.cost} · {proposal.budget}</p>
+          <div class="ad__bar-actions">
+            <button type="button" class="ad__btn ad__btn--agent" data-accept>Accept</button>
+            <button type="button" class="ad__btn" data-reject>Reject</button>
+          </div>
+        </div>
+
+        <div class="ad__hist" data-for="accepted">
+          <span class="ad__actor"><Icon name="sparkles" size="sm" /><span class="ad__actor-id">{proposal.actor}</span></span>
+          <p class="ad__hist-text">{proposal.historyText}</p>
+          <span class="ad__undo">{proposal.undoSteps} undo step</span>
+        </div>
+
+        <div class="ad__hist ad__hist--rejected" data-for="rejected">
+          <DemoIcon name="undo-2" size="md" />
+          <p class="ad__hist-text">{proposal.rejectText}</p>
+        </div>
+      </div>
+
+      <div class="ad__tlbox">
+        <div class="cwd-tl ad__tl" aria-hidden="true">
+          <div class="cwd-tl__corner"></div>
+          <TimelineRuler labels={rulerLabels} minor={36} major={6} />
+
+          <TrackHeader kind="media" name="Video V1" icon="film" />
+          <div class="cwd-lane" style="--h:var(--track-md)">
+            <div class="ad__row ad__row--media">
+              {segs.map((s) => (
+                <div class={`cwd-seg cwd-seg--media ad__seg${s.cut ? ' ad__seg--cut' : ''}`} style={`--w:${(s.end - s.start).toFixed(3)}`}>
+                  <div class="cwd-seg__body"></div>
+                </div>
+              ))}
+              <div class="cwd-clip__label ad__label"><DemoIcon name="film" /><span>{sequence.name}.mov</span></div>
+            </div>
+          </div>
+
+          <TrackHeader kind="audio" name="Audio A1" icon="audio-waveform" />
+          <div class="cwd-lane cwd-lane--alt" style="--h:var(--track-md)">
+            <div class="ad__row ad__row--audio">
+              {segs.map((s) => (
+                <div class={`cwd-seg cwd-seg--audio ad__seg${s.cut ? ' ad__seg--cut' : ''}`} style={`--w:${(s.end - s.start).toFixed(3)}`}>
+                  <div class="cwd-seg__body">
+                    <svg class="cwd-wave" viewBox={`${(s.start * 10).toFixed(2)} 0 ${((s.end - s.start) * 10).toFixed(2)} 100`} preserveAspectRatio="none" focusable="false"><use href={`#${id}-wf`} /></svg>
+                  </div>
+                </div>
+              ))}
+              <div class="cwd-clip__label ad__label"><DemoIcon name="audio-waveform" /><span>{sequence.name}.wav</span></div>
+            </div>
+          </div>
+
+          <TrackHeader kind="captions" name="Captions" icon="captions" height="sm" />
+          <div class="cwd-lane" style="--h:var(--track-sm)">
+            {captions.map((t, i) => (
+              <div class="cwd-clip cwd-clip--captions ad__cap" style={`--x:${((i * keptPct) / captions.length).toFixed(3)};--w:${(keptPct / captions.length - 0.5).toFixed(3)};--i:${i}`}>
+                <div class="cwd-clip__label"><DemoIcon name="captions" /><span>{t}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <svg width="0" height="0" class="ad__defs" aria-hidden="true" focusable="false">
+          <defs><path id={`${id}-wf`} d={wave} vector-effect="non-scaling-stroke"></path></defs>
+        </svg>
+      </div>
+      <p class="sr-only" data-tsum>{steps[last]?.timelineSummary}</p>
+    </div>
+  </div>
+
+  <div class="ad__controls" role="group" aria-label="Demo controls">
+    <button type="button" class="ad__ctl" data-prev aria-label="Previous step"><DemoIcon name="step-back" size="md" /></button>
+    <button type="button" class="ad__ctl ad__ctl--wide" data-play>
+      <span data-play-icon><DemoIcon name="play" size="md" /></span>
+      <span data-pause-icon hidden><DemoIcon name="pause" size="md" /></span>
+      <span data-play-label>Play</span>
+    </button>
+    <button type="button" class="ad__ctl" data-next aria-label="Next step"><DemoIcon name="step-forward" size="md" /></button>
+    <span class="ad__count" data-count>Step {steps.length} of {steps.length}</span>
+    <span class="ad__progress" aria-hidden="true">{steps.map((_, i) => <span class="ad__pip" data-pip={i}></span>)}</span>
+    <button type="button" class="ad__ctl ad__ctl--wide ad__replay" data-replay><DemoIcon name="rotate-ccw" size="md" /><span>Replay</span></button>
+  </div>
+
+  <p class="sr-only" aria-live="polite" data-live></p>
+
+  <!-- GAP-02, GAP-03: illustrative until a real recording and a real headless-run transcript exist. -->
+  <p class="ad__note">
+    <strong>Illustrative.</strong> Tool names are from the planned MCP surface; the values are invented. What exists today is a Phase 0 spike that ran a real four-call version (<code>media_import</code>, <code>timeline_insert</code>, <code>clip_split</code>, <code>render_frame</code>) in 3 of 3 runs, with no screenshots.
+    <a href={SPIKE_REPORT}>Read the spike run report<Icon name="external-link" size="sm" /></a>
+  </p>
+
+  <script type="application/json" data-config is:inline set:html={JSON.stringify(config)}></script>
+</section>
+
+<style>
+  .ad {
+    container-type: inline-size;
+    display: grid;
+    gap: var(--space-4);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    line-height: 20px;
+  }
+  .ad__grid { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+  @container (min-width: 840px) {
+    .ad__grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+    .ad__chat { height: auto; }
+    .ad__chat .ad__scroll { position: absolute; inset: var(--panel-header) 0 0 0; height: auto; }
+  }
+
+  /* ---------- Panels ---------- */
+  .ad__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+    overflow: hidden;
+  }
+  .ad__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: var(--panel-header);
+    padding: var(--space-1) var(--space-3);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+    flex: none;
+  }
+  .ad__title { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.02em; }
+  .ad__seq { margin-left: var(--space-2); color: var(--text-secondary); font-family: var(--font-mono); font-weight: 400; }
+  .ad__len { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Transcript ---------- */
+  .ad__scroll {
+    height: calc(var(--space-12) * 8);
+    overflow-y: auto;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    scrollbar-gutter: stable;
+  }
+  .ad__steps { display: grid; gap: var(--space-4); }
+  .ad__step { display: grid; gap: var(--space-2); min-width: 0; }
+  .ad__step[hidden] { display: none; }
+  .ad__step.is-new { animation: ad-in var(--duration-slow) var(--easing-enter) both; }
+  @keyframes ad-in {
+    from { opacity: 0; transform: translateY(var(--space-1)); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .ad__user {
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+  }
+  .ad__who { font-size: 11px; line-height: 14px; font-weight: 600; color: var(--text-secondary); }
+  .ad__who span { font-weight: 400; color: var(--text-muted); }
+  .ad__user-text { margin-top: var(--space-1); color: var(--text-primary); }
+
+  .ad__agent {
+    display: grid;
+    gap: var(--space-1-5);
+    justify-items: start;
+    padding-left: var(--space-3);
+    border-left: var(--border-thick) solid var(--agent);
+    min-width: 0;
+  }
+  .ad__prose { color: var(--agent-text); }
+  .ad__call {
+    max-width: 100%;
+    padding: var(--space-1-5) var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--agent-subtle);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
+  }
+  .ad__tool { color: var(--agent-text); font-weight: 600; }
+  .ad__args { color: var(--text-secondary); }
+  .ad__result {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1-5) var(--space-2);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 18px;
+  }
+  .ad__cost {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: var(--control-sm);
+    padding-inline: var(--space-2);
+    border: var(--border-thin) solid var(--agent);
+    border-radius: var(--radius-full);
+    background: var(--agent-subtle);
+    color: var(--agent-text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    white-space: nowrap;
+  }
+
+  .ad__sheet { margin: 0; display: grid; gap: var(--space-1); width: 100%; max-width: calc(var(--space-12) * 6); }
+  .ad__frames { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); }
+  .ad__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius-xs);
+    box-shadow: 0 0 0 var(--border-thin) var(--border-default);
+  }
+  .ad__ftime {
+    position: absolute;
+    left: var(--space-0-5);
+    bottom: var(--space-0-5);
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-xs);
+    background: var(--demo-caption-bg);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 14px;
+  }
+  .ad__fcap { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; line-height: 14px; }
+
+  /* ---------- Timeline panel ---------- */
+  .ad__pane {
+    --ph: calc(var(--space-12) * 2.5);
+    display: grid;
+    place-items: center;
+    padding: var(--space-3);
+    background: var(--surface-preview);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+  }
+  .ad__pframe {
+    position: relative;
+    width: min(100%, calc(var(--ph) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 var(--border-thin) var(--border-default);
+  }
+  .ad__pcap {
+    position: absolute;
+    left: 50%;
+    bottom: 9%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 88%;
+    padding: 0.1em 0.55em;
+    border-radius: var(--radius-sm);
+    background: var(--demo-caption-bg);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.3;
+    text-align: center;
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--easing-standard);
+  }
+  .ad[data-captions="ghost"] .ad__pcap,
+  .ad[data-captions="solid"] .ad__pcap { opacity: 1; }
+  /* A proposed caption is dashed and hatched like every other proposal. */
+  .ad[data-captions="ghost"] .ad__pcap {
+    background: var(--demo-hatch), var(--surface-0);
+    border: var(--border-thin) dashed var(--agent);
+    color: var(--agent-text);
+  }
+  @container (min-width: 520px) { .ad__pcap { font-size: 14px; } }
+  @container (min-width: 840px) { .ad__pane { --ph: calc(var(--space-12) * 3.5); } }
+
+  /* Status slot: one fixed-height place for nothing / proposal / history. */
+  .ad__slot {
+    min-height: calc(var(--space-12) * 3.5);
+    display: grid;
+    align-content: center;
+    padding: var(--space-3);
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+  }
+  @container (min-width: 520px) { .ad__slot { min-height: calc(var(--space-12) * 2); } }
+  .ad__slot > [data-for] { display: none; }
+  .ad[data-phase="working"] .ad__slot > [data-for="working"],
+  .ad[data-phase="proposal"] .ad__slot > [data-for="proposal"],
+  .ad[data-phase="accepted"] .ad__slot > [data-for="accepted"],
+  .ad[data-phase="rejected"] .ad__slot > [data-for="rejected"] { display: grid; }
+  .ad__idle { color: var(--text-muted); font-size: 12px; }
+
+  /* ProposalBar: agent-subtle fill, dashed agent border, Accept in agent fill, no marigold. */
+  .ad__bar {
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: var(--border-thin) dashed var(--agent);
+    border-radius: var(--radius-md);
+    background: var(--agent-subtle);
+  }
+  .ad__bar-row { display: flex; align-items: flex-start; gap: var(--space-3); flex-wrap: wrap; }
+  .ad__bar-title { flex: 1 1 calc(var(--space-12) * 3); min-width: 0; color: var(--text-primary); }
+  .ad__bar-title strong { font-weight: 600; }
+  .ad__bar-cost { color: var(--text-secondary); font-size: 11px; line-height: 14px; font-family: var(--font-ui); }
+  .ad__bar-actions { display: none; gap: var(--space-2); }
+  .ad[data-js] .ad__bar-actions { display: flex; }
+
+  .ad__hist {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+  }
+  .ad__hist--rejected { grid-template-columns: auto minmax(0, 1fr); color: var(--text-secondary); }
+  .ad__hist-text { min-width: 0; color: var(--text-primary); }
+  .ad__actor {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: var(--control-sm);
+    padding-inline: var(--space-2);
+    border: var(--border-thin) solid var(--agent);
+    border-radius: var(--radius-full);
+    background: var(--agent-subtle);
+    color: var(--agent-text);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .ad__actor-id { font-family: var(--font-mono); }
+  .ad__undo { color: var(--text-muted); font-size: 11px; line-height: 14px; white-space: nowrap; }
+  @container (max-width: 519px) {
+    .ad__hist { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* ---------- Timeline drawing ---------- */
+  .ad__tlbox { container-type: inline-size; min-width: 0; }
+  .ad__tl { --demo-hdr: var(--demo-hdr-icon); border-top: 0; }
+  .ad__tl :global(.cwd-hdr__name),
+  .ad__tl :global(.cwd-hdr__toggles) { display: none; }
+  .ad__tl :global(.cwd-hdr) { justify-content: center; padding-inline: 0; }
+  @container (min-width: 520px) {
+    .ad__tl { --demo-hdr: calc(var(--space-12) * 3); }
+    .ad__tl :global(.cwd-hdr__name) { display: block; }
+    .ad__tl :global(.cwd-hdr) { justify-content: flex-start; padding-inline: var(--space-2); }
+  }
+  .ad__defs { position: absolute; }
+
+  .ad__row {
+    position: absolute;
+    inset: var(--space-0-5) 0;
+    display: flex;
+    align-items: stretch;
+  }
+  .ad__row--media { --cwd-c: var(--clip-media); --cwd-cb: var(--clip-media-body); }
+  .ad__row--audio { --cwd-c: var(--clip-audio); --cwd-cb: var(--clip-audio-body); }
+
+  .ad__seg {
+    position: relative;
+    flex: none;
+    width: calc(var(--w) * 1%);
+    overflow: hidden;
+    border-block: var(--border-thin) solid var(--cwd-c);
+    background-color: var(--cwd-cb);
+    transition:
+      width var(--duration-slow) var(--easing-standard),
+      background-color var(--duration-base) var(--easing-standard),
+      border-color var(--duration-base) var(--easing-standard);
+  }
+  .ad__seg:first-child { border-inline-start: var(--border-thin) solid var(--cwd-c); border-start-start-radius: var(--radius-sm); border-end-start-radius: var(--radius-sm); }
+  .ad__seg:nth-last-child(2) { border-inline-end: var(--border-thin) solid var(--cwd-c); border-start-end-radius: var(--radius-sm); border-end-end-radius: var(--radius-sm); }
+  .ad__seg :global(.cwd-seg__body) { position: absolute; inset: calc(var(--clip-strip) + var(--space-4)) 0 0 0; }
+  .ad__seg :global(.cwd-wave) { overflow: hidden; }
+  .ad__label { z-index: 2; max-width: 60%; color: var(--text-primary); }
+
+  /* Cuts: invisible until the dry run (dashed outline), hatched ghosts in a proposal, gone once committed. */
+  .ad[data-silences="detected"] .ad__seg--cut,
+  .ad[data-silences="ghost"] .ad__seg--cut {
+    border-style: dashed;
+    border-color: var(--agent);
+  }
+  .ad[data-silences="ghost"] .ad__seg--cut {
+    background-image: var(--demo-hatch);
+    background-color: color-mix(in srgb, var(--agent) 10%, var(--cwd-cb));
+  }
+  .ad[data-silences="detected"] .ad__seg--cut::before,
+  .ad[data-silences="ghost"] .ad__seg--cut::before { background: var(--agent); }
+  .ad[data-silences="detected"] .ad__seg--cut :global(.cwd-wave use),
+  .ad[data-silences="ghost"] .ad__seg--cut :global(.cwd-wave use) { stroke: var(--agent-text); }
+  .ad[data-silences="committed"] .ad__seg--cut {
+    width: 0;
+    border-inline-width: 0;
+    opacity: 0;
+  }
+  /* Ripple-closed pieces are separate clips: a lane-colored hairline marks each edit point. */
+  .ad[data-silences="committed"] .ad__seg:not(.ad__seg--cut):not(:nth-last-child(2)) { border-inline-end: var(--border-thin) solid var(--timeline-lane); }
+
+  /* Captions: absent, then a proposal (dashed, hatched), then real captions clips. */
+  .ad__cap {
+    opacity: 0;
+    transform: translateY(var(--space-1));
+    transition:
+      opacity var(--duration-slow) var(--easing-enter),
+      transform var(--duration-slow) var(--easing-enter);
+    transition-delay: calc(var(--i) * var(--duration-fast) / 2);
+  }
+  .ad[data-captions="ghost"] .ad__cap,
+  .ad[data-captions="solid"] .ad__cap { opacity: 1; transform: none; }
+  .ad[data-captions="ghost"] .ad__cap {
+    border: var(--border-thin) dashed var(--agent);
+    background: var(--demo-hatch), var(--agent-subtle);
+    color: var(--agent-text);
+  }
+  .ad__cap :global(.cwd-clip__label > span) { display: none; }
+  .ad[data-captions="ghost"] .ad__cap::before { background: var(--agent); }
+  .ad[data-captions="ghost"] .ad__cap :global(.cwd-clip__label > .cwd-icon) { color: var(--agent-text); }
+
+  /* ---------- Controls ---------- */
+  .ad__controls {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .ad[data-js] .ad__controls { display: flex; }
+  .ad__ctl, .ad__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1-5);
+    min-width: var(--control-lg);
+    height: var(--control-lg);
+    padding-inline: var(--space-2);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--easing-standard);
+  }
+  .ad__ctl--wide { padding-inline: var(--space-3); }
+  .ad__ctl:hover:not(:disabled), .ad__btn:hover:not(:disabled) { background: var(--surface-3); }
+  .ad__ctl:disabled { opacity: var(--opacity-disabled); cursor: default; }
+  .ad__btn { height: var(--button-height-sm); padding-inline: var(--space-4); }
+  .ad__btn--agent { border-color: var(--agent); background: var(--agent); color: var(--on-agent); }
+  .ad__btn--agent:hover:not(:disabled) { background: var(--agent-hover); }
+  .ad__count { margin-left: var(--space-2); color: var(--text-secondary); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .ad__progress { display: inline-flex; gap: var(--space-1); flex: 1 1 var(--space-12); min-width: var(--space-8); max-width: calc(var(--space-12) * 4); }
+  .ad__pip { flex: 1; height: var(--space-1); border-radius: var(--radius-full); background: var(--border-default); transition: background var(--duration-base) var(--easing-standard); }
+  .ad__pip[data-on="true"] { background: var(--agent); }
+  .ad__replay { margin-left: auto; }
+
+  /* ---------- Footnote ---------- */
+  .ad__note { max-width: var(--prose-max); color: var(--text-secondary); font-size: 13px; line-height: 20px; }
+  .ad__note strong { color: var(--text-primary); font-weight: 600; }
+  .ad__note code { font-size: 12px; }
+  .ad__note a { display: inline-flex; align-items: center; gap: var(--space-1); margin-left: var(--space-1); }
+</style>
+
+<script>
+  type StepCfg = { silences: string; captions: string; summary: string; timeline: string; dwell: number };
+  type Cfg = { steps: StepCfg[]; proposal: { history: string; reject: string; after: string; before: string } };
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function init(root: HTMLElement) {
+    const cfg: Cfg = JSON.parse(root.querySelector('[data-config]')?.textContent ?? '{}');
+    const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel);
+    const scroller = q('[data-scroll]');
+    const live = q('[data-live]');
+    const tsum = q('[data-tsum]');
+    const len = q('[data-len]');
+    const count = q('[data-count]');
+    const playBtn = q<HTMLButtonElement>('[data-play]');
+    const prevBtn = q<HTMLButtonElement>('[data-prev]');
+    const nextBtn = q<HTMLButtonElement>('[data-next]');
+    if (!cfg.steps?.length || !scroller || !live || !playBtn || !prevBtn || !nextBtn || !count) return;
+
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
+    const pips = Array.from(root.querySelectorAll<HTMLElement>('[data-pip]'));
+    const lastIdx = cfg.steps.length - 1;
+    let idx = 0;
+    let phase: 'working' | 'proposal' | 'accepted' | 'rejected' = 'working';
+    let playing = false;
+    let inView = false;
+    let touched = false;
+    let timer = 0;
+
+    const announce = (text: string) => {
+      live.textContent = '';
+      requestAnimationFrame(() => (live.textContent = text));
+    };
+
+    function render(opts: { announce: boolean; animateFrom?: number }) {
+      const step = cfg.steps[idx];
+      if (!step) return;
+      items.forEach((li, i) => {
+        const wasHidden = li.hidden;
+        li.hidden = i > idx;
+        li.classList.toggle('is-new', wasHidden && !li.hidden && opts.animateFrom !== undefined);
+      });
+      pips.forEach((p, i) => (p.dataset.on = String(i <= idx)));
+      count!.textContent = `Step ${idx + 1} of ${cfg.steps.length}`;
+
+      let silences = step.silences;
+      let captions = step.captions;
+      if (idx === lastIdx && phase === 'accepted') {
+        silences = 'committed';
+        captions = 'solid';
+      } else if (idx === lastIdx && phase === 'rejected') {
+        silences = 'none';
+        captions = 'none';
+      }
+      root.dataset.silences = silences;
+      root.dataset.captions = captions;
+      root.dataset.phase = idx === lastIdx ? (phase === 'working' ? 'proposal' : phase) : 'working';
+      if (len) len.textContent = phase === 'accepted' && idx === lastIdx ? cfg.proposal.after : cfg.proposal.before;
+
+      let timelineText = step.timeline;
+      let summary = step.summary;
+      if (idx === lastIdx && phase === 'accepted') {
+        summary = `Accepted. ${cfg.proposal.history} One undo step.`;
+        timelineText = `Timeline: the silences and fillers are removed and the clip is shorter, ${cfg.proposal.before} to ${cfg.proposal.after}. Captions are solid clips on the captions track.`;
+      } else if (idx === lastIdx && phase === 'rejected') {
+        summary = cfg.proposal.reject;
+        timelineText = 'Timeline: back to the original interview clip. No ghosts, no captions.';
+      }
+      if (tsum) tsum.textContent = timelineText;
+      if (opts.announce) announce(summary);
+
+      prevBtn!.disabled = idx === 0;
+      nextBtn!.disabled = idx === lastIdx;
+      playBtn!.disabled = idx === lastIdx;
+      const showPause = playing && idx < lastIdx;
+      q('[data-play-icon]')!.hidden = showPause;
+      q('[data-pause-icon]')!.hidden = !showPause;
+      q('[data-play-label]')!.textContent = showPause ? 'Pause' : 'Play';
+      playBtn!.setAttribute('aria-label', showPause ? 'Pause' : 'Play');
+
+      scroller!.scrollTo({ top: scroller!.scrollHeight, behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    }
+
+    function schedule() {
+      window.clearTimeout(timer);
+      if (!playing || !inView || idx >= lastIdx) return;
+      timer = window.setTimeout(() => {
+        go(idx + 1);
+        schedule();
+      }, cfg.steps[idx]?.dwell ?? 2800);
+    }
+
+    function go(i: number) {
+      const next = Math.max(0, Math.min(lastIdx, i));
+      const from = idx;
+      idx = next;
+      if (idx < lastIdx) phase = 'working';
+      if (idx === lastIdx && from !== lastIdx) phase = 'proposal';
+      if (idx >= lastIdx) playing = false;
+      render({ announce: true, animateFrom: from });
+    }
+
+    function setPlaying(value: boolean) {
+      playing = value;
+      render({ announce: false });
+      schedule();
+    }
+
+    prevBtn.addEventListener('click', () => {
+      touched = true;
+      playing = false;
+      window.clearTimeout(timer);
+      go(idx - 1);
+    });
+    nextBtn.addEventListener('click', () => {
+      touched = true;
+      playing = false;
+      window.clearTimeout(timer);
+      go(idx + 1);
+    });
+    playBtn.addEventListener('click', () => {
+      touched = true;
+      setPlaying(!playing);
+    });
+    q('[data-replay]')?.addEventListener('click', () => {
+      touched = true;
+      window.clearTimeout(timer);
+      phase = 'working';
+      idx = 0;
+      render({ announce: true });
+      // Replay plays through unless the visitor prefers reduced motion; then it waits on step 1.
+      setPlaying(!reduceMotion.matches);
+    });
+    q('[data-accept]')?.addEventListener('click', () => {
+      if (idx !== lastIdx) return;
+      touched = true;
+      phase = 'accepted';
+      render({ announce: true });
+      q<HTMLButtonElement>('[data-replay]')?.focus();
+    });
+    q('[data-reject]')?.addEventListener('click', () => {
+      if (idx !== lastIdx) return;
+      touched = true;
+      phase = 'rejected';
+      render({ announce: true });
+      q<HTMLButtonElement>('[data-replay]')?.focus();
+    });
+
+    // JS is running: unlock the controls and Accept / Reject, and start on step 1 (the no-JS markup shows the end).
+    root.dataset.js = '';
+    render({ announce: false });
+
+    new IntersectionObserver(
+      (entries) => {
+        inView = entries.some((e) => e.isIntersecting);
+        if (inView && !touched && !playing && idx === 0 && !reduceMotion.matches) {
+          playing = true;
+          render({ announce: false });
+        }
+        if (inView) schedule();
+        else window.clearTimeout(timer);
+      },
+      { threshold: 0.5 },
+    ).observe(root);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-ad]').forEach(init);
+</script>
