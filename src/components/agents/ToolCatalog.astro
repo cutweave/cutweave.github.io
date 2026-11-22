@@ -1,0 +1,211 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * ToolCatalog: the planned MCP surface, from src/data/mcp-tools.ts.
+ * Props: none. Includes a text filter (vanilla TS; the full list is visible without JS).
+ * GAP-08: the names come from the architecture doc. Replace with a link to the generated
+ * command reference when WP-1N (codegen) and WP-7E.03 (reference docs) land.
+ */
+import '../../styles/area-s2.css';
+import StatusChip from '../ui/StatusChip.astro';
+import AgentBadge from '../ui/AgentBadge.astro';
+import {
+  CORE_TOOL_GROUPS,
+  GENERIC_TOOLS,
+  MCP_RESOURCES,
+  MCP_PROMPTS,
+  MCP_TRANSPORTS,
+} from '../../data/mcp-tools';
+
+const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
+---
+{/* GAP-08: planned catalog, not generated from the command registry yet. */}
+<div class="catalog" data-catalog>
+  <div class="bar">
+    <StatusChip status="planned" label="Planned catalog" />
+    <p class="bar-note">Names come from the architecture doc. Not runnable yet, and the final list may change.</p>
+  </div>
+
+  <div class="filter" data-filter-wrap hidden>
+    <label for="tool-filter">Filter tools, resources and prompts</label>
+    <input id="tool-filter" type="search" autocomplete="off" spellcheck="false" placeholder="clip, render, caption" data-filter />
+    <p class="count" role="status" aria-live="polite" data-count></p>
+  </div>
+
+  <h3 class="h" id="core-tools">Core tools <span class="muted">({coreCount} always listed)</span></h3>
+  <p class="blurb">Always visible to the agent. Each carries annotations for read-only, destructive and idempotent. Image tools return an image plus structured metadata.</p>
+  <div class="groups">
+    {CORE_TOOL_GROUPS.map((g) => (
+      <section class="group" data-group aria-labelledby={`g-${g.id}`}>
+        <h4 id={`g-${g.id}`}>{g.title}</h4>
+        <ul>
+          {g.tools.map((t) => (
+            <li data-item data-text={`${t.name} ${t.does}`.toLowerCase()}>
+              <code class="name">{t.name}</code>
+              {t.image && <AgentBadge size="sm" label="Image" />}
+              <span class="does">{t.does}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+
+  <h3 class="h" id="generic-tools">Four generic tools for the long tail</h3>
+  <p class="blurb">Everything else in the command registry is reached through these, so the tool list stays small. The budget is 12 tools or 3k tokens for the minimal profile and 36 tools or 8k tokens for the standard one.</p>
+  <section class="group" data-group aria-labelledby="generic-tools">
+    <ul>
+      {GENERIC_TOOLS.map((t) => (
+        <li data-item data-text={`${t.name} ${t.does}`.toLowerCase()}>
+          <code class="name">{t.name}</code>
+          <span class="does">{t.does}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <div class="two">
+    <div>
+      <h3 class="h" id="resources">Resources</h3>
+      <section class="group" data-group aria-labelledby="resources">
+        <ul>
+          {MCP_RESOURCES.map((r) => (
+            <li data-item data-text={r.toLowerCase()}><code class="name">{r}</code></li>
+          ))}
+        </ul>
+      </section>
+    </div>
+    <div>
+      <h3 class="h" id="prompts">MCP prompts</h3>
+      <section class="group" data-group aria-labelledby="prompts">
+        <ul class="chips">
+          {MCP_PROMPTS.map((p) => (
+            <li data-item data-text={p}><code class="name">{p}</code></li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <h3 class="h" id="transports">Transports</h3>
+  <ul class="transports">
+    {MCP_TRANSPORTS.map((t) => (
+      <li>
+        <p class="t-name">{t.name}</p>
+        <code class="name">{t.command}</code>
+        <p class="does">{t.note}</p>
+      </li>
+    ))}
+  </ul>
+  <p class="blurb foot">Built on the official Rust MCP SDK, rmcp. The spike has only been exercised with the 2025-11-25 spec revision from a real host.</p>
+  <p class="empty" data-empty hidden>No match. Try a shorter word, like clip or render.</p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-catalog]').forEach((root) => {
+    const wrap = root.querySelector<HTMLElement>('[data-filter-wrap]');
+    const input = root.querySelector<HTMLInputElement>('[data-filter]');
+    const count = root.querySelector<HTMLElement>('[data-count]');
+    const empty = root.querySelector<HTMLElement>('[data-empty]');
+    if (!wrap || !input || !count || !empty) return;
+    wrap.hidden = false;
+    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-item]'));
+    const groups = Array.from(root.querySelectorAll<HTMLElement>('[data-group]'));
+    const apply = () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      items.forEach((li) => {
+        const hit = !q || (li.dataset.text ?? '').includes(q);
+        li.hidden = !hit;
+        if (hit) shown++;
+      });
+      groups.forEach((g) => {
+        const any = g.querySelector('[data-item]:not([hidden])');
+        g.hidden = !any;
+      });
+      empty.hidden = shown > 0;
+      count.textContent = q ? `${shown} of ${items.length} shown` : '';
+    };
+    input.addEventListener('input', apply);
+  });
+</script>
+
+<style>
+  .catalog { display: flex; flex-direction: column; gap: var(--space-4); }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .bar-note { color: var(--text-secondary); font-size: 15px; }
+
+  .filter[hidden] { display: none; }
+  .filter { display: grid; gap: var(--space-2); max-width: 28rem; }
+  .filter label { font-weight: 600; font-size: 14px; }
+  .filter input {
+    height: var(--button-height-md);
+    padding-inline: var(--space-3);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--mono-small);
+  }
+  .filter input::placeholder { color: var(--text-muted); }
+  .count { color: var(--text-secondary); font-size: 14px; min-height: 20px; }
+
+  .h { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; margin-top: var(--space-6); }
+  .muted { color: var(--text-secondary); font-weight: 500; font-size: 16px; }
+  .blurb { color: var(--text-secondary); max-width: var(--prose-max); }
+  .foot { margin-top: var(--space-2); font-size: 15px; }
+
+  .groups { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .groups { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1040px) { .groups { grid-template-columns: repeat(3, 1fr); } }
+
+  .group {
+    padding: var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+  }
+  .group[hidden], li[hidden] { display: none; }
+  h4 {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 650;
+    margin-bottom: var(--space-3);
+  }
+  ul { display: flex; flex-direction: column; gap: var(--space-3); }
+  li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
+  .name { font-size: var(--mono-small); line-height: 20px; color: var(--text-primary); overflow-wrap: anywhere; }
+  .does { color: var(--text-secondary); font-size: 14px; line-height: 20px; flex-basis: 100%; }
+
+  .chips { flex-direction: row; flex-wrap: wrap; gap: var(--space-2); }
+  .chips li {
+    padding: 0 var(--space-2);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+  }
+
+  .two { display: grid; gap: var(--space-4) var(--space-6); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .two { grid-template-columns: 1fr 1fr; } }
+  .two .h { margin-top: var(--space-6); margin-bottom: var(--space-3); }
+
+  .transports { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .transports { grid-template-columns: repeat(3, 1fr); } }
+  .transports li {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+  }
+  .t-name { font-weight: 650; }
+  .transports .does { flex-basis: auto; }
+  .empty { color: var(--text-secondary); }
+</style>

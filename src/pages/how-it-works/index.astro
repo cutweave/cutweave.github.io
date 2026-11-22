@@ -1,20 +1,173 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Placeholder: another agent replaces this page. Keep the layout, one h1 and the title/description props.
+// /how-it-works/: "One engine, many clients". Architecture for developers (docs/site-plan.md §4, work package S2).
+// Facts: docs/content-inventory.md §8, §9. Gap: GAP-09 (spike numbers are informal; see EngineFacts).
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
+import Section from '../../components/ui/Section.astro';
+import Button from '../../components/ui/Button.astro';
+import StatusChip from '../../components/ui/StatusChip.astro';
+import ArchitectureDiagram from '../../components/engine/ArchitectureDiagram.astro';
+import LifeOfEdit from '../../components/engine/LifeOfEdit.astro';
+import FlicksExplainer from '../../components/engine/FlicksExplainer.astro';
+import EngineFacts from '../../components/engine/EngineFacts.astro';
+import { STACK, DOC_LINKS } from '../../data/engine-facts';
 ---
-<BaseLayout title="How it works" description="One Rust engine, many clients: how Cutweave turns every edit into a command.">
-  <Container>
-    <div class="stub">
-      <h1>How it works</h1>
-      <p>This page is coming soon: one engine, many clients.</p>
+<BaseLayout
+  title="How it works"
+  description="One Rust engine, many clients. The desktop UI, AI agents over MCP, the CLI and plugins all send commands to the same engine. See the command lifecycle, flicks, the render pipeline and the engineering facts, with honest status."
+>
+  <section class="hero" aria-labelledby="how-title">
+    <Container>
+      <div class="hero-copy">
+        <p class="eyebrow">How it works</p>
+        <h1 id="how-title">One engine, many clients.</h1>
+        <p class="lede">The desktop UI is not special. It uses the same command API as AI agents over MCP, the command line and plugins. Every edit is a registered command, applied to one project document by one Rust engine.</p>
+        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" /> <span>This page describes the design. Each fact below says what is built.</span></p>
+      </div>
+      <div class="diagram">
+        <ArchitectureDiagram />
+      </div>
+    </Container>
+  </section>
+
+  <Section
+    id="life-of-an-edit"
+    tone="raised"
+    eyebrow="Life of an edit"
+    title="From command to pixels"
+    lede="Follow one command, clip.split, through the engine. Every client takes this same path."
+  >
+    <LifeOfEdit />
+  </Section>
+
+  <Section
+    id="flicks"
+    eyebrow="Time"
+    title="Time is a whole number"
+    lede="Cutweave measures time in flicks: 1/705,600,000 of a second, stored as an i64. Pick a rate to see the exact count."
+  >
+    <FlicksExplainer />
+  </Section>
+
+  <Section
+    id="rendering"
+    tone="raised"
+    eyebrow="Rendering"
+    title="One pipeline for preview, export and agents"
+    lede="What you scrub is what you export, and what an agent sees."
+  >
+    <ul class="points">
+      <li>
+        <h3>Preview and export share one pipeline</h3>
+        <p>There is no separate, faster preview renderer to drift from the export. Preview frames are downscaled into a shared-memory ring and drawn on a WebGPU canvas. Export goes to the encoder. An agent&rsquo;s frame goes to JPEG or PNG.</p>
+        <p class="chip"><StatusChip status="planned" label="Planned" /></p>
+      </li>
+      <li>
+        <h3>Deterministic by construction</h3>
+        <p>A frame is a pure function of the snapshot, the sequence, the time and the quality. Randomness is seeded from item IDs, and nothing reads the wall clock. That makes frame caching, parallel chunked export and golden tests possible.</p>
+        <p class="chip"><StatusChip status="in-progress" /> <span>Verified in a spike.</span></p>
+      </li>
+      <li>
+        <h3>Linear light, in float</h3>
+        <p>The working space is <code>Rgba16Float</code> in linear light. PQ and HLG sources are tone-mapped to SDR.</p>
+        <p class="chip"><StatusChip status="in-progress" /> <span>Spike S4.</span></p>
+      </li>
+      <li>
+        <h3>Same pixels across GPU vendors</h3>
+        <p>In the S4 compositor spike, output on an NVIDIA GPU and an AMD GPU differed by at most one code value.</p>
+        <p class="chip"><span class="measured">Measured in a spike</span></p>
+        <p class="foot">Informal, one Windows laptop. Formal runs pending.</p>
+      </li>
+    </ul>
+  </Section>
+
+  <Section
+    id="facts"
+    eyebrow="Engineering facts"
+    title="What is built, and what is a plan"
+    lede="Each fact carries its status and the document it comes from."
+  >
+    <EngineFacts />
+  </Section>
+
+  <Section id="stack" tone="raised" eyebrow="Stack" title="What it is built with">
+    <dl class="stack">
+      <div>
+        <dt>Engine</dt>
+        <dd>{STACK.engine.join(', ')}</dd>
+      </div>
+      <div>
+        <dt>App</dt>
+        <dd>{STACK.app.join(', ')}</dd>
+      </div>
+    </dl>
+  </Section>
+
+  <Section id="next" title="Read the design" lede="The architecture doc is the contract the code is written against. Decisions are recorded as ADRs.">
+    <div class="closing">
+      <Button variant="primary" href={DOC_LINKS.architecture} external iconEnd="external-link">Read the architecture doc</Button>
+      <Button href={DOC_LINKS.adrIndex} external iconEnd="external-link">Browse the ADRs</Button>
     </div>
-  </Container>
+  </Section>
 </BaseLayout>
 
 <style>
-  .stub { padding-block: var(--section-space); display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
-  h1 { font-family: var(--font-display); font-size: var(--display-section-size); line-height: var(--display-section-line); font-weight: 700; letter-spacing: -0.02em; }
-  p { color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
+  .hero { padding-block: var(--section-space) var(--space-8); background: var(--glow-marigold); }
+  .hero-copy { display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--prose-max); }
+  .eyebrow {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 650;
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--display-hero-size);
+    line-height: var(--display-hero-line);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: 15px; }
+  .diagram { margin-top: var(--space-12); }
+
+  .points { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .points { grid-template-columns: repeat(2, 1fr); } }
+  .points li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+  }
+  .points h3 { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; color: var(--text-primary); }
+  .points code { font-size: var(--mono-small); color: var(--text-primary); }
+  .chip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: auto; font-size: 14px; }
+  .measured {
+    padding: 0 var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 22px;
+  }
+  .foot { font-size: 14px; color: var(--text-muted); }
+
+  .stack { display: grid; gap: var(--space-4); grid-template-columns: 1fr; margin: 0; }
+  @media (min-width: 720px) { .stack { grid-template-columns: repeat(2, 1fr); } }
+  .stack div {
+    padding: var(--space-4) var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  dt { font-size: 12px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); font-weight: 650; margin-bottom: var(--space-2); }
+  dd { margin: 0; font-family: var(--font-mono); font-size: var(--mono-small); line-height: 24px; }
+
+  .closing { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 </style>

@@ -1,20 +1,262 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Placeholder: another agent replaces this page. Keep the layout, one h1 and the title/description props.
+// /agents/: "Built for agents". MCP and agent deep dive (docs/site-plan.md §4, work package S2).
+// Facts: docs/content-inventory.md §2.4, §5. Gaps: GAP-03, GAP-05, GAP-07, GAP-08, GAP-18.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
+import Section from '../../components/ui/Section.astro';
+import Button from '../../components/ui/Button.astro';
+import StatusChip from '../../components/ui/StatusChip.astro';
+import CodeBlock from '../../components/ui/CodeBlock.astro';
+import ScreenshotVsState from '../../components/agents/ScreenshotVsState.astro';
+import ToolCatalog from '../../components/agents/ToolCatalog.astro';
+import ProposalFlow from '../../components/agents/ProposalFlow.astro';
+import BudgetTiers from '../../components/agents/BudgetTiers.astro';
+import AgentKit from '../../components/agents/AgentKit.astro';
+import { LINKS } from '../../site';
+import { DOC_LINKS } from '../../data/engine-facts';
+
+// GAP-05: this snippet is planned, not tested. Replace with a copyable, tested config once
+// WP-1J (MCP v0), WP-1K (CLI) and WP-6G/6H (Agent Kit) land.
+const mcpConfig = `{
+  "mcpServers": {
+    "cutweave": {
+      "command": "cutweave",
+      "args": ["mcp", "--attach"]
+    }
+  }
+}`;
+const installCmd = `# Writes the MCP config and installs the skills for your client.
+cutweave agent-kit install --client claude
+# also: codex, gemini, cursor, vscode`;
+
+const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_frame'];
 ---
-<BaseLayout title="Agents" description="How AI agents edit with Cutweave through full MCP control.">
-  <Container>
-    <div class="stub">
-      <h1>Agents</h1>
-      <p>This page is coming soon: how agents drive Cutweave through MCP.</p>
+<BaseLayout
+  title="Built for agents"
+  description="Every Cutweave edit is a command and every command is an MCP tool. Agents get structured state and rendered frames, not screenshots. Planned catalog, spending limits enforced by the engine, and evidence from a spike."
+>
+  <section class="hero" aria-labelledby="agents-title">
+    <Container>
+      <div class="hero-copy">
+        <p class="eyebrow">Built for agents</p>
+        <h1 id="agents-title">Agents see frames, not screenshots.</h1>
+        <p class="lede">Every edit in Cutweave is a command. Every command is an MCP tool. The agent gets structured state and rendered frames, so it works on the same timeline you do without guessing at pixels.</p>
+        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" /> <span>The MCP surface below is the plan. One spike run is real.</span></p>
+        <div class="actions">
+          <Button variant="primary" href="#demo" iconEnd="arrow-right">See an agent edit</Button>
+          <Button href="#evidence">Read the spike evidence</Button>
+        </div>
+      </div>
+      <ol class="chain" aria-label="From command to agent">
+        <li><span class="k">Command</span><code>clip.split</code><span class="d">One registered command, applied through one transaction.</span></li>
+        <li><span class="k">MCP tool</span><code>clip_split</code><span class="d">The same schema, reachable by any MCP client. A CI test checks parity.</span></li>
+        <li><span class="k">Agent gets</span><code>state + frame</code><span class="d">New revision, what changed, and a rendered image with metadata.</span></li>
+      </ol>
+    </Container>
+  </section>
+
+  <Section id="demo" tone="raised" eyebrow="Watch it work" title="Watch an agent edit" lede="A scripted session with real tool names and invented values.">
+    {/* INTEGRATOR: replace with <AgentDemo /> from ../../components/demo/AgentDemo.astro */}
+    <div class="demo-slot">Interactive agent demo</div>
+  </Section>
+
+  <Section
+    id="why-no-screenshots"
+    eyebrow="Why frames"
+    title="Two loops, side by side"
+    lede="A screen-driving agent works from pixels. An agent in Cutweave asks the engine."
+  >
+    <ScreenshotVsState />
+  </Section>
+
+  <Section
+    id="tools"
+    tone="raised"
+    eyebrow="The tool surface"
+    title="About 30 core tools, and four for everything else"
+    lede="Every non-view command is also an MCP tool with an identical schema. The core tools are always listed. The long tail is one search away."
+  >
+    <ToolCatalog />
+  </Section>
+
+  <Section
+    id="proposals"
+    eyebrow="Proposals and undo"
+    title="An agent turn is one thing you can accept or reject"
+    lede="Agent edits are held as a proposal until you decide. Then they are one undo step, attributed to the agent that made them."
+  >
+    <ProposalFlow />
+  </Section>
+
+  <Section
+    id="budget"
+    tone="raised"
+    eyebrow="Spending authority"
+    title="Say what it costs before it runs"
+    lede="The engine enforces three tiers of authority. The model cannot talk its way past them."
+  >
+    <BudgetTiers />
+  </Section>
+
+  <Section
+    id="agent-kit"
+    eyebrow="Agent Kit"
+    title="A kit that makes agents good at video"
+    lede="Tools give an agent hands. The kit gives it the craft: skills, workflows, presets and a way to measure whether it works."
+  >
+    <AgentKit />
+  </Section>
+
+  <Section
+    id="connect"
+    tone="raised"
+    eyebrow="Connect your client"
+    title="Point your agent at Cutweave"
+    lede="This is how it is meant to work. There is nothing to run yet."
+  >
+    {/* GAP-05: planned config. Replace with a tested snippet and the real install command. */}
+    <div class="connect">
+      <p class="status"><StatusChip status="planned" label="Planned, not runnable yet" /> <span>No build exists to connect to.</span></p>
+      <div class="code-grid">
+        <CodeBlock label="MCP client config (planned)" lang="json" code={mcpConfig} />
+        <CodeBlock label="Agent Kit installer (planned)" lang="sh" code={installCmd} />
+      </div>
+      <p class="note">
+        <code>--attach</code> is a stdio proxy into the running app, so you watch the agent edit live. For CI and servers there is a headless mode: <code>cutweave mcp --headless --project X</code>.
+      </p>
     </div>
-  </Container>
+  </Section>
+
+  <Section
+    id="evidence"
+    eyebrow="Evidence today"
+    title="One real run: three of three"
+    lede="In a Phase 0 spike, Claude Code ran headless against a spike MCP server. The prompt: import a fixture video, cut it at 2 s, and show the frame at 3 s."
+  >
+    <div class="evidence">
+      <ol class="calls" aria-label="The four calls every run made, in order">
+        {spikeSteps.map((s) => <li><code>{s}</code></li>)}
+      </ol>
+      <ul class="facts">
+        <li><strong class="num">3 of 3</strong><span>runs passed, each with exactly four calls and no screenshots.</span></li>
+        <li><strong class="num">~$0.035</strong><span>per warm run.</span></li>
+        <li><strong class="num">~2.7k</strong><span>tokens for <code>tools/list</code> with 13 tools, against a 3k budget for the minimal profile.</span></li>
+        <li><strong class="num">1 actor</strong><span>every edit was attributed to <code>agent:claude-code</code>. The frame came back as an MCP image block.</span></li>
+      </ul>
+      <p class="caveat"><strong>Caveat.</strong> This was a spike server with a stub import. It is not the product, and it has only been seen from one host and one spec revision. <span class="foot">Informal, one Windows laptop.</span></p>
+      <p><Button href={DOC_LINKS.spikeReport} external iconEnd="external-link">Read the run report</Button></p>
+    </div>
+  </Section>
+
+  <Section
+    id="next"
+    tone="raised"
+    title="Follow the build"
+    lede="The design is public and so is the work. Read the MCP design, then watch the repository."
+  >
+    {/* GAP-07: when the docs site exists, link the MCP reference from here. */}
+    <div class="closing">
+      <Button variant="primary" href={LINKS.repo} external icon="github">Follow on GitHub</Button>
+      <Button href={DOC_LINKS.mcpDesign} external iconEnd="external-link">Read the MCP design</Button>
+    </div>
+  </Section>
 </BaseLayout>
 
 <style>
-  .stub { padding-block: var(--section-space); display: flex; flex-direction: column; gap: var(--stack-md); max-width: var(--prose-max); }
-  h1 { font-family: var(--font-display); font-size: var(--display-section-size); line-height: var(--display-section-line); font-weight: 700; letter-spacing: -0.02em; }
-  p { color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
+  .hero {
+    padding-block: var(--section-space) var(--space-8);
+    background: var(--glow-agent), var(--glow-marigold);
+  }
+  .hero-copy { display: flex; flex-direction: column; gap: var(--space-4); max-width: var(--prose-max); }
+  .eyebrow {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 650;
+    letter-spacing: var(--eyebrow-tracking);
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--display-hero-size);
+    line-height: var(--display-hero-line);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: 15px; }
+  .actions, .closing { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+
+  .chain {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: 1fr;
+    margin-top: var(--space-12);
+  }
+  @media (min-width: 840px) { .chain { grid-template-columns: repeat(3, 1fr); } }
+  .chain li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  .chain .k { font-size: 12px; line-height: 16px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); font-weight: 650; }
+  .chain code { font-size: 20px; line-height: 28px; }
+  /* The last step is what the agent consumes: agent blue. */
+  .chain li:last-child code { color: var(--agent-text); }
+  .chain .d { color: var(--text-secondary); font-size: 15px; line-height: 22px; }
+
+  .demo-slot {
+    display: grid;
+    place-items: center;
+    min-height: calc(var(--layer-width-md) / 2);
+    padding: var(--space-8);
+    border: var(--border-thick) dashed var(--border-control);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+  }
+
+  .connect { display: flex; flex-direction: column; gap: var(--space-4); }
+  .connect .status { color: var(--text-secondary); }
+  .code-grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .code-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+  .note { color: var(--text-secondary); max-width: var(--prose-max); }
+  .note code, .facts code { font-size: var(--mono-small); color: var(--text-primary); }
+
+  .evidence { display: flex; flex-direction: column; gap: var(--space-6); }
+  .calls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .calls li { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .calls li + li::before { content: '\2192'; color: var(--text-muted); }
+  .calls code {
+    padding: var(--space-1) var(--space-3);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    font-size: var(--mono-small);
+  }
+  .facts { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .facts { grid-template-columns: repeat(2, 1fr); } }
+  .facts li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+  }
+  .num { font-family: var(--font-display); font-size: 28px; line-height: 34px; color: var(--text-primary); }
+  .caveat {
+    padding: var(--space-4);
+    border-inline-start: var(--border-thick) solid var(--border-control);
+    color: var(--text-secondary);
+    max-width: var(--prose-max);
+  }
+  .caveat strong { color: var(--text-primary); }
+  .foot { display: block; font-size: 14px; color: var(--text-muted); margin-top: var(--space-1); }
 </style>

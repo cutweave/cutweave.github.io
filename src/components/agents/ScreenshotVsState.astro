@@ -1,0 +1,117 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * ScreenshotVsState: side-by-side contrast of a screen-driving agent loop and Cutweave's
+ * query, command, render loop. No props. Uses agent blue only on the Cutweave loop's image step.
+ */
+import '../../styles/area-s2.css';
+import Icon from '../ui/Icon.astro';
+
+const screen = [
+  { step: 'Take a screenshot', note: 'Pixels of the whole window.' },
+  { step: 'Guess the coordinates', note: 'Find the button or clip edge by sight.' },
+  { step: 'Click or drag', note: 'The agent does not know whether it landed.' },
+  { step: 'Take another screenshot', note: 'Compare, then repeat.' },
+];
+
+const state = [
+  { step: 'Query state', note: 'timeline_get returns clips, tracks, times and the revision.', tool: 'timeline_get' },
+  { step: 'Send a command', note: 'clip_split with an item ID and a time. The reply says what changed.', tool: 'clip_split' },
+  { step: 'Render a frame', note: 'An image plus metadata: time, items visible, captions on screen.', tool: 'render_frame', image: true },
+];
+---
+<div class="vs">
+  <article class="loop" aria-labelledby="vs-screen">
+    <header>
+      <h3 id="vs-screen">A screen-driving agent</h3>
+      <p class="sub">Works on any app, with no help from the app. The cost is that it infers state from pixels.</p>
+    </header>
+    <ol class="steps">
+      {screen.map((s) => (
+        <li>
+          <span class="n" aria-hidden="true"></span>
+          <div><strong>{s.step}</strong><span class="note">{s.note}</span></div>
+        </li>
+      ))}
+    </ol>
+    <p class="loopback"><Icon name="arrow-right" size="sm" /> Back to the first step until it looks right.</p>
+  </article>
+
+  <article class="loop loop-cw" aria-labelledby="vs-cw">
+    <header>
+      <h3 id="vs-cw">An agent in Cutweave</h3>
+      <p class="sub">The app exposes its own state and its own renderer, so the agent asks instead of guessing.</p>
+    </header>
+    <ol class="steps">
+      {state.map((s) => (
+        <li>
+          <span class="n" aria-hidden="true"></span>
+          <div>
+            <strong>{s.step}</strong>
+            <span class="note">{s.note}</span>
+            <code class:list={['tool', s.image && 'tool-image']}>{s.tool}</code>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="loopback"><Icon name="check" size="sm" /> Every edit is attributed to one actor and undoable as one step.</p>
+  </article>
+</div>
+
+<style>
+  .vs { display: grid; gap: var(--space-6); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .vs { grid-template-columns: 1fr 1fr; } }
+
+  .loop {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+  }
+  .loop-cw { background: var(--surface-2); border-color: var(--border-control); }
+  h3 { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .sub { color: var(--text-secondary); margin-top: var(--space-1); }
+
+  .steps { display: flex; flex-direction: column; gap: var(--space-3); counter-reset: s; }
+  .steps li { display: flex; gap: var(--space-3); align-items: flex-start; counter-increment: s; }
+  .n {
+    flex: none;
+    width: var(--space-6);
+    height: var(--space-6);
+    display: inline-grid;
+    place-items: center;
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .n::before { content: counter(s); }
+  .steps div { display: flex; flex-direction: column; gap: var(--space-0-5); }
+  .note { color: var(--text-secondary); font-size: 15px; line-height: 22px; }
+  .tool {
+    align-self: flex-start;
+    margin-top: var(--space-1);
+    padding: 0 var(--space-2);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: var(--mono-small);
+    line-height: 22px;
+    color: var(--text-primary);
+  }
+  /* Image-returning tool: agent blue marks content an agent consumes. */
+  .tool-image { background: var(--agent-subtle); border-color: var(--agent); color: var(--agent-text); }
+
+  .loopback {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: var(--border-thin) solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+</style>

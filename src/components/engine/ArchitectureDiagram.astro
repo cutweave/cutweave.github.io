@@ -1,0 +1,477 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * ArchitectureDiagram: one engine, many clients. Inline SVG drawn from docs/content-inventory.md §8.1
+ * (arch §1, §2). Clients on top, the API layer, the engine (command bus, Tx, project document,
+ * render and audio, plus media, jobs, AI gateway and plugin host) and the outputs.
+ *
+ * Props:
+ *  - compact?: boolean    simplified diagram (clients, one engine chain, outputs) for the landing page.
+ *                         Default false. Compact omits the API layer detail and the engine services.
+ *  - idPrefix?: string    unique id prefix when two diagrams share a page (default 'arch-full' or 'arch-compact')
+ *  - headingLevel?: 3|4   not used for headings; the component has none. Place it under your own heading.
+ *
+ * Behavior: four buttons trace a client's path (click to pin, hover or focus to preview). Hovering a
+ * client box in the SVG does the same. Without JS the whole diagram is shown. Two SVGs are rendered
+ * (wide and narrow) and CSS shows one: the narrow one is a vertical stack for phones, so text stays
+ * readable at 360 px with no horizontal scroll.
+ */
+import '../../styles/area-s2.css';
+
+interface Props {
+  compact?: boolean;
+  idPrefix?: string;
+}
+const { compact = false, idPrefix } = Astro.props;
+const pre = idPrefix ?? (compact ? 'arch-compact' : 'arch-full');
+
+type Dir = 'u' | 'd' | 'l' | 'r';
+interface Node { id: string; kind: 'client' | 'api' | 'core' | 'svc' | 'out'; x: number; y: number; w: number; h: number; title: string; sub?: string; mono?: boolean; paths: string; client?: string; agent?: boolean }
+interface Box { x: number; y: number; w: number; h: number; label: string; lx: number; ly: number }
+interface Edge { d: string; head?: [number, number, Dir]; paths: string; dashed?: boolean }
+interface Label { x: number; y: number; text: string; anchor?: 'start' | 'end'; mono?: boolean; paths: string }
+interface Layout { w: number; h: number; boxes: Box[]; nodes: Node[]; edges: Edge[]; labels: Label[]; small: boolean }
+
+const ALL = 'ui agents cli plugins';
+const none = 'x'; // not on any client's path: dimmed whenever a client is selected
+
+const clientsWide = (): Node[] => [
+  { id: 'ui', kind: 'client', client: 'ui', x: 15, y: 16, w: 210, h: 60, title: 'Desktop UI', sub: 'Electron and React', paths: 'ui' },
+  { id: 'agents', kind: 'client', client: 'agents', x: 255, y: 16, w: 210, h: 60, title: 'AI agents', sub: 'MCP, stdio or HTTP', paths: 'agents', agent: true },
+  { id: 'cli', kind: 'client', client: 'cli', x: 495, y: 16, w: 210, h: 60, title: 'cutweave CLI', sub: 'JSON in, JSON out', paths: 'cli' },
+  { id: 'plugins', kind: 'client', client: 'plugins', x: 735, y: 16, w: 210, h: 60, title: 'Plugins', sub: 'WASM, JS, WGSL, UI panels', paths: 'plugins' },
+];
+const clientsNarrow = (): Node[] => [
+  { id: 'ui', kind: 'client', client: 'ui', x: 12, y: 12, w: 162, h: 48, title: 'Desktop UI', sub: 'Electron and React', paths: 'ui' },
+  { id: 'agents', kind: 'client', client: 'agents', x: 186, y: 12, w: 162, h: 48, title: 'AI agents', sub: 'MCP', paths: 'agents', agent: true },
+  { id: 'cli', kind: 'client', client: 'cli', x: 12, y: 68, w: 162, h: 48, title: 'cutweave CLI', sub: 'JSON in, JSON out', paths: 'cli' },
+  { id: 'plugins', kind: 'client', client: 'plugins', x: 186, y: 68, w: 162, h: 48, title: 'Plugins', sub: 'WASM, JS, WGSL', paths: 'plugins' },
+];
+
+function fullWide(): Layout {
+  const edges: Edge[] = [];
+  [120, 360, 600, 840].forEach((x, i) => edges.push({ d: `M${x} 76 V113`, head: [x, 120, 'd'], paths: ['ui', 'agents', 'cli', 'plugins'][i] ?? ALL }));
+  edges.push(
+    { d: 'M150 224 V323', head: [150, 330, 'd'], paths: ALL },
+    { d: 'M775 330 V232', head: [775, 225, 'u'], paths: ALL, dashed: true },
+    { d: 'M275 358 H338', head: [345, 358, 'r'], paths: ALL },
+    { d: 'M575 358 H628', head: [635, 358, 'r'], paths: ALL },
+    { d: 'M775 386 V408 H645 V423', head: [645, 430, 'd'], paths: ALL },
+    { d: 'M775 408 H830 V423', head: [830, 430, 'd'], paths: 'ui' },
+    { d: 'M160 430 V393', head: [160, 386, 'u'], paths: 'plugins' },
+    { d: 'M525 458 H558', head: [565, 458, 'r'], paths: 'cli' },
+    { d: 'M480 486 V513', head: [480, 520, 'd'], paths: none },
+    { d: 'M340 486 V503 H160 V513', head: [160, 520, 'd'], paths: none },
+    { d: 'M645 486 V616', paths: ALL },
+    { d: 'M525 616 H875', paths: ALL },
+    { d: 'M525 616 V625', head: [525, 632, 'd'], paths: 'ui plugins' },
+    { d: 'M700 616 V625', head: [700, 632, 'd'], paths: 'cli' },
+    { d: 'M875 616 V625', head: [875, 632, 'd'], paths: 'agents' },
+  );
+  return {
+    w: 960, h: 690, small: false,
+    boxes: [
+      { x: 15, y: 120, w: 930, h: 104, label: 'API layer: one local axum server on 127.0.0.1, token auth', lx: 30, ly: 141 },
+      { x: 15, y: 290, w: 930, h: 310, label: 'Engine: cutweave, one Rust process', lx: 30, ly: 588 },
+    ],
+    nodes: [
+      ...clientsWide(),
+      { id: 'rpc', kind: 'api', x: 30, y: 154, w: 206, h: 56, title: 'JSON-RPC over WebSocket', sub: '/rpc', mono: true, paths: 'ui' },
+      { id: 'mcp', kind: 'api', x: 264, y: 154, w: 206, h: 56, title: 'MCP', sub: '/mcp', mono: true, paths: 'agents', agent: true },
+      { id: 'media', kind: 'api', x: 498, y: 154, w: 206, h: 56, title: 'HTTP media endpoints', sub: '/media/{id}/thumb, /frame', mono: true, paths: 'ui' },
+      { id: 'shm', kind: 'api', x: 732, y: 154, w: 206, h: 56, title: 'Shared-memory preview', sub: 'ring buffer to a WebGPU canvas', paths: 'ui' },
+      { id: 'bus', kind: 'core', x: 45, y: 330, w: 230, h: 56, title: 'Command bus', sub: 'validate, actor from credential', paths: ALL },
+      { id: 'tx', kind: 'core', x: 345, y: 330, w: 230, h: 56, title: 'Transaction (Tx)', sub: 'forward and inverse patches', paths: ALL },
+      { id: 'doc', kind: 'core', x: 635, y: 330, w: 280, h: 56, title: 'Project document', sub: 'immutable snapshots, one writer', paths: ALL },
+      { id: 'plug', kind: 'svc', x: 45, y: 430, w: 230, h: 56, title: 'Plugin host', sub: 'wasmtime, QuickJS, WGSL', paths: 'plugins' },
+      { id: 'jobs', kind: 'svc', x: 295, y: 430, w: 230, h: 56, title: 'Job manager', sub: 'export, analysis, AI, proxies', paths: 'cli' },
+      { id: 'render', kind: 'core', x: 565, y: 430, w: 160, h: 56, title: 'Render pipeline', sub: 'wgpu and WGSL', paths: ALL },
+      { id: 'audio', kind: 'core', x: 745, y: 430, w: 170, h: 56, title: 'Audio engine', sub: 'device clock is master', paths: 'ui' },
+      { id: 'mediaL', kind: 'svc', x: 45, y: 520, w: 230, h: 50, title: 'Media layer', sub: 'FFmpeg, frame index, proxies', paths: none },
+      { id: 'ai', kind: 'svc', x: 295, y: 520, w: 230, h: 50, title: 'AI gateway', sub: 'HTTPS to cloud models', paths: none },
+      { id: 'preview', kind: 'out', x: 450, y: 632, w: 150, h: 44, title: 'Preview', paths: 'ui plugins' },
+      { id: 'export', kind: 'out', x: 625, y: 632, w: 150, h: 44, title: 'Export', paths: 'cli' },
+      { id: 'frame', kind: 'out', x: 800, y: 632, w: 150, h: 44, title: 'Agent frame', paths: 'agents', agent: true },
+    ],
+    edges,
+    labels: [
+      { x: 160, y: 282, text: 'commands', paths: ALL },
+      { x: 765, y: 282, text: 'doc.patched{rev, actor, ops}', anchor: 'end', mono: true, paths: ALL },
+    ],
+  };
+}
+
+function fullNarrow(): Layout {
+  const edges: Edge[] = [
+    { d: 'M180 116 V141', head: [180, 148, 'd'], paths: ALL },
+    { d: 'M270 286 V339', head: [270, 346, 'd'], paths: ALL },
+    { d: 'M300 504 H326 V293', head: [326, 286, 'u'], paths: ALL, dashed: true },
+    { d: 'M170 390 V407', head: [170, 414, 'd'], paths: ALL },
+    { d: 'M170 458 V475', head: [170, 482, 'd'], paths: ALL },
+    { d: 'M170 526 V538 H100 V543', head: [100, 550, 'd'], paths: ALL },
+    { d: 'M170 538 H240 V543', head: [240, 550, 'd'], paths: 'ui' },
+    { d: 'M100 594 V632', paths: ALL },
+    { d: 'M66 632 H294', paths: ALL },
+    { d: 'M66 632 V643', head: [66, 650, 'd'], paths: 'ui plugins' },
+    { d: 'M180 632 V643', head: [180, 650, 'd'], paths: 'cli' },
+    { d: 'M294 632 V643', head: [294, 650, 'd'], paths: 'agents' },
+  ];
+  return {
+    w: 360, h: 860, small: true,
+    boxes: [
+      { x: 12, y: 148, w: 336, h: 138, label: 'API layer: local axum, 127.0.0.1, token auth', lx: 24, ly: 166 },
+      { x: 12, y: 312, w: 336, h: 302, label: 'Engine: cutweave, one Rust process', lx: 24, ly: 330 },
+      { x: 12, y: 708, w: 336, h: 140, label: 'Also in the engine', lx: 24, ly: 726 },
+    ],
+    nodes: [
+      ...clientsNarrow(),
+      { id: 'rpc', kind: 'api', x: 24, y: 176, w: 150, h: 44, title: 'JSON-RPC', sub: 'WebSocket /rpc', mono: true, paths: 'ui' },
+      { id: 'mcp', kind: 'api', x: 186, y: 176, w: 150, h: 44, title: 'MCP', sub: '/mcp', mono: true, paths: 'agents', agent: true },
+      { id: 'media', kind: 'api', x: 24, y: 228, w: 150, h: 44, title: 'HTTP media', sub: '/media/{id}/...', mono: true, paths: 'ui' },
+      { id: 'shm', kind: 'api', x: 186, y: 228, w: 150, h: 44, title: 'Shared memory', sub: 'preview ring', paths: 'ui' },
+      { id: 'bus', kind: 'core', x: 40, y: 346, w: 260, h: 44, title: 'Command bus', sub: 'validate, actor from credential', paths: ALL },
+      { id: 'tx', kind: 'core', x: 40, y: 414, w: 260, h: 44, title: 'Transaction (Tx)', sub: 'forward and inverse patches', paths: ALL },
+      { id: 'doc', kind: 'core', x: 40, y: 482, w: 260, h: 44, title: 'Project document', sub: 'immutable snapshots', paths: ALL },
+      { id: 'render', kind: 'core', x: 40, y: 550, w: 120, h: 44, title: 'Render', sub: 'wgpu and WGSL', paths: ALL },
+      { id: 'audio', kind: 'core', x: 180, y: 550, w: 120, h: 44, title: 'Audio', sub: 'device clock', paths: 'ui' },
+      { id: 'preview', kind: 'out', x: 12, y: 650, w: 108, h: 40, title: 'Preview', paths: 'ui plugins' },
+      { id: 'export', kind: 'out', x: 126, y: 650, w: 108, h: 40, title: 'Export', paths: 'cli' },
+      { id: 'frame', kind: 'out', x: 240, y: 650, w: 108, h: 40, title: 'Agent frame', paths: 'agents', agent: true },
+      { id: 'plug', kind: 'svc', x: 24, y: 740, w: 150, h: 44, title: 'Plugin host', sub: 'wasmtime, QuickJS', paths: 'plugins' },
+      { id: 'jobs', kind: 'svc', x: 186, y: 740, w: 150, h: 44, title: 'Job manager', sub: 'export, AI, analysis', paths: 'cli' },
+      { id: 'mediaL', kind: 'svc', x: 24, y: 792, w: 150, h: 44, title: 'Media layer', sub: 'FFmpeg, proxies', paths: none },
+      { id: 'ai', kind: 'svc', x: 186, y: 792, w: 150, h: 44, title: 'AI gateway', sub: 'cloud models, HTTPS', paths: none },
+    ],
+    edges,
+    labels: [],
+  };
+}
+
+function compactWide(): Layout {
+  const edges: Edge[] = [];
+  [120, 360, 600, 840].forEach((x, i) => edges.push({ d: `M${x} 60 V93`, head: [x, 100, 'd'], paths: ['ui', 'agents', 'cli', 'plugins'][i] ?? ALL }));
+  edges.push(
+    { d: 'M230 168 H258', head: [265, 168, 'r'], paths: ALL },
+    { d: 'M455 168 H483', head: [490, 168, 'r'], paths: ALL },
+    { d: 'M680 168 H708', head: [715, 168, 'r'], paths: ALL },
+    { d: 'M810 196 V236', paths: ALL },
+    { d: 'M620 236 H890', paths: ALL },
+    { d: 'M620 236 V243', head: [620, 250, 'd'], paths: 'ui plugins' },
+    { d: 'M755 236 V243', head: [755, 250, 'd'], paths: 'cli' },
+    { d: 'M890 236 V243', head: [890, 250, 'd'], paths: 'agents' },
+  );
+  const c = clientsWide().map((n) => ({ ...n, y: 10, h: 50 }));
+  return {
+    w: 960, h: 300, small: false,
+    boxes: [{ x: 15, y: 100, w: 930, h: 120, label: 'One Rust engine. Every client reaches it through one local API.', lx: 30, ly: 121 }],
+    nodes: [
+      ...c,
+      { id: 'bus', kind: 'core', x: 40, y: 140, w: 190, h: 56, title: 'Command bus', paths: ALL },
+      { id: 'tx', kind: 'core', x: 265, y: 140, w: 190, h: 56, title: 'Transaction (Tx)', paths: ALL },
+      { id: 'doc', kind: 'core', x: 490, y: 140, w: 190, h: 56, title: 'Project document', paths: ALL },
+      { id: 'render', kind: 'core', x: 715, y: 140, w: 190, h: 56, title: 'Render pipeline', paths: ALL },
+      { id: 'preview', kind: 'out', x: 560, y: 250, w: 120, h: 40, title: 'Preview', paths: 'ui plugins' },
+      { id: 'export', kind: 'out', x: 695, y: 250, w: 120, h: 40, title: 'Export', paths: 'cli' },
+      { id: 'frame', kind: 'out', x: 830, y: 250, w: 120, h: 40, title: 'Agent frame', paths: 'agents', agent: true },
+    ],
+    edges,
+    labels: [],
+  };
+}
+
+function compactNarrow(): Layout {
+  return {
+    w: 360, h: 530, small: true,
+    boxes: [{ x: 12, y: 146, w: 336, h: 292, label: 'One Rust engine, one local API', lx: 24, ly: 164 }],
+    nodes: [
+      ...clientsNarrow(),
+      { id: 'bus', kind: 'core', x: 60, y: 184, w: 240, h: 40, title: 'Command bus', paths: ALL },
+      { id: 'tx', kind: 'core', x: 60, y: 248, w: 240, h: 40, title: 'Transaction (Tx)', paths: ALL },
+      { id: 'doc', kind: 'core', x: 60, y: 312, w: 240, h: 40, title: 'Project document', paths: ALL },
+      { id: 'render', kind: 'core', x: 60, y: 376, w: 240, h: 40, title: 'Render pipeline', paths: ALL },
+      { id: 'preview', kind: 'out', x: 12, y: 476, w: 108, h: 40, title: 'Preview', paths: 'ui plugins' },
+      { id: 'export', kind: 'out', x: 126, y: 476, w: 108, h: 40, title: 'Export', paths: 'cli' },
+      { id: 'frame', kind: 'out', x: 240, y: 476, w: 108, h: 40, title: 'Agent frame', paths: 'agents', agent: true },
+    ],
+    edges: [
+      { d: 'M180 116 V139', head: [180, 146, 'd'], paths: ALL },
+      { d: 'M180 224 V241', head: [180, 248, 'd'], paths: ALL },
+      { d: 'M180 288 V305', head: [180, 312, 'd'], paths: ALL },
+      { d: 'M180 352 V369', head: [180, 376, 'd'], paths: ALL },
+      { d: 'M180 416 V454', paths: ALL },
+      { d: 'M66 454 H294', paths: ALL },
+      { d: 'M66 454 V469', head: [66, 476, 'd'], paths: 'ui plugins' },
+      { d: 'M180 454 V469', head: [180, 476, 'd'], paths: 'cli' },
+      { d: 'M294 454 V469', head: [294, 476, 'd'], paths: 'agents' },
+    ],
+    labels: [],
+  };
+}
+
+const wide = compact ? compactWide() : fullWide();
+const narrow = compact ? compactNarrow() : fullNarrow();
+const layouts = [
+  { key: 'wide', l: wide },
+  { key: 'narrow', l: narrow },
+];
+
+const headPoints = ([x, y, dir]: [number, number, Dir]): string => {
+  const s = 7;
+  const h = 4;
+  if (dir === 'd') return `${x},${y} ${x - h},${y - s} ${x + h},${y - s}`;
+  if (dir === 'u') return `${x},${y} ${x - h},${y + s} ${x + h},${y + s}`;
+  if (dir === 'r') return `${x},${y} ${x - s},${y - h} ${x - s},${y + h}`;
+  return `${x},${y} ${x + s},${y - h} ${x + s},${y + h}`;
+};
+
+const titleY = (n: Node) => (n.sub ? n.y + n.h * 0.46 : n.y + n.h / 2 + 5);
+const subY = (n: Node) => n.y + n.h * 0.76;
+
+const clients = [
+  {
+    id: 'ui',
+    label: 'Desktop UI',
+    trace: 'Desktop UI: commands over JSON-RPC on a WebSocket, media over HTTP, preview frames through a shared-memory ring. Then command bus, Tx, project document, render pipeline and audio engine, out to the preview.',
+  },
+  {
+    id: 'agents',
+    label: 'AI agents',
+    trace: 'AI agents: MCP over stdio or HTTP. Then command bus, Tx and project document. Image tools come from the render pipeline as an agent frame.',
+  },
+  {
+    id: 'cli',
+    label: 'CLI',
+    trace: 'CLI: JSON in, JSON out. It attaches to the running engine or starts a headless one, and goes through the same command bus. Export runs as a job through the render pipeline.',
+  },
+  {
+    id: 'plugins',
+    label: 'Plugins',
+    trace: 'Plugins: run in the plugin host (wasmtime, QuickJS, a WGSL loader), which calls the command bus and the render pipeline. A plugin effect shows up in the preview.',
+  },
+];
+const defaultTrace = 'Select a client to trace its path through the engine.';
+const titleId = `${pre}-title`;
+const descId = `${pre}-desc`;
+---
+<figure class:list={['arch', compact && 'is-compact']} data-arch data-default={defaultTrace}>
+  <div class="tracer" role="group" aria-label="Trace a client's path">
+    <span class="tracer-label">Trace a path</span>
+    <div class="tracer-buttons" data-tracer hidden>
+      {clients.map((c) => (
+        <button type="button" class:list={['trace', c.id === 'agents' && 'trace-agent']} data-client={c.id} data-trace={c.trace} aria-pressed="false">{c.label}</button>
+      ))}
+    </div>
+    <p class="trace-text" role="status" aria-live="polite" data-trace-out>{defaultTrace}</p>
+  </div>
+
+  {layouts.map(({ key, l }) => (
+    <svg
+      class:list={['svg', `svg-${key}`, l.small && 'small']}
+      viewBox={`0 0 ${l.w} ${l.h}`}
+      role="img"
+      aria-labelledby={`${titleId}-${key}`}
+      aria-describedby={descId}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title id={`${titleId}-${key}`}>{compact ? 'One engine, many clients (summary)' : 'Cutweave architecture: clients, API layer, engine and outputs'}</title>
+      {l.boxes.map((b) => (
+        <g>
+          <rect class="box" x={b.x} y={b.y} width={b.w} height={b.h} rx="10" />
+          <text class="box-label" x={b.lx} y={b.ly}>{b.label}</text>
+        </g>
+      ))}
+      {l.edges.map((e) => (
+        <g class:list={['edge-g', e.dashed && 'dashed']} data-paths={e.paths}>
+          <path class="edge" d={e.d} />
+          {e.head && <polygon class="head" points={headPoints(e.head)} />}
+        </g>
+      ))}
+      {l.labels.map((t) => (
+        <text class:list={['elabel', t.mono && 'mono']} x={t.x} y={t.y} text-anchor={t.anchor ?? 'start'} data-paths={t.paths}>{t.text}</text>
+      ))}
+      {l.nodes.map((n) => (
+        <g class:list={['node', `k-${n.kind}`, n.agent && 'agent']} data-paths={n.paths} data-client={n.client}>
+          <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="6" />
+          <text class="t" x={n.x + n.w / 2} y={titleY(n)} text-anchor="middle">{n.title}</text>
+          {n.sub && <text class:list={['s', n.mono && 'mono']} x={n.x + n.w / 2} y={subY(n)} text-anchor="middle">{n.sub}</text>}
+        </g>
+      ))}
+    </svg>
+  ))}
+
+  <ul class="legend" aria-label="Legend">
+    <li><svg viewBox="0 0 28 16" aria-hidden="true"><rect class="lg-client" x="1" y="2" width="26" height="12" rx="3" /></svg>Client</li>
+    <li><svg viewBox="0 0 28 16" aria-hidden="true"><rect class="lg-core" x="1" y="2" width="26" height="12" rx="3" /></svg>Engine component</li>
+    <li><svg viewBox="0 0 28 16" aria-hidden="true"><rect class="lg-out" x="1" y="2" width="26" height="12" rx="3" /></svg>Output</li>
+    <li><svg viewBox="0 0 28 16" aria-hidden="true"><path class="lg-edge" d="M2 8 H20" /><polygon class="lg-head" points="26,8 20,5 20,11" /></svg>Command or call</li>
+    {!compact && <li><svg viewBox="0 0 28 16" aria-hidden="true"><path class="lg-edge lg-dash" d="M2 8 H20" /><polygon class="lg-head" points="26,8 20,5 20,11" /></svg>Events streamed back</li>}
+    <li><svg viewBox="0 0 28 16" aria-hidden="true"><rect class="lg-agent" x="1" y="2" width="26" height="12" rx="3" /></svg>Agent path</li>
+    <li><svg viewBox="0 0 28 16" aria-hidden="true"><path class="lg-on" d="M2 8 H20" /><polygon class="lg-on-head" points="26,8 20,5 20,11" /></svg>Selected path</li>
+  </ul>
+
+  <figcaption class="cap">
+    <details id={descId}>
+      <summary>Text description of the diagram</summary>
+      {compact ? (
+        <div class="desc">
+          <p>Four clients, the desktop UI, AI agents over MCP, the CLI and plugins, all send commands to one Rust engine through one local API. Inside the engine a command goes to the command bus, then a transaction, then the project document, then the render pipeline. The render pipeline produces three outputs: the preview, an export, and the agent frame.</p>
+        </div>
+      ) : (
+        <div class="desc">
+          <p>The diagram has four rows, read top to bottom.</p>
+          <ol>
+            <li><strong>Clients.</strong> The desktop UI (Electron and React), AI agents over MCP, the cutweave CLI, and plugins (WASM, JS, WGSL and UI panels).</li>
+            <li><strong>API layer.</strong> One local axum server on 127.0.0.1 with token auth. It offers JSON-RPC over WebSocket at /rpc, MCP at /mcp, HTTP media endpoints (thumbnails, filmstrips, waveforms, frames), and a shared-memory ring for the preview.</li>
+            <li><strong>Engine.</strong> One Rust process. Every client sends commands to the API, then to the command bus, which validates them. The transaction records forward and inverse patches and applies them to the project document, a single writer that holds immutable snapshots. The document feeds the render pipeline and the audio engine. The job manager calls media, AI and render. The plugin host calls the command bus, render and the AI gateway. The AI gateway reaches cloud models over HTTPS. The media layer wraps FFmpeg.</li>
+            <li><strong>Outputs.</strong> The render pipeline produces the preview, an export, and the agent frame.</li>
+          </ol>
+          <p>Events such as doc.patched{`{rev, actor, ops}`} stream from the engine back to every subscriber, and the UI keeps a read-only projection that updates from them.</p>
+          {clients.map((c) => <p><strong>{c.label}.</strong> {c.trace.split(': ').slice(1).join(': ')}</p>)}
+        </div>
+      )}
+    </details>
+  </figcaption>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-arch]').forEach((root) => {
+    const tracer = root.querySelector<HTMLElement>('[data-tracer]');
+    const out = root.querySelector<HTMLElement>('[data-trace-out]');
+    if (!tracer || !out) return;
+    tracer.hidden = false;
+    const fallback = root.dataset.default ?? '';
+    const buttons = Array.from(tracer.querySelectorAll<HTMLButtonElement>('[data-client]'));
+    const targets = Array.from(root.querySelectorAll<SVGElement>('[data-paths]'));
+    const clientNodes = Array.from(root.querySelectorAll<SVGElement>('svg [data-client]'));
+    let pinned: string | null = null;
+
+    const apply = (id: string | null) => {
+      root.dataset.active = id ?? '';
+      if (id) root.setAttribute('data-active', id);
+      else root.removeAttribute('data-active');
+      targets.forEach((el) => {
+        const on = !!id && (el.getAttribute('data-paths') ?? '').split(' ').includes(id);
+        el.classList.toggle('on', on);
+        el.classList.toggle('dim', !!id && !on);
+      });
+      const b = buttons.find((x) => x.dataset.client === id);
+      out.textContent = b?.dataset.trace ?? fallback;
+    };
+    const sync = () => buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.client === pinned)));
+
+    buttons.forEach((b) => {
+      const id = b.dataset.client ?? null;
+      b.addEventListener('click', () => {
+        pinned = pinned === id ? null : id;
+        sync();
+        apply(pinned);
+      });
+      b.addEventListener('mouseenter', () => apply(id));
+      b.addEventListener('focus', () => apply(id));
+      b.addEventListener('mouseleave', () => apply(pinned));
+      b.addEventListener('blur', () => apply(pinned));
+    });
+    clientNodes.forEach((n) => {
+      const id = n.getAttribute('data-client');
+      n.addEventListener('mouseenter', () => apply(id));
+      n.addEventListener('mouseleave', () => apply(pinned));
+      n.addEventListener('click', () => {
+        pinned = pinned === id ? null : id;
+        sync();
+        apply(pinned);
+      });
+    });
+  });
+</script>
+
+<style>
+  .arch {
+    --path-color: var(--marigold-text);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .arch[data-active='agents'] { --path-color: var(--agent); }
+
+  .tracer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+  .tracer-label { font-size: 12px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); font-weight: 650; }
+  .tracer-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .tracer-buttons[hidden] { display: none; }
+  .trace {
+    height: var(--button-height-sm);
+    padding-inline: var(--space-3);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .trace:hover { background: var(--surface-3); }
+  /* Selected = "here" in marigold, except the agent path, which is agent blue. */
+  .trace[aria-pressed='true'] { border-color: var(--marigold-text); background: var(--marigold-subtle); }
+  .trace-agent[aria-pressed='true'] { border-color: var(--agent); background: var(--agent-subtle); }
+  .trace-text { flex-basis: 100%; color: var(--text-secondary); font-size: 15px; line-height: 22px; min-height: 44px; max-width: var(--prose-max); }
+
+  .svg { width: 100%; height: auto; }
+  .svg-narrow { display: block; max-width: 420px; margin-inline: auto; }
+  .svg-wide { display: none; }
+  @media (min-width: 760px) {
+    .svg-wide { display: block; }
+    .svg-narrow { display: none; }
+  }
+
+  .box { fill: var(--surface-1); stroke: var(--border-default); stroke-width: var(--diagram-stroke); }
+  .box-label { fill: var(--text-secondary); font-family: var(--font-ui); font-size: 12px; font-weight: 600; }
+  .small .box-label { font-size: 11px; }
+
+  .node rect { fill: var(--surface-2); stroke: var(--border-control); stroke-width: var(--diagram-stroke); }
+  .k-client rect { stroke-width: var(--diagram-stroke-path); }
+  .k-out rect { fill: var(--surface-1); stroke-dasharray: 5 3; }
+  .k-svc rect { fill: var(--surface-1); stroke: var(--border-default); }
+  /* Agent blue marks the agent-facing parts only. */
+  .node.agent rect { fill: var(--agent-subtle); stroke: var(--agent); }
+  .t { fill: var(--text-primary); font-family: var(--font-ui); font-size: 14px; font-weight: 650; }
+  .s { fill: var(--text-secondary); font-family: var(--font-ui); font-size: 12px; }
+  .s.mono, .elabel.mono { font-family: var(--font-mono); }
+  .small .t { font-size: 13px; }
+  .small .s { font-size: 11px; }
+  .elabel { fill: var(--text-secondary); font-family: var(--font-ui); font-size: 12px; }
+  .elabel.mono { font-size: 11px; }
+
+  .edge { fill: none; stroke: var(--border-control); stroke-width: var(--diagram-stroke); }
+  .head { fill: var(--border-control); }
+  .dashed .edge { stroke-dasharray: 4 3; }
+  .node { cursor: default; }
+  .k-client { cursor: pointer; }
+
+  /* Path tracing (JS adds .on and .dim). */
+  [data-arch] .dim { opacity: var(--diagram-dim); }
+  .node.on rect { stroke: var(--path-color); stroke-width: var(--diagram-stroke-path); }
+  .edge-g.on .edge { stroke: var(--path-color); stroke-width: var(--diagram-stroke-path); }
+  .edge-g.on .head { fill: var(--path-color); }
+  .arch :is(.node, .edge-g, .elabel) { transition: opacity var(--duration-base) var(--easing-standard); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); color: var(--text-secondary); font-size: 14px; }
+  .legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .legend svg { width: 28px; height: 16px; flex: none; }
+  .lg-client { fill: var(--surface-2); stroke: var(--border-control); stroke-width: 2; }
+  .lg-core { fill: var(--surface-2); stroke: var(--border-control); stroke-width: 1; }
+  .lg-out { fill: var(--surface-1); stroke: var(--border-control); stroke-width: 1; stroke-dasharray: 3 2; }
+  .lg-agent { fill: var(--agent-subtle); stroke: var(--agent); stroke-width: 1; }
+  .lg-edge { fill: none; stroke: var(--border-control); stroke-width: 1.5; }
+  .lg-dash { stroke-dasharray: 3 2; }
+  .lg-head { fill: var(--border-control); }
+  .lg-on { fill: none; stroke: var(--marigold-text); stroke-width: 2; }
+  .lg-on-head { fill: var(--marigold-text); }
+
+  .cap summary { cursor: pointer; color: var(--text-primary); font-weight: 600; font-size: 15px; width: fit-content; }
+  .desc { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); color: var(--text-secondary); font-size: 15px; line-height: 23px; max-width: var(--prose-max); }
+  .desc ol { display: flex; flex-direction: column; gap: var(--space-2); padding-inline-start: var(--space-6); list-style: decimal; }
+  .desc strong { color: var(--text-primary); }
+
+  .is-compact .trace-text { min-height: 0; }
+</style>

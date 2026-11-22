@@ -1,0 +1,190 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * LifeOfEdit: steps one command, clip.split, from a client to the screen.
+ * Facts: arch §5.1 (envelope, typed errors), §5.2 (Tx, patches, snapshots), §8 (render).
+ * Without JS every step is shown. With JS, Previous and Next step through, one detail at a time.
+ * Payloads are illustrative: real names, invented values.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+
+const steps = [
+  {
+    title: 'Validate',
+    text: 'The client sends the command with a request_id and, optionally, the expected_rev it last saw. The engine checks the arguments against the JSON Schema, then runs semantic checks, such as whether the item exists and the time falls inside the clip. The actor comes from the credential, not from anything the client claims.',
+    code: `clip.split {
+  request_id: "0192…",      // UUIDv7, deduplicated for 10 minutes
+  expected_rev: 41,
+  item: "itm_0192…",
+  at: 2116800000            // 3 s, in flicks
+}`,
+  },
+  {
+    title: 'Tx records forward and inverse patches',
+    text: 'The command runs inside a transaction. The Tx records the forward patch ops and their inverses (RFC 6902). A gesture, such as a drag, and a proposal, which is an agent turn, are transaction kinds that still commit as one undo step.',
+    code: `forward:  replace /items/itm_0192…/duration
+          add     /items/itm_0193…
+inverse:  remove  /items/itm_0193…
+          replace /items/itm_0192…/duration`,
+  },
+  {
+    title: 'A new snapshot revision',
+    text: 'One writer owns the project document. It applies the patch and publishes an immutable snapshot at the next revision. Readers hold an Arc to a revision, so the hot path takes no locks.',
+    code: `rev 41  →  rev 42   // earlier snapshots stay valid for readers`,
+  },
+  {
+    title: 'Event: doc.patched',
+    text: 'The engine streams the change to every subscriber, with the revision, who made it and the patch ops.',
+    code: `doc.patched { rev: 42, actor: "agent:claude-code", ops: [ … ] }`,
+  },
+  {
+    title: 'UI projection updates',
+    text: 'The editor keeps a read-only projection of the document. It updates from doc.patched, and never writes to it directly. Any other client can follow the same stream.',
+    code: `docStore.apply(patched)   // read-only projection`,
+  },
+  {
+    title: 'Render',
+    text: 'Rendering is a pure function of the snapshot, the sequence, the time and the quality. The same revision gives the same frame, so frames can be cached. The preview, an export and an agent’s image all come from this one pipeline.',
+    code: `render(snapshot@42, sequence, t, quality) → frame`,
+  },
+];
+---
+<div class="life" data-life>
+  <div class="controls" data-controls hidden>
+    <button type="button" class="btn" data-prev>Previous step</button>
+    <button type="button" class="btn" data-next>Next step</button>
+    <p class="pos" role="status" aria-live="polite" data-pos></p>
+  </div>
+
+  <ol class="steps">
+    {steps.map((s, i) => (
+      <li data-step={i}>
+        <span class="n" aria-hidden="true">{i + 1}</span>
+        <div class="c">
+          <h3>{s.title}</h3>
+          <div class="detail">
+            <p>{s.text}</p>
+            <pre tabindex="0"><code>{s.code}</code></pre>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <div class="envelope">
+    <h3>What protects a retry or a race</h3>
+    <ul>
+      <li><code>request_id</code> makes a command idempotent. A repeat inside 10 minutes returns the original result, so a client can resend after an engine restart.</li>
+      <li><code>expected_rev</code> is optimistic concurrency. If the document has moved on, the command fails with <code>Conflict</code> instead of overwriting.</li>
+      <li>Errors are typed: <code>NotFound</code>, <code>Locked</code>, <code>Conflict&#123;current_rev&#125;</code>, <code>Invalid&#123;path,msg&#125;</code> and <code>Unsupported</code>, each with a human message and a machine code.</li>
+    </ul>
+    <p class="foot">Illustrative payloads. The names and shapes are from the architecture doc; the values are invented.</p>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-life]').forEach((root) => {
+    const controls = root.querySelector<HTMLElement>('[data-controls]');
+    const prev = root.querySelector<HTMLButtonElement>('[data-prev]');
+    const next = root.querySelector<HTMLButtonElement>('[data-next]');
+    const pos = root.querySelector<HTMLElement>('[data-pos]');
+    const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
+    if (!controls || !prev || !next || !pos || steps.length === 0) return;
+    controls.hidden = false;
+    root.classList.add('js');
+    let i = 0;
+    const show = (n: number) => {
+      i = Math.max(0, Math.min(steps.length - 1, n));
+      steps.forEach((s, k) => {
+        s.classList.toggle('active', k === i);
+        if (k === i) s.setAttribute('aria-current', 'step');
+        else s.removeAttribute('aria-current');
+      });
+      prev.disabled = i === 0;
+      next.disabled = i === steps.length - 1;
+      pos.textContent = `Step ${i + 1} of ${steps.length}: ${steps[i]?.querySelector('h3')?.textContent ?? ''}`;
+    };
+    prev.addEventListener('click', () => show(i - 1));
+    next.addEventListener('click', () => show(i + 1));
+    steps.forEach((s, k) => s.addEventListener('click', () => show(k)));
+    show(0);
+  });
+</script>
+
+<style>
+  .life { display: flex; flex-direction: column; gap: var(--space-6); }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .controls[hidden] { display: none; }
+  .btn {
+    height: var(--button-height-md);
+    padding-inline: var(--space-4);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: var(--text-body-size);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--surface-3); }
+  .btn:disabled { color: var(--text-disabled); border-color: var(--border-subtle); cursor: not-allowed; background: var(--surface-2); }
+  .pos { color: var(--text-secondary); font-size: 15px; }
+
+  .steps { display: flex; flex-direction: column; gap: var(--space-3); }
+  .steps li {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  .n {
+    flex: none;
+    width: var(--space-8);
+    height: var(--space-8);
+    display: inline-grid;
+    place-items: center;
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+  }
+  .c { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+  h3 { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .detail { display: flex; flex-direction: column; gap: var(--space-3); color: var(--text-secondary); font-size: 15px; line-height: 23px; max-width: var(--prose-max); }
+  pre {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-thin) solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-size: var(--mono-small);
+    line-height: var(--code-line);
+    overflow-x: auto;
+  }
+
+  /* With JS: one detail at a time. The marigold marks the current step ("here"). */
+  .js .steps li { cursor: pointer; }
+  .js .steps li:not(.active) .detail { display: none; }
+  .js .steps li:not(.active) { background: var(--surface-1); }
+  .js .steps li:not(.active) h3 { color: var(--text-secondary); font-weight: 500; }
+  .js .steps li.active { border-color: var(--marigold-text); }
+  .js .steps li.active .n { border-color: var(--marigold-text); background: var(--marigold-subtle); color: var(--text-primary); }
+
+  .envelope {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+  }
+  .envelope ul { display: flex; flex-direction: column; gap: var(--space-2); color: var(--text-secondary); }
+  .envelope code { font-size: var(--mono-small); color: var(--text-primary); }
+  .foot { color: var(--text-muted); font-size: 14px; }
+</style>

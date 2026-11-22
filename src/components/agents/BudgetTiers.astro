@@ -1,0 +1,142 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * BudgetTiers: the three-tier spending authority, enforced by the engine (arch §13, ADR-0016).
+ * Props:
+ *  - compact?: boolean   one line per tier, no sample message (for the landing page). Default false.
+ *  - headingLevel?: 3 | 4   level of the tier headings so the page outline stays valid (default 3)
+ *  - showStatus?: boolean   show the "Planned" chip (default true)
+ * Copy for the over-budget message is the brand book's (design/README.md).
+ */
+import '../../styles/area-s2.css';
+import Icon from '../ui/Icon.astro';
+import StatusChip from '../ui/StatusChip.astro';
+
+interface Props {
+  compact?: boolean;
+  headingLevel?: 3 | 4;
+  showStatus?: boolean;
+}
+const { compact = false, headingLevel = 3, showStatus = true } = Astro.props;
+const H = `h${headingLevel}` as 'h3' | 'h4';
+
+const tiers = [
+  {
+    n: 1,
+    name: 'Auto',
+    short: 'Runs without asking while it is under the budget. The default budget is $0, so this is off until you set one.',
+    long: 'The action is under the per-action and per-session agent budget. The default budget is $0, so tier 1 is off until you set a budget.',
+  },
+  {
+    n: 2,
+    name: 'Agent-confirmed',
+    short: 'A dry run returns cost_estimate and a confirm_token. It proves the agent saw the price. It cannot exceed the remaining budget.',
+    long: 'A dry run returns a cost_estimate and a confirm_token. The token proves the agent saw the price, but it cannot take the agent past the remaining budget.',
+  },
+  {
+    n: 3,
+    name: 'Human-approved',
+    short: 'Over budget, or marked requires_human, such as publishing or deleting originals. Only the desktop UI can approve.',
+    long: 'Over budget, or marked requires_human (publishing, deleting originals). The engine returns approval_required with an approval_id. Only the desktop UI can mint an approval; agent credentials cannot. Headless mode uses tiers 1 and 2 with an explicit --budget flag.',
+  },
+];
+---
+<div class:list={['tiers', compact && 'is-compact']}>
+  {showStatus && (
+    <p class="status"><StatusChip status="planned" label="Planned, Phase 5" /> <span>Enforced by the engine, not by the model.</span></p>
+  )}
+  <ol class="grid">
+    {tiers.map((t) => (
+      <li class="tier">
+        <span class="num" aria-hidden="true">{t.n}</span>
+        <div class="body">
+          <p class="kicker">Tier {t.n}</p>
+          <H class="name">{t.name}</H>
+          <p class="desc">{compact ? t.short : t.long}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  {!compact && (
+    <div class="sample">
+      <p class="label">What you see when an agent goes over budget <span class="tag">Illustrative</span></p>
+      <div class="over" role="note">
+        <span class="chip"><Icon name="sparkles" size="sm" /><span>Needs approval</span><span class="amt">~$2.10</span></span>
+        <p class="msg">This costs ~$2.10, above your $1.00 agent budget. Approve to continue.</p>
+      </div>
+      <p class="keys"><Icon name="shield-check" size="sm" /> Provider keys stay in the OS keychain. The engine makes every provider call, and keys never reach agents, plugins or the renderer.</p>
+    </div>
+  )}
+</div>
+
+<style>
+  .tiers { display: flex; flex-direction: column; gap: var(--space-6); }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); }
+  .grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .tier {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  .is-compact .tier { padding: var(--space-4); }
+  .num {
+    flex: none;
+    width: var(--space-8);
+    height: var(--space-8);
+    display: inline-grid;
+    place-items: center;
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-full);
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+  }
+  .body { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+  .kicker { font-size: 12px; line-height: 16px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); font-weight: 650; }
+  .name { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .desc { color: var(--text-secondary); font-size: 15px; line-height: 23px; }
+
+  .sample { display: flex; flex-direction: column; gap: var(--space-3); }
+  .label { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; font-weight: 600; }
+  .tag {
+    padding: 0 var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .over {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-1);
+  }
+  /* Cost chip, "approval" state from the design system: agent-origin approval uses agent blue. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    height: var(--control-md);
+    padding-inline: var(--space-2);
+    border: var(--border-thin) solid var(--agent);
+    border-radius: var(--radius-full);
+    background: var(--agent-subtle);
+    color: var(--agent-text);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .msg { font-weight: 500; }
+  .keys { display: flex; gap: var(--space-2); align-items: flex-start; color: var(--text-secondary); font-size: 15px; }
+  .keys :global(svg) { margin-top: var(--space-1); }
+</style>
