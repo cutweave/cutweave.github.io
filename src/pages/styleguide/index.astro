@@ -1,0 +1,108 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Hidden (noindex, excluded from the sitemap) review page: every base component in its states.
+// Use the header toggle to review both themes.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/ui/Container.astro';
+import Section from '../../components/ui/Section.astro';
+import Button from '../../components/ui/Button.astro';
+import StatusChip from '../../components/ui/StatusChip.astro';
+import AgentBadge from '../../components/ui/AgentBadge.astro';
+import Card from '../../components/ui/Card.astro';
+import Icon from '../../components/ui/Icon.astro';
+import Kbd from '../../components/ui/Kbd.astro';
+import CodeBlock from '../../components/ui/CodeBlock.astro';
+import { icons } from '../../components/ui/icons';
+
+const variants = ['primary', 'secondary', 'ghost'] as const;
+const sizes = ['sm', 'md', 'lg'] as const;
+const statuses = ['built', 'in-progress', 'planned', 'later'] as const;
+const iconNames = [...Object.keys(icons), 'github'] as Parameters<typeof Icon>[0]['name'][];
+---
+<BaseLayout title="Styleguide" description="Internal component review page." noindex>
+  <Section eyebrow="Internal" title="Styleguide" lede="Every base component in its states. Switch theme with the header toggle. Tab through the page to check focus rings.">
+    <p class="note">This page is hidden from search and the sitemap. Source: <code>src/pages/styleguide/index.astro</code>.</p>
+  </Section>
+
+  <Section tone="raised" level={2} title="Button" id="button">
+    {variants.map((variant) => (
+      <div class="group">
+        <h3 class="sub">{variant}</h3>
+        <div class="row">
+          {sizes.map((size) => <Button variant={variant} size={size}>Export video</Button>)}
+          <Button variant={variant} icon="scissors">Split clip</Button>
+          <Button variant={variant} iconEnd="arrow-right">Continue</Button>
+          <Button variant={variant} href="/styleguide/">As a link</Button>
+          <Button variant={variant} disabled>Disabled</Button>
+        </div>
+      </div>
+    ))}
+  </Section>
+
+  <Section title="StatusChip" id="status-chip">
+    <div class="row">
+      {statuses.map((status) => <StatusChip status={status} />)}
+      <StatusChip status="built" label="Shipped in 0.1" />
+    </div>
+  </Section>
+
+  <Section tone="raised" title="AgentBadge" id="agent-badge">
+    <div class="row">
+      <AgentBadge />
+      <AgentBadge label="Agent proposal" />
+      <AgentBadge label="AI generated" size="sm" />
+    </div>
+  </Section>
+
+  <Section title="Card" id="card">
+    <div class="cards">
+      <Card>
+        <h3 class="card-title">Static card</h3>
+        <p>Surface-2 with a hairline border.</p>
+      </Card>
+      <Card tone="raised">
+        <h3 class="card-title">Raised card</h3>
+        <p>Surface-1, for use on surface-0.</p>
+      </Card>
+      <Card href="/styleguide/">
+        <h3 class="card-title">Link card</h3>
+        <p>Hover and focus the whole card.</p>
+      </Card>
+    </div>
+  </Section>
+
+  <Section tone="raised" title="Icon" id="icon" lede="Lucide, 1.75 stroke, currentColor. Sizes sm, md, lg.">
+    <div class="row">
+      <Icon name="sparkles" size="sm" /><Icon name="sparkles" size="md" /><Icon name="sparkles" size="lg" />
+    </div>
+    <ul class="icons">
+      {iconNames.map((name) => (
+        <li><Icon name={name} size="lg" /><span>{name}</span></li>
+      ))}
+    </ul>
+  </Section>
+
+  <Section title="Kbd" id="kbd">
+    <p class="row">Press <Kbd>Ctrl</Kbd> + <Kbd>K</Kbd> to open the command palette, or <Kbd>Space</Kbd> to play.</p>
+  </Section>
+
+  <Section tone="raised" title="CodeBlock" id="code-block">
+    <CodeBlock label="Terminal" lang="sh" code={'cutweave export project.cwv --preset shorts\ncutweave agent --mcp'} />
+  </Section>
+
+  <Section title="Container and Section" id="layout" lede="This section uses eyebrow, title and lede. Containers apply gutters and a max width.">
+    <Container size="narrow"><p class="note">A narrow container nested in a section.</p></Container>
+  </Section>
+</BaseLayout>
+
+<style>
+  .note { color: var(--text-secondary); }
+  .group { margin-bottom: var(--space-6); }
+  .sub { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-3); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .cards { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+  .card-title { font-size: var(--display-card-size); line-height: 1.25; font-weight: 600; }
+  .icons { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); margin-top: var(--space-6); }
+  .icons li { display: flex; align-items: center; gap: var(--space-2); color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px; }
+  .icons :global(svg) { color: var(--text-primary); }
+</style>

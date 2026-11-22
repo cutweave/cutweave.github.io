@@ -1,0 +1,60 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * ThemeToggle: accessible light/dark switch. Dark is the default; the inline script in
+ * BaseLayout applies the stored or system choice before paint, and this script stores a manual
+ * choice in localStorage (key "cutweave-theme", wrapped in try/catch).
+ * It is a role="switch" named "Light theme"; aria-checked is true when the light theme is on.
+ * Props: none.
+ */
+import Icon from './ui/Icon.astro';
+---
+<button type="button" class="toggle" role="switch" aria-checked="false" aria-label="Light theme" data-theme-toggle>
+  <Icon name="moon" size="lg" class="when-dark" />
+  <Icon name="sun" size="lg" class="when-light" />
+</button>
+
+<style>
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-height-md);
+    height: var(--button-height-md);
+    padding: 0;
+    border: var(--border-thin) solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard);
+  }
+  .toggle:hover { background: var(--surface-3); color: var(--text-primary); }
+  .when-light { display: none; }
+  :global([data-theme='light']) .when-dark { display: none; }
+  :global([data-theme='light']) .when-light { display: block; }
+</style>
+
+<script>
+  const KEY = 'cutweave-theme';
+  const root = document.documentElement;
+  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+
+  function sync(): void {
+    toggle?.setAttribute('aria-checked', String(root.getAttribute('data-theme') === 'light'));
+  }
+  sync();
+
+  toggle?.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    root.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem(KEY, next);
+    } catch {
+      /* storage unavailable: the choice lasts for this page view only */
+    }
+    sync();
+  });
+</script>

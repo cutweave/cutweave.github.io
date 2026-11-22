@@ -1,0 +1,48 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Logo: the Cutweave mark plus the wordmark ("Cutweave" in the display font, weight 700, mark to
+ * the left at cap height). Follows the brand book: marigold ink on dark grounds, ink on light
+ * grounds. Never recolor, outline or rotate. Minimum mark size 16px; clear space = a quarter of the mark.
+ * Props:
+ *  - href?: string        wraps the logo in a link (default '/')
+ *  - wordmark?: boolean   show the "Cutweave" word next to the mark (default true)
+ */
+interface Props {
+  href?: string;
+  wordmark?: boolean;
+}
+const { href = '/', wordmark = true } = Astro.props;
+---
+<a class="logo" href={href} aria-label="Cutweave home">
+  <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+    <rect x="6" y="10" width="24" height="12" rx="6" />
+    <rect x="36" y="10" width="22" height="12" rx="6" />
+    <rect x="6" y="26" width="14" height="12" rx="6" />
+    <rect x="26" y="26" width="32" height="12" rx="6" />
+    <rect x="6" y="42" width="34" height="12" rx="6" />
+    <rect x="46" y="42" width="12" height="12" rx="6" />
+  </svg>
+  {wordmark && <span class="word" aria-hidden="true">Cutweave</span>}
+</a>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--hit-min);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+  /* Cap height of the 22px wordmark is about 16px; the mark is 24px so its cap-to-baseline matches optically. */
+  .mark { width: var(--space-6); height: var(--space-6); fill: var(--marigold); }
+  :global([data-theme='light']) .mark { fill: var(--text-primary); }
+  .word {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+</style>

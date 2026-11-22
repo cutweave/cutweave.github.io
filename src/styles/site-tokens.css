@@ -1,0 +1,63 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Website-only tokens. The design system (tokens.css, copied verbatim from the
+ * main repo) is tuned for a dense editor; a marketing site needs larger type and
+ * roomier spacing. Build these from existing tokens where possible, and when a
+ * value is useful to the product too, propose it upstream in design/tokens.json.
+ * Components reference var(--token) only: no literal colors or font stacks.
+ */
+:root {
+  /* Layout: page width and gutters. */
+  --content-max: 1120px;          /* default Container width */
+  --content-narrow: 840px;        /* Container size="narrow" */
+  --prose-max: 66ch;              /* long-form text measure */
+  --gutter: var(--space-4);       /* page side padding on phones */
+  --gutter-wide: var(--space-8);  /* page side padding from tablet up (see global.css) */
+
+  /* Vertical rhythm. */
+  --section-space: calc(var(--space-12) * 1.5);       /* Section padding on phones: 72px */
+  --section-space-wide: calc(var(--space-12) * 2.5);  /* Section padding on desktop: 120px */
+  --stack-sm: var(--space-2);
+  --stack-md: var(--space-4);
+  --stack-lg: var(--space-8);
+
+  /* Site chrome. */
+  --header-height: calc(var(--toolbar) * 1.5);  /* sticky header: 60px */
+  --hit-touch: 44px;                            /* tap target for phone-only controls (menu button) */
+
+  /* Marketing type. Body copy is larger than the 13px app scale. */
+  --text-body-size: 16px;          /* default paragraph on the site */
+  --text-body-line: 26px;
+  --text-lede-size: 19px;          /* section ledes, hero subhead */
+  --text-lede-line: 30px;
+  --display-hero-size: clamp(40px, 7vw, 76px);    /* home hero headline (display font) */
+  --display-hero-line: 1.02;
+  --display-section-size: clamp(28px, 4vw, 44px); /* Section titles (display font) */
+  --display-section-line: 1.1;
+  --display-card-size: 20px;       /* card titles (UI font, heading weight) */
+  --eyebrow-tracking: 0.08em;      /* uppercase eyebrow above section titles */
+
+  /* Button sizes (marketing buttons are taller than editor controls). */
+  --button-height-sm: var(--control-lg);   /* 32px */
+  --button-height-md: calc(var(--control-lg) + var(--space-2));    /* 40px */
+  --button-height-lg: calc(var(--control-lg) + var(--space-4));    /* 48px */
+
+  /* Hero glows: soft washes behind the hero. Marigold = "here", agent = AI. Decorative only. */
+  --glow-marigold: radial-gradient(60% 70% at 50% 0%, var(--marigold-subtle), transparent 72%);
+  --glow-agent: radial-gradient(50% 60% at 85% 10%, var(--agent-subtle), transparent 70%);
+
+  /* Header backdrop: surface-0 at partial opacity so content blurs under the sticky header. */
+  --header-bg: color-mix(in srgb, var(--surface-0) 88%, transparent);
+  --header-blur: 12px;
+
+  /* Code and kbd. */
+  --code-size: 13px;
+  --code-line: 20px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: var(--gutter-wide);
+    --section-space: var(--section-space-wide);
+  }
+}

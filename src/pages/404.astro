@@ -1,0 +1,28 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+// 404 in the brand voice: say what happened and the next step, no apology, no exclamation marks.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import Button from '../components/ui/Button.astro';
+---
+<BaseLayout title="Page not found" description="This page does not exist." canonical="/404.html" noindex>
+  <Container>
+    <div class="nf">
+      <p class="code">404 · 00:00:00:00</p>
+      <h1>This clip is offline.</h1>
+      <p class="msg">There is no page at this address. Go back to the start of the timeline, or check the roadmap for what is coming.</p>
+      <div class="actions">
+        <Button variant="primary" href="/" icon="arrow-right">Go to the home page</Button>
+        <Button href="/roadmap/">See the roadmap</Button>
+      </div>
+    </div>
+  </Container>
+</BaseLayout>
+
+<style>
+  .nf { padding-block: var(--section-space); display: flex; flex-direction: column; align-items: flex-start; gap: var(--stack-md); }
+  .code { font-family: var(--font-mono); font-size: 22px; line-height: 28px; font-weight: 500; color: var(--text-muted); }
+  h1 { font-family: var(--font-display); font-size: var(--display-section-size); line-height: var(--display-section-line); font-weight: 700; letter-spacing: -0.02em; }
+  .msg { max-width: var(--prose-max); color: var(--text-secondary); font-size: var(--text-lede-size); line-height: var(--text-lede-line); }
+  .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
+</style>

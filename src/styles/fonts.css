@@ -1,0 +1,28 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Self-hosted variable fonts (all SIL OFL) from the @fontsource-variable packages.
+ * Family names match the stacks in tokens.css (--font-ui, --font-display, --font-mono).
+ * Latin subset only; add the latin-ext files here if non-Latin content appears.
+ * No third-party requests: Vite bundles these into /_astro/.
+ */
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400 700;
+  src: url("../../node_modules/@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url("../../node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url("../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2") format("woff2-variations");
+}

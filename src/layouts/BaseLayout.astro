@@ -1,0 +1,103 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * BaseLayout: document shell for every page. Provides SEO tags, the no-flash theme script,
+ * skip link, Header, <main id="content"> and Footer.
+ * Props:
+ *  - title?: string        page title; rendered as "<title> · Cutweave". Omit on the home page to get the default.
+ *  - description?: string  meta description (default SITE.description)
+ *  - image?: string        Open Graph/Twitter image path (default '/og.png')
+ *                          GAP: /og.png does not exist yet. Add a 1200x630 image at public/og.png.
+ *  - noindex?: boolean     adds robots noindex,nofollow (used by /styleguide/)
+ *  - canonical?: string    override the canonical path (default: the current page)
+ *  - bare?: boolean        omit Header and Footer (for special pages)
+ * Slot: page content, placed inside <main id="content">.
+ */
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  canonical?: string;
+  bare?: boolean;
+}
+const { title, description = SITE.description, image = '/og.png', noindex = false, canonical, bare = false } = Astro.props;
+
+const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name}: open-source video editor for creators and their AI agents`;
+const canonicalUrl = new URL(canonical ?? Astro.url.pathname, SITE.url).href;
+const imageUrl = new URL(image, SITE.url).href;
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Favicon: the marigold mark as SVG (works on light and dark browser chrome). A PNG/ICO fallback and apple-touch-icon are a known gap. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Browser UI color: these two values mirror surface-0 in dark and light; a meta tag cannot read CSS variables. -->
+    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#e7e7e7" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={imageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl} />
+
+    <!-- Theme before first paint: stored choice, else system preference, else dark. -->
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        var t = null;
+        try { t = localStorage.getItem('cutweave-theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        d.setAttribute('data-theme', t);
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    {!bare && <Header />}
+    <main id="content" tabindex="-1">
+      <slot />
+    </main>
+    {!bare && <Footer />}
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: var(--z-tooltip);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-sm);
+    background: var(--marigold);
+    color: var(--on-marigold);
+    font-weight: 600;
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+  .skip:focus { transform: none; }
+  main:focus { outline: none; }
+</style>

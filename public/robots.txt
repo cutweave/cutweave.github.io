@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cutweave.github.io/sitemap-index.xml

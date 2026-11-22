@@ -1,0 +1,199 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * Header: sticky site header. Logo, primary nav, GitHub link, theme toggle.
+ * Below 860px the nav collapses into a menu button that opens an overlay panel (absolutely
+ * positioned under the header, so opening it never shifts layout). Keyboard: the button is
+ * focusable, Escape closes the panel and returns focus to it, links close it on activation.
+ * Without JavaScript the panel is simply shown as a normal block.
+ * Props: none (reads NAV and LINKS from src/site.ts).
+ */
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import Icon from './ui/Icon.astro';
+import { NAV, LINKS } from '../site';
+
+const path = Astro.url.pathname;
+const isCurrent = (href: string) => !href.includes('#') && path === href;
+---
+<header class="header">
+  <div class="bar">
+    <Logo />
+
+    <button
+      type="button"
+      class="menu-btn"
+      aria-expanded="false"
+      aria-controls="site-nav"
+      aria-label="Menu"
+      data-menu-button
+    >
+      <Icon name="menu" size="lg" class="when-closed" />
+      <Icon name="x" size="lg" class="when-open" />
+    </button>
+
+    <div class="panel" id="site-nav" data-menu-panel>
+      <nav aria-label="Main">
+        <ul class="links">
+          {NAV.map((item) => (
+            <li>
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="tools">
+        <a class="gh" href={LINKS.repo} target="_blank" rel="noopener">
+          <Icon name="github" size="lg" />
+          <span>GitHub</span>
+        </a>
+        <ThemeToggle />
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-dropdown);
+    background: var(--header-bg);
+    backdrop-filter: blur(var(--header-blur));
+    border-bottom: var(--border-thin) solid var(--border-subtle);
+  }
+  .bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    max-width: calc(var(--content-max) + var(--gutter) * 2);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--hit-touch);
+    height: var(--hit-touch);
+    padding: 0;
+    border: var(--border-thin) solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .menu-btn:hover { background: var(--surface-3); }
+  .when-open { display: none; }
+  .menu-btn[aria-expanded='true'] .when-open { display: block; }
+  .menu-btn[aria-expanded='true'] .when-closed { display: none; }
+
+  /* Mobile: overlay panel under the header. Never in flow, so no layout shift. */
+  .panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--gutter) var(--space-6);
+    background: var(--surface-0);
+    border-bottom: var(--border-thin) solid var(--border-default);
+    box-shadow: var(--shadow-popover);
+  }
+  :global(html.js) .panel {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(calc(var(--space-2) * -1));
+    transition:
+      opacity var(--duration-base) var(--easing-exit),
+      transform var(--duration-base) var(--easing-exit),
+      visibility 0s linear var(--duration-base);
+  }
+  :global(html.js) .panel[data-open] {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--duration-base) var(--easing-enter),
+      transform var(--duration-base) var(--easing-enter),
+      visibility 0s;
+  }
+
+  /* No JavaScript: the menu button is useless, so show the nav as a normal block. */
+  :global(html:not(.js)) .bar { height: auto; flex-wrap: wrap; padding-block: var(--space-2); }
+  :global(html:not(.js)) .menu-btn { display: none; }
+  :global(html:not(.js)) .panel { position: static; width: 100%; box-shadow: none; border: 0; padding-inline: 0; }
+
+  .links { display: flex; flex-direction: column; }
+  .links a, .gh {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--hit-touch);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background-color var(--duration-fast) var(--easing-standard),
+      color var(--duration-fast) var(--easing-standard);
+  }
+  .links a { display: flex; }
+  .links a:hover, .gh:hover { background: var(--surface-3); color: var(--text-primary); }
+  .links a[aria-current='page'] { color: var(--text-primary); box-shadow: inset 0 calc(var(--border-thick) * -1) 0 var(--marigold); }
+  .tools { display: flex; align-items: center; gap: var(--space-2); }
+
+  @media (min-width: 860px) {
+    .menu-btn { display: none; }
+    .panel,
+    :global(html.js) .panel,
+    :global(html.js) .panel[data-open] {
+      position: static;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-4);
+      padding: 0;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      visibility: visible;
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .links { flex-direction: row; gap: var(--space-1); }
+    .links a { min-height: var(--button-height-md); }
+    .gh { min-height: var(--button-height-md); }
+  }
+</style>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-menu-button]');
+  const panel = document.querySelector<HTMLElement>('[data-menu-panel]');
+
+  function setOpen(open: boolean, restoreFocus = false): void {
+    if (!button || !panel) return;
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+    panel.toggleAttribute('data-open', open);
+    if (!open && restoreFocus) button.focus();
+  }
+
+  button?.addEventListener('click', () => setOpen(button.getAttribute('aria-expanded') !== 'true'));
+  panel?.addEventListener('click', (event) => {
+    if ((event.target as Element).closest('a')) setOpen(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && button?.getAttribute('aria-expanded') === 'true') setOpen(false, true);
+  });
+  window.matchMedia('(min-width: 860px)').addEventListener('change', (event) => {
+    if (event.matches) setOpen(false);
+  });
+</script>
