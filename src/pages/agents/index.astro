@@ -13,6 +13,7 @@ import ToolCatalog from '../../components/agents/ToolCatalog.astro';
 import ProposalFlow from '../../components/agents/ProposalFlow.astro';
 import BudgetTiers from '../../components/agents/BudgetTiers.astro';
 import AgentKit from '../../components/agents/AgentKit.astro';
+import AgentDemo from '../../components/demo/AgentDemo.astro';
 import { LINKS } from '../../site';
 import { DOC_LINKS } from '../../data/engine-facts';
 
@@ -57,8 +58,7 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
   </section>
 
   <Section id="demo" tone="raised" eyebrow="Watch it work" title="Watch an agent edit" lede="A scripted session with real tool names and invented values.">
-    {/* INTEGRATOR: replace with <AgentDemo /> from ../../components/demo/AgentDemo.astro */}
-    <div class="demo-slot">Interactive agent demo</div>
+    <AgentDemo id="agents-demo" />
   </Section>
 
   <Section
@@ -210,15 +210,6 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
   .chain li:last-child code { color: var(--agent-text); }
   .chain .d { color: var(--text-secondary); font-size: 15px; line-height: 22px; }
 
-  .demo-slot {
-    display: grid;
-    place-items: center;
-    min-height: calc(var(--layer-width-md) / 2);
-    padding: var(--space-8);
-    border: var(--border-thick) dashed var(--border-control);
-    border-radius: var(--radius-lg);
-    color: var(--text-secondary);
-  }
 
   .connect { display: flex; flex-direction: column; gap: var(--space-4); }
   .connect .status { color: var(--text-secondary); }
