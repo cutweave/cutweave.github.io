@@ -548,17 +548,18 @@ const finalState = steps[last]?.timeline ?? { silences: 'none', captions: 'none'
   .ad__seg:nth-last-child(2) { border-inline-end: var(--border-thin) solid var(--cwd-c); border-start-end-radius: var(--radius-sm); border-end-end-radius: var(--radius-sm); }
   .ad__seg :global(.cwd-seg__body) { position: absolute; inset: calc(var(--clip-strip) + var(--space-4)) 0 0 0; }
   .ad__seg :global(.cwd-wave) { overflow: hidden; }
-  .ad__label { z-index: 2; max-width: 60%; color: var(--text-primary); }
+  /* Label sits above the ghost layer on a solid backing in the clip body color so it always reads. */
+  .ad__label { z-index: 3; right: auto; max-width: 60%; width: fit-content; padding-inline: var(--space-1); border-radius: var(--radius-xs); background: var(--cwd-cb); color: var(--text-primary); }
 
   /* Cuts: invisible until the dry run (dashed outline), hatched ghosts in a proposal, gone once committed. */
   .ad[data-silences="detected"] .ad__seg--cut,
   .ad[data-silences="ghost"] .ad__seg--cut {
     border-style: dashed;
-    border-color: var(--agent);
+    border-color: color-mix(in srgb, var(--agent) 65%, transparent);
   }
   .ad[data-silences="ghost"] .ad__seg--cut {
-    background-image: var(--demo-hatch);
-    background-color: color-mix(in srgb, var(--agent) 10%, var(--cwd-cb));
+    background-image: var(--demo-hatch-thin);
+    background-color: color-mix(in srgb, var(--agent) 8%, var(--cwd-cb));
   }
   .ad[data-silences="detected"] .ad__seg--cut::before,
   .ad[data-silences="ghost"] .ad__seg--cut::before { background: var(--agent); }

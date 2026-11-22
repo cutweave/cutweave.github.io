@@ -21,6 +21,13 @@
     transparent var(--border-thin) var(--space-1-5)
   );
 
+  /* Thinner, wider-spaced hatch for the many small ghosts on the demo timeline (calmer on narrow lanes). */
+  --demo-hatch-thin: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--agent) 20%, transparent) 0 var(--border-thin),
+    transparent var(--border-thin) var(--space-2)
+  );
+
   /* Playhead cap: the small marigold flag at the top of the line. */
   --demo-playhead-cap: calc(var(--space-2) + var(--space-0-5));
 
