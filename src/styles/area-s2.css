@@ -1,0 +1,27 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Site tokens for the /agents/ and /how-it-works/ components (work package S2).
+ * Built from existing design tokens. Imported by the components that use them.
+ */
+:root {
+  /* Proposal hatch: the diagonal hatch for agent proposals, always paired with a dashed agent outline.
+     Same construction as the design system's proposed TimelineClip (design/components/bundle.css). */
+  --hatch-agent:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent var(--space-1),
+      var(--agent-subtle) var(--space-1),
+      var(--agent-subtle) var(--space-2)
+    ),
+    var(--agent-subtle);
+
+  /* Diagram strokes: hairline for boxes, thicker for traced paths. */
+  --diagram-stroke: var(--border-thin);
+  --diagram-stroke-path: var(--border-thick);
+  /* Dimmed opacity for diagram parts that are not on the selected client's path. */
+  --diagram-dim: 0.4;
+
+  /* Small mono size for tool names, chips and code-ish labels. */
+  --mono-small: 13px;
+}

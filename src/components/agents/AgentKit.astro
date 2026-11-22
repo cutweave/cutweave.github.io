@@ -1,0 +1,78 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * AgentKit: what the Cutweave Agent Kit will contain (arch §14b; WP-6G, 6H). All planned:
+ * first slice in Phase 3, full kit in Phase 6. The kit's first files do not exist in the repo yet.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+import StatusChip from '../ui/StatusChip.astro';
+import { AGENT_KIT_SKILLS, MCP_PROMPTS } from '../../data/mcp-tools';
+
+const clients = ['claude', 'codex', 'gemini', 'cursor', 'vscode'];
+---
+<div class="kit">
+  <p class="status">
+    <StatusChip status="planned" label="Planned, Phase 3 first slice" />
+    <StatusChip status="planned" label="Planned, Phase 6 full kit" />
+  </p>
+
+  <div class="grid">
+    <section class="card wide" aria-labelledby="kit-skills">
+      <h3 id="kit-skills">Skills <span class="muted">(about 14)</span></h3>
+      <p class="sub">Spec-valid SKILL.md files that teach an agent how to do video work, not just which tools exist.</p>
+      <ul class="tags">{AGENT_KIT_SKILLS.map((s) => <li><code>{s}</code></li>)}</ul>
+    </section>
+
+    <section class="card" aria-labelledby="kit-prompts">
+      <h3 id="kit-prompts">MCP prompts <span class="muted">({MCP_PROMPTS.length})</span></h3>
+      <p class="sub">Slash-style workflows, such as <code>make-short</code> and <code>rough-cut</code>.</p>
+    </section>
+
+    <section class="card" aria-labelledby="kit-packs">
+      <h3 id="kit-packs">Preset and prompt packs</h3>
+      <p class="sub">A model-agnostic intent layer (shot, subject, camera move, style, mood) with per-model adapters. Plus camera-motion vocabulary, platform specs, caption styles and storyboard templates.</p>
+    </section>
+
+    <section class="card" aria-labelledby="kit-install">
+      <h3 id="kit-install">Client installers</h3>
+      <p class="sub">One command writes the MCP config and installs the skills for your client. A Claude Code plugin bundles both.</p>
+      <ul class="tags">{clients.map((c) => <li><code>{c}</code></li>)}</ul>
+    </section>
+
+    <section class="card" aria-labelledby="kit-eval">
+      <h3 id="kit-eval">Eval harness</h3>
+      <p class="sub">About 15 task suites. State-based assertions come first; a pinned vision-rubric judge comes second. Safety tasks include transcript prompt injection, over-budget generation and an ambiguous destructive request. Runs nightly in CI.</p>
+      <p class="target"><strong>Target:</strong> at least 80% task success on at least two different agent clients.</p>
+    </section>
+  </div>
+</div>
+
+<style>
+  .kit { display: flex; flex-direction: column; gap: var(--space-6); }
+  .status { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .grid { grid-template-columns: repeat(2, 1fr); } .wide { grid-column: 1 / -1; } }
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  h3 { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .muted { color: var(--text-secondary); font-weight: 500; font-size: 16px; }
+  .sub { color: var(--text-secondary); font-size: 15px; line-height: 23px; }
+  .sub code { color: var(--text-primary); font-size: var(--mono-small); }
+  .tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .tags li {
+    padding: 0 var(--space-2);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-full);
+    background: var(--surface-1);
+  }
+  .tags code { font-size: var(--mono-small); line-height: 24px; }
+  .target { font-size: 15px; }
+</style>

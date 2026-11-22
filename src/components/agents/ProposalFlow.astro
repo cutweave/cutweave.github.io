@@ -1,0 +1,256 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * ProposalFlow: how an agent's turn becomes a dashed, hatched proposal that you accept or reject as
+ * one undo step, plus per-actor history and checkpoints. Illustrative: real tool and actor names,
+ * invented values. Accept and Reject on the sample bar are interactive (vanilla TS); Reset restores it.
+ * Proposals as a UI feature are Phase 6 (WP-6I.04, 6I.08); the proposal transaction kind is ADR-0017.
+ */
+import '../../styles/area-s2.css';
+import Icon from '../ui/Icon.astro';
+import AgentBadge from '../ui/AgentBadge.astro';
+import StatusChip from '../ui/StatusChip.astro';
+
+const history = [
+  { actor: 'user', what: 'Trim intro clip', agent: false },
+  { actor: 'agent:claude-code', what: 'Remove 14 silences, add captions (proposal)', agent: true },
+  { actor: 'plugin:<id>', what: 'Apply a plugin effect', agent: false },
+  { actor: 'user', what: 'Move title card', agent: false },
+];
+---
+<div class="flow" data-proposal>
+  <ol class="how">
+    <li><strong>The agent turn runs in a proposal.</strong> An ephemeral transaction soft-locks the items it touches, so your own edits to other items still work.</li>
+    <li><strong>You see the diff.</strong> Changes appear on the timeline as dashed, hatched agent-blue ghosts, with before and after frames.</li>
+    <li><strong>You decide once.</strong> Accept commits one undo step tagged with the agent. Reject rolls it back. A proposal has no idle timeout and can be cancelled.</li>
+  </ol>
+
+  <figure class="demo" aria-label="Sample proposal bar, illustrative">
+    <div class="chips"><span class="illus">Illustrative</span><StatusChip status="planned" label="Planned, Phase 6" /></div>
+
+    <div class="ghosts" aria-hidden="true">
+      <span class="clip real"></span>
+      <span class="clip ghost" data-ghost></span>
+      <span class="clip real short"></span>
+      <span class="clip ghost" data-ghost></span>
+      <span class="clip real"></span>
+    </div>
+
+    <div class="bar" role="region" aria-label="Agent proposal" data-bar>
+      <AgentBadge label="Agent" />
+      <div class="text">
+        <p class="title"><strong>Agent proposes 6 changes:</strong> remove 14 silences, add captions</p>
+        <p class="cost">Cost <span class="mono">~$0.04</span> to transcribe. Illustrative.</p>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" data-reject>Reject</button>
+        <button type="button" class="btn btn-agent" data-accept>Accept</button>
+      </div>
+    </div>
+
+    <p class="result" role="status" aria-live="polite" data-result>Pending. Nothing is committed until you accept.</p>
+    <button type="button" class="reset" data-reset hidden>Reset the sample</button>
+  </figure>
+
+  <div class="two">
+    <section aria-labelledby="hist-h" class="panel">
+      <h3 id="hist-h">History shows who did what</h3>
+      <p class="sub">The actor comes from the credential, never from the client. You can undo the agent&rsquo;s last change without touching your own.</p>
+      <ul class="hist">
+        {history.map((h) => (
+          <li class:list={[h.agent && 'is-agent']}>
+            <code class:list={['actor', h.agent && 'actor-agent']}>{h.agent && <Icon name="sparkles" size="sm" />}{h.actor}</code>
+            <span>{h.what}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+    <section aria-labelledby="ckpt-h" class="panel">
+      <h3 id="ckpt-h">Checkpoints are cheap</h3>
+      <p class="sub">The document uses persistent snapshots, so naming a state costs almost nothing and restoring it is one command.</p>
+      <ul class="ckpt">
+        <li><code>edit_checkpoint &#123; name: "before-cuts" &#125;</code></li>
+        <li><code>edit.restore &#123; checkpoint: "before-cuts" &#125;</code></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-proposal]').forEach((root) => {
+    const bar = root.querySelector<HTMLElement>('[data-bar]');
+    const result = root.querySelector<HTMLElement>('[data-result]');
+    const accept = root.querySelector<HTMLButtonElement>('[data-accept]');
+    const reject = root.querySelector<HTMLButtonElement>('[data-reject]');
+    const reset = root.querySelector<HTMLButtonElement>('[data-reset]');
+    const ghosts = root.querySelectorAll<HTMLElement>('[data-ghost]');
+    if (!bar || !result || !accept || !reject || !reset) return;
+    const set = (state: 'pending' | 'accepted' | 'rejected') => {
+      root.dataset.state = state;
+      const done = state !== 'pending';
+      accept.disabled = done;
+      reject.disabled = done;
+      reset.hidden = !done;
+      ghosts.forEach((g) => g.classList.toggle('accepted', state === 'accepted'));
+      ghosts.forEach((g) => g.classList.toggle('gone', state === 'rejected'));
+      result.textContent =
+        state === 'accepted'
+          ? 'Committed as one undo step, tagged agent:claude-code. Undo removes all six changes.'
+          : state === 'rejected'
+            ? 'Rolled back. The timeline is exactly as it was.'
+            : 'Pending. Nothing is committed until you accept.';
+    };
+    accept.addEventListener('click', () => set('accepted'));
+    reject.addEventListener('click', () => set('rejected'));
+    reset.addEventListener('click', () => {
+      set('pending');
+      accept.focus();
+    });
+    set('pending');
+  });
+</script>
+
+<style>
+  .flow { display: flex; flex-direction: column; gap: var(--space-8); }
+
+  .how { display: grid; gap: var(--space-4); grid-template-columns: 1fr; counter-reset: h; }
+  @media (min-width: 840px) { .how { grid-template-columns: repeat(3, 1fr); } }
+  .how li {
+    counter-increment: h;
+    padding: var(--space-4);
+    border-inline-start: var(--border-thick) solid var(--border-control);
+    color: var(--text-secondary);
+  }
+  .how li::before {
+    content: counter(h);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+  }
+  .how strong { color: var(--text-primary); }
+
+  .demo {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-1);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .illus {
+    display: inline-flex;
+    align-items: center;
+    height: calc(var(--hit-min) - var(--space-1));
+    padding-inline: var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  /* Mini timeline: real clips and proposed ghosts. */
+  .ghosts { display: flex; gap: var(--space-1); height: var(--track-md); }
+  .clip { flex: 3; border-radius: var(--radius-sm); border: var(--border-thin) solid var(--clip-media); background: var(--clip-media-body); }
+  .clip.short { flex: 1.5; }
+  .ghost {
+    flex: 1;
+    border: var(--border-thin) dashed var(--agent);
+    background: var(--hatch-agent);
+    transition: opacity var(--duration-slow) var(--easing-standard), background-color var(--duration-slow) var(--easing-standard);
+  }
+  .ghost.accepted { border-style: solid; background: var(--agent-subtle); }
+  .ghost.gone { opacity: 0; }
+
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: var(--border-thin) dashed var(--agent);
+    border-radius: var(--radius-md);
+    background: var(--agent-subtle);
+  }
+  .text { flex: 1 1 14rem; }
+  .title { font-size: 15px; line-height: 22px; }
+  .cost { font-size: 13px; line-height: 18px; color: var(--text-secondary); }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .actions { display: flex; gap: var(--space-2); }
+
+  .btn {
+    height: var(--button-height-sm);
+    padding-inline: var(--space-4);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:hover { background: var(--surface-3); }
+  /* Agent blue owns the decision on a proposal, never marigold. */
+  .btn-agent { background: var(--agent); color: var(--on-agent); border-color: var(--agent); }
+  .btn-agent:hover { background: var(--agent-hover); }
+  .btn:disabled { background: var(--surface-2); color: var(--text-disabled); border-color: var(--border-subtle); cursor: not-allowed; }
+
+  .result { color: var(--text-secondary); font-size: 15px; min-height: 22px; }
+  .reset {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+    text-decoration-color: var(--border-control);
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+  .reset[hidden] { display: none; }
+
+  .two { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+  @media (min-width: 840px) { .two { grid-template-columns: 3fr 2fr; } }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  h3 { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .sub { color: var(--text-secondary); font-size: 15px; line-height: 22px; }
+  .hist { display: flex; flex-direction: column; gap: var(--space-2); }
+  .hist li { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: center; font-size: 15px; }
+  .actor {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    padding: 0 var(--space-2);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 22px;
+    color: var(--text-secondary);
+  }
+  .actor-agent { background: var(--agent-subtle); border-color: var(--agent); color: var(--agent-text); }
+  .ckpt { display: flex; flex-direction: column; gap: var(--space-2); }
+  .ckpt code {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    border: var(--border-thin) solid var(--border-subtle);
+    font-size: var(--mono-small);
+    overflow-wrap: anywhere;
+  }
+</style>
