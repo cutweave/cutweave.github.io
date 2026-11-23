@@ -1,0 +1,172 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * ConnectClients: per-client MCP setup, with tabs (GAP-05).
+ * The snippets are the ones in the product repo's docs/reference/mcp-clients.md (origin/main at 7728d7c).
+ * Without JS every client is listed one after the other; with JS the tabs show one at a time.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+import CodeBlock from '../ui/CodeBlock.astro';
+
+interface Client {
+  id: string;
+  name: string;
+  where: string;
+  attach: string;
+  attachLang: string;
+  headless: string;
+  headlessLang: string;
+}
+
+const json = (args: string[]) =>
+  `{\n  "mcpServers": {\n    "cutweave": { "command": "cutweave", "args": [${args.map((a) => `"${a}"`).join(', ')}] }\n  }\n}`;
+const toml = (args: string[]) =>
+  `[mcp_servers.cutweave]\ncommand = "cutweave"\nargs = [${args.map((a) => `"${a}"`).join(', ')}]`;
+
+const attach = ['mcp', '--attach'];
+const headless = ['mcp', '--headless', '--allow-root', '/path/to/footage'];
+
+const clients: Client[] = [
+  {
+    id: 'claude-code',
+    name: 'Claude Code',
+    where: 'Run in a terminal. Add --scope project to write the server to the repository’s .mcp.json instead.',
+    attach: 'claude mcp add cutweave -- cutweave mcp --attach',
+    attachLang: 'sh',
+    headless: 'claude mcp add cutweave-headless -- cutweave mcp --headless --allow-root /path/to/footage',
+    headlessLang: 'sh',
+  },
+  {
+    id: 'claude-desktop',
+    name: 'Claude Desktop',
+    where: 'claude_desktop_config.json (Settings, Developer, Edit Config).',
+    attach: json(attach),
+    attachLang: 'json',
+    headless: json(headless),
+    headlessLang: 'json',
+  },
+  {
+    id: 'codex',
+    name: 'Codex',
+    where: '~/.codex/config.toml',
+    attach: toml(attach),
+    attachLang: 'toml',
+    headless: toml(headless),
+    headlessLang: 'toml',
+  },
+  {
+    id: 'gemini',
+    name: 'Gemini CLI',
+    where: '~/.gemini/settings.json, or .gemini/settings.json in a project.',
+    attach: json(attach),
+    attachLang: 'json',
+    headless: json(headless),
+    headlessLang: 'json',
+  },
+  {
+    id: 'cursor',
+    name: 'Cursor',
+    where: '~/.cursor/mcp.json, or .cursor/mcp.json in a project.',
+    attach: json(attach),
+    attachLang: 'json',
+    headless: json(headless),
+    headlessLang: 'json',
+  },
+];
+---
+<div class="clients" data-clients>
+  <div class="tabs" role="tablist" aria-label="Agent client" data-tablist hidden>
+    {clients.map((c, i) => (
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        id={`tab-${c.id}`}
+        aria-controls={`panel-${c.id}`}
+        aria-selected={i === 0 ? 'true' : 'false'}
+        tabindex={i === 0 ? 0 : -1}
+        data-tab
+      >{c.name}</button>
+    ))}
+  </div>
+
+  {clients.map((c) => (
+    <section class="panel" id={`panel-${c.id}`} role="tabpanel" aria-labelledby={`tab-${c.id}`} data-panel>
+      <h3 class="panel-title">{c.name}</h3>
+      <p class="where">{c.where}</p>
+      <div class="pair">
+        <CodeBlock label="Attach to the running app" lang={c.attachLang} code={c.attach} />
+        <CodeBlock label="Headless, no app needed" lang={c.headlessLang} code={c.headless} />
+      </div>
+    </section>
+  ))}
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-clients]').forEach((root) => {
+    const list = root.querySelector<HTMLElement>('[data-tablist]');
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'));
+    if (!list || tabs.length === 0) return;
+    list.hidden = false;
+    root.classList.add('is-tabbed');
+    const select = (i: number, focus = false) => {
+      tabs.forEach((t, j) => {
+        const on = i === j;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      });
+      panels.forEach((p, j) => { p.hidden = i !== j; });
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(i));
+      t.addEventListener('keydown', (e) => {
+        let n = -1;
+        if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') n = 0;
+        else if (e.key === 'End') n = tabs.length - 1;
+        if (n >= 0) {
+          e.preventDefault();
+          select(n, true);
+        }
+      });
+    });
+    select(0);
+  });
+</script>
+
+<style>
+  .clients { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .tabs[hidden] { display: none; }
+  .tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .tab {
+    height: var(--button-height-md);
+    padding-inline: var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .tab:hover { color: var(--text-primary); border-color: var(--border-control); }
+  /* Selected is the "you are here" state: marigold. */
+  .tab[aria-selected='true'] {
+    color: var(--text-primary);
+    border-color: var(--marigold);
+    background: var(--marigold-subtle);
+    font-weight: 650;
+  }
+
+  .panel { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .panel[hidden] { display: none; }
+  .panel-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .is-tabbed .panel-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .where { color: var(--text-secondary); max-width: var(--prose-max); overflow-wrap: anywhere; }
+  .pair { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 840px) { .pair { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+</style>
