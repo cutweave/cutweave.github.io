@@ -87,9 +87,10 @@ const isCurrent = (href: string) => !href.includes('#') && path === href;
     cursor: pointer;
   }
   .menu-btn:hover { background: var(--surface-3); }
-  .when-open { display: none; }
-  .menu-btn[aria-expanded='true'] .when-open { display: block; }
-  .menu-btn[aria-expanded='true'] .when-closed { display: none; }
+  /* The icons are rendered by Icon.astro, which does not carry this component's scope attribute. */
+  .menu-btn :global(.when-open) { display: none; }
+  .menu-btn[aria-expanded='true'] :global(.when-open) { display: block; }
+  .menu-btn[aria-expanded='true'] :global(.when-closed) { display: none; }
 
   /* Mobile: overlay panel under the header. Never in flow, so no layout shift. */
   .panel {
