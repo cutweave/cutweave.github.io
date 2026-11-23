@@ -23,7 +23,6 @@ Work-package (WP) ids refer to the main repo's `docs/wbs/`.
 | GAP-13 | Social preview image | A generated `og.png` from the mark, tokens and the pitch line | Designed OG images per page, using real screenshots once GAP-01 closes | site work, after GAP-01 |
 | GAP-14 | Logo refinement | v0 mark from `design/assets/logos/` | Designer-refined mark and wordmark files | P7 design pass |
 | GAP-15 | Privacy page, accessibility statement, changelog | Short privacy and status notes on `/open-source/` and in the FAQ | Full privacy page, accessibility statement, release notes | WP-7F.04, WP-7G.01, first release |
-| GAP-16 | Custom domain | `cutweave.github.io` | Own domain with HTTPS (Pages custom domain + `CNAME`) | Roadmap long-lead item (domain, trademark, handles) |
 | GAP-17 | Plugin exception status | Described as "draft, pending legal review" | State it as in effect, link the final text | Legal review (ADR-0011) |
 | GAP-18 | AI provider and model list | Provider names as text from the research snapshot (2026-11-22), labelled planned | The live, signed model catalog with real cost ranges | WP-5* (gateway, catalog), M5 |
 | GAP-19 | Real-footage imagery (partly closed) | `/how-it-works/` shows two frames from the production compositor's test goldens, labelled "Rendered by the production compositor (test golden)"; sources in `src/assets/README.md`. They are synthetic test cards, not footage. | Frames of real media rendered from sample projects by the product render pipeline | WP-1D (decode), WP-1I.05 (render wiring), WP-7G.02 (sample projects) |
@@ -32,8 +31,11 @@ Work-package (WP) ids refer to the main repo's `docs/wbs/`.
 
 These are in the main repo, not here:
 
+- The product repo's `README.md` links the site at `https://cutweave.github.io` (added in e653c75). Point it at `https://cutweave.app`.
 - The design-system reference artifact (claude.ai link) is private. The site links to `docs/07-design-system.md` on GitHub instead.
 
 ## Closed
 
-None yet.
+| Id | Gap | What closed it |
+|---|---|---|
+| GAP-16 | Custom domain | The site moves to `https://cutweave.app` (2026-11-23). `astro.config.mjs`, `src/site.ts`, `public/robots.txt`, `scripts/check-links.mjs` and the README use it. There is no `CNAME` file: the site deploys through GitHub Actions, and the domain is set in the repository's Pages settings. |
