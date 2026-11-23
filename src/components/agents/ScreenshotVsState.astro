@@ -17,7 +17,7 @@ const screen = [
 const state = [
   { step: 'Query state', note: 'timeline_get returns clips, tracks, times and the revision.', tool: 'timeline_get' },
   { step: 'Send a command', note: 'clip_split with an item ID and a time. The reply says what changed.', tool: 'clip_split' },
-  { step: 'Render a frame', note: 'An image plus metadata: time, items visible, captions on screen.', tool: 'render_frame', image: true },
+  { step: 'Render a frame', note: 'An image plus metadata: time, items visible, captions on screen.', tool: 'render_frame', image: true, planned: 'Planned, WP-1J.02' },
 ];
 ---
 <div class="vs">
@@ -50,6 +50,7 @@ const state = [
             <strong>{s.step}</strong>
             <span class="note">{s.note}</span>
             <code class:list={['tool', s.image && 'tool-image']}>{s.tool}</code>
+            {s.planned && <span class="planned">{s.planned}</span>}
           </div>
         </li>
       ))}
@@ -104,6 +105,8 @@ const state = [
   }
   /* Image-returning tool: agent blue marks content an agent consumes. */
   .tool-image { background: var(--agent-subtle); border-color: var(--agent); color: var(--agent-text); }
+
+  .planned { color: var(--text-muted); font-size: 13px; line-height: 18px; }
 
   .loopback {
     display: flex;

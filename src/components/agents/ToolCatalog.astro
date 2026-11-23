@@ -1,10 +1,10 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
- * ToolCatalog: the planned MCP surface, from src/data/mcp-tools.ts.
+ * ToolCatalog: the MCP surface, from src/data/mcp-tools.ts. The listed tools are what the engine's
+ * tools/list returns today; planned names carry the work package that adds them.
  * Props: none. Includes a text filter (vanilla TS; the full list is visible without JS).
- * GAP-08: the names come from the architecture doc. Replace with a link to the generated
- * command reference when WP-1N (codegen) and WP-7E.03 (reference docs) land.
+ * GAP-08: hand-kept lists. Replace with a link to the generated command reference when it is published.
  */
 import '../../styles/area-s2.css';
 import StatusChip from '../ui/StatusChip.astro';
@@ -12,28 +12,34 @@ import AgentBadge from '../ui/AgentBadge.astro';
 import {
   CORE_TOOL_GROUPS,
   GENERIC_TOOLS,
+  CATALOG_COMMAND_GROUPS,
+  PLANNED_TOOL_GROUPS,
   MCP_RESOURCES,
   MCP_PROMPTS,
   MCP_TRANSPORTS,
 } from '../../data/mcp-tools';
+import { LINKS } from '../../site';
 
 const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
+const minimalCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.filter((t) => t.minimal).length, 0) + GENERIC_TOOLS.length;
+const catalogCount = CATALOG_COMMAND_GROUPS.reduce((n, g) => n + g.commands.length, 0);
+const COMMANDS_DOC = `${LINKS.repo}/blob/main/docs/reference/commands.md`;
 ---
-{/* GAP-08: planned catalog, not generated from the command registry yet. */}
+{/* GAP-08: hand-kept lists; the listed tools match tools/list from the build, not a generated reference yet. */}
 <div class="catalog" data-catalog>
   <div class="bar">
-    <StatusChip status="planned" label="Planned catalog" />
-    <p class="bar-note">Names come from the architecture doc. Not runnable yet, and the final list may change.</p>
+    <StatusChip status="built" label="Built, v0" />
+    <p class="bar-note">Listed tools are what <code>tools/list</code> returns from the engine today. Planned names are marked with the work package that adds them.</p>
   </div>
 
   <div class="filter" data-filter-wrap hidden>
-    <label for="tool-filter">Filter tools, resources and prompts</label>
-    <input id="tool-filter" type="search" autocomplete="off" spellcheck="false" placeholder="clip, render, caption" data-filter />
+    <label for="tool-filter">Filter tools, commands and planned names</label>
+    <input id="tool-filter" type="search" autocomplete="off" spellcheck="false" placeholder="clip, render, undo" data-filter />
     <p class="count" role="status" aria-live="polite" data-count></p>
   </div>
 
-  <h3 class="h" id="core-tools">Core tools <span class="muted">({coreCount} always listed)</span></h3>
-  <p class="blurb">Always visible to the agent. Each carries annotations for read-only, destructive and idempotent. Image tools return an image plus structured metadata.</p>
+  <h3 class="h" id="core-tools">Listed today <span class="muted">({coreCount} tools on the standard profile)</span></h3>
+  <p class="blurb">Always visible to the agent. Each carries annotations for read-only, destructive and idempotent. The <span class="tag">minimal</span> mark means the tool is also on the minimal profile, which lists {minimalCount} tools in all for small context windows.</p>
   <div class="groups">
     {CORE_TOOL_GROUPS.map((g) => (
       <section class="group" data-group aria-labelledby={`g-${g.id}`}>
@@ -42,7 +48,7 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
           {g.tools.map((t) => (
             <li data-item data-text={`${t.name} ${t.does}`.toLowerCase()}>
               <code class="name">{t.name}</code>
-              {t.image && <AgentBadge size="sm" label="Image" />}
+              {t.minimal && <span class="tag">minimal</span>}
               <span class="does">{t.does}</span>
             </li>
           ))}
@@ -52,7 +58,7 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
   </div>
 
   <h3 class="h" id="generic-tools">Four generic tools for the long tail</h3>
-  <p class="blurb">Everything else in the command registry is reached through these, so the tool list stays small. The budget is 12 tools or 3k tokens for the minimal profile and 36 tools or 8k tokens for the standard one.</p>
+  <p class="blurb">Every other command is reached through these, so the tool list stays small. Both profiles list all four. The budget is 12 tools or 3k tokens for the minimal profile and 36 tools or 8k tokens for the standard one.</p>
   <section class="group" data-group aria-labelledby="generic-tools">
     <ul>
       {GENERIC_TOOLS.map((t) => (
@@ -64,9 +70,44 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
     </ul>
   </section>
 
+  <h3 class="h" id="via-execute">Reached through <code>cutweave_execute</code> <span class="muted">({catalogCount} commands)</span></h3>
+  <p class="blurb">Registered commands that are not listed as tools. Find one with <code>cutweave_search_commands</code>, read its schema with <code>cutweave_describe_command</code>, then run it as a step. Several steps in one call are one transaction and one undo step. The full list is in the <a href={COMMANDS_DOC}>command reference</a>.</p>
+  <div class="groups">
+    {CATALOG_COMMAND_GROUPS.map((g) => (
+      <section class="group" data-group aria-labelledby={`c-${g.id}`}>
+        <h4 id={`c-${g.id}`}>{g.title}</h4>
+        <ul class="chips">
+          {g.commands.map((c) => (
+            <li data-item data-text={c}><code class="name">{c}</code></li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+
+  <h3 class="h" id="planned-tools">Planned <span class="muted">(not listed yet)</span></h3>
+  <p class="blurb"><StatusChip status="planned" label="Planned" /> The tools that let an agent see a frame or export arrive with their work packages. A real agent can edit the timeline today, but it cannot see rendered frames until <code>render_frame</code> lands. The long tail beyond Phase 1 is named in the architecture and may change.</p>
+  <div class="groups">
+    {PLANNED_TOOL_GROUPS.map((g) => (
+      <section class="group" data-group aria-labelledby={`p-${g.id}`}>
+        <h4 id={`p-${g.id}`}>{g.title}</h4>
+        <ul>
+          {g.tools.map((t) => (
+            <li data-item data-text={`${t.name} ${t.does} ${t.when ?? ''}`.toLowerCase()}>
+              <code class="name">{t.name}</code>
+              {t.image && <AgentBadge size="sm" label="Image" />}
+              {t.when && <span class="tag when">{t.when}</span>}
+              <span class="does">{t.does}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+
   <div class="two">
     <div>
-      <h3 class="h" id="resources">Resources</h3>
+      <h3 class="h" id="resources">Resources <span class="muted">(planned)</span></h3>
       <section class="group" data-group aria-labelledby="resources">
         <ul>
           {MCP_RESOURCES.map((r) => (
@@ -76,7 +117,7 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
       </section>
     </div>
     <div>
-      <h3 class="h" id="prompts">MCP prompts</h3>
+      <h3 class="h" id="prompts">MCP prompts <span class="muted">(planned)</span></h3>
       <section class="group" data-group aria-labelledby="prompts">
         <ul class="chips">
           {MCP_PROMPTS.map((p) => (
@@ -87,7 +128,7 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
     </div>
   </div>
 
-  <h3 class="h" id="transports">Transports</h3>
+  <h3 class="h" id="transports">Transports <span class="muted">(built)</span></h3>
   <ul class="transports">
     {MCP_TRANSPORTS.map((t) => (
       <li>
@@ -97,8 +138,8 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
       </li>
     ))}
   </ul>
-  <p class="blurb foot">Built on the official Rust MCP SDK, rmcp. The spike has only been exercised with the 2025-11-25 spec revision from a real host.</p>
-  <p class="empty" data-empty hidden>No match. Try a shorter word, like clip or render.</p>
+  <p class="blurb foot">Built on the official Rust MCP SDK, rmcp. Both spec revisions work, 2025-11-25 and 2026-07-28. The recorded run below uses 2025-11-25 over stdio.</p>
+  <p class="empty" data-empty hidden>No match. Try a shorter word, like clip or undo.</p>
 </div>
 
 <script>
@@ -179,6 +220,17 @@ const coreCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
   ul { display: flex; flex-direction: column; gap: var(--space-3); }
   li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
   .name { font-size: var(--mono-small); line-height: 20px; color: var(--text-primary); overflow-wrap: anywhere; }
+  .tag {
+    padding: 0 var(--space-1-5);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 18px;
+  }
+  .tag.when { border-style: dashed; }
+  .blurb a { text-decoration: underline; text-underline-offset: 2px; }
+  .blurb code, .bar-note code, .h code { font-size: var(--mono-small); }
   .does { color: var(--text-secondary); font-size: 14px; line-height: 20px; flex-basis: 100%; }
 
   .chips { flex-direction: row; flex-wrap: wrap; gap: var(--space-2); }

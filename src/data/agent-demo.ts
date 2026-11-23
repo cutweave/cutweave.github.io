@@ -2,14 +2,17 @@
 /**
  * Script for the "Watch an agent edit" demo (components/demo/AgentDemo.astro).
  *
- * ILLUSTRATIVE. Tool names are from the planned MCP surface (docs/content-inventory.md section 5.2);
- * every value (ids, counts, durations, costs) is invented. Costs use the brand format
+ * ILLUSTRATIVE. The tool names are real or planned (the MCP catalog in src/data/mcp-tools.ts): project_info,
+ * media_list, cutweave_execute and its edit.checkpoint step exist today; caption_generate, caption_style,
+ * render_contact_sheet and the silence.remove, filler.remove and caption.generate steps are planned. Every value
+ * (ids, counts, durations, costs) is invented, and the proposal flow is the plan. Costs use the brand format
  * "~$0.04 · <model> via <provider>" with provider names from the inventory (section 6.2).
  *
- * GAP-03: replace this file with a transcript generated from a real `cutweave mcp --headless` run against a
- * sample project (WP-1J, WP-2I, WP-7G.02). Keep the shape below and the component needs no change: a run
- * recorder only has to emit `DemoScript` (steps of transcript entries, each with the timeline state after it).
- * What exists today is the Phase 0 spike run: four calls, 3 of 3 runs, no screenshots
+ * GAP-03: the frames story is still planned (render_frame is WP-1J.02), so this stays illustrative. A real
+ * recorded session without frames is in src/data/mcp-real-run.json (scripts/capture-mcp-run.mjs). Replace this
+ * file with a generated transcript when frames exist. Keep the shape below and the component needs no change:
+ * a run recorder only has to emit `DemoScript` (steps of transcript entries, each with the timeline state after it).
+ * The Phase 0 spike ran a real four-call version with frames: 3 of 3 runs, no screenshots
  * (spikes/s5-command-bus/AGENT-RUN-REPORT.md in the main repo).
  */
 
@@ -184,7 +187,7 @@ export const agentDemo: DemoScript = {
       entries: [
         { type: 'call', tool: 'project_info', args: '{}' },
         { type: 'result', text: 'Harbor interview · 1 sequence · rev 41 · 30 fps' },
-        { type: 'call', tool: 'media_list', args: '{ "kind": "video" }' },
+        { type: 'call', tool: 'media_list', args: '{}' },
         { type: 'result', text: 'med_3k9x interview_A.mov · 11:42 · speech detected' },
       ],
     },
@@ -216,7 +219,7 @@ export const agentDemo: DemoScript = {
         {
           type: 'call',
           tool: 'cutweave_execute',
-          args: '{ "dry_run": true, "steps": ["timeline.remove_silences", "timeline.remove_fillers"] }',
+          args: '{ "dry_run": true, "steps": [{ "cmd": "silence.remove" }, { "cmd": "filler.remove" }] }',
         },
         { type: 'result', text: 'Dry run: remove 14 silences (2:11) and 9 fillers (0:29). Saves 2:40. Nothing changed.' },
       ],
@@ -227,7 +230,11 @@ export const agentDemo: DemoScript = {
       timelineSummary: 'Timeline unchanged; the dashed outlines remain.',
       timeline: { silences: 'detected', captions: 'none' },
       entries: [
-        { type: 'call', tool: 'edit_checkpoint', args: '{ "name": "before-cuts" }' },
+        {
+          type: 'call',
+          tool: 'cutweave_execute',
+          args: '{ "steps": [{ "cmd": "edit.checkpoint", "args": { "name": "before-cuts" } }] }',
+        },
         { type: 'result', text: 'Checkpoint before-cuts saved at rev 41.' },
       ],
     },
@@ -242,7 +249,7 @@ export const agentDemo: DemoScript = {
         {
           type: 'call',
           tool: 'cutweave_execute',
-          args: '{ "expected_rev": 41, "steps": ["timeline.remove_silences", "timeline.remove_fillers", "caption.generate"] }',
+          args: '{ "expected_rev": 41, "steps": [{ "cmd": "silence.remove" }, { "cmd": "filler.remove" }, { "cmd": "caption.generate" }] }',
         },
         { type: 'result', text: 'Proposal prop_7f3a open · 6 changes · interview_A soft-locked · not applied.' },
         { type: 'agent', text: 'Proposed, not applied. Checking it visually before you see it.' },

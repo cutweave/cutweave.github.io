@@ -15,8 +15,8 @@
  *
  * GAP-02: replace the scripted player with a captioned screen recording of an agent over MCP once
  *         WP-1O.04 / WP-7G.02 exist.
- * GAP-03: the script uses real planned tool names with invented values; regenerate src/data/agent-demo.ts from a
- *         real `cutweave mcp --headless` run (WP-1J, WP-2I) and nothing here needs to change.
+ * GAP-03: the script uses real or planned tool names with invented values (frames are still planned). A real
+ *         recorded run is on /agents/ (RealRun). Regenerate src/data/agent-demo.ts once render_frame exists.
  * Honesty: carries an "Illustrative" chip and a footnote linking the real Phase 0 spike run
  *          (docs/site-plan.md section 3).
  *
@@ -37,8 +37,10 @@ import { agentDemo, type DemoScript } from '../../data/agent-demo';
 interface Props {
   id?: string;
   script?: DemoScript;
+  /** Where the recorded real run lives (the /agents/ page has it; other pages link there). */
+  realRunHref?: string;
 }
-const { id = 'agent-demo', script = agentDemo } = Astro.props;
+const { id = 'agent-demo', script = agentDemo, realRunHref = '/agents/#real-run' } = Astro.props;
 const { steps, proposal, cuts, captions, sequence } = script;
 const last = steps.length - 1;
 const SPIKE_REPORT = 'https://github.com/cutweave/cutweave/blob/main/spikes/s5-command-bus/AGENT-RUN-REPORT.md';
@@ -256,7 +258,7 @@ const finalState = steps[last]?.timeline ?? { silences: 'none', captions: 'none'
 
   <!-- GAP-02, GAP-03: illustrative until a real recording and a real headless-run transcript exist. -->
   <p class="ad__note">
-    <strong>Illustrative.</strong> Tool names are from the planned MCP surface; the values are invented. What exists today is a Phase 0 spike that ran a real four-call version (<code>media_import</code>, <code>timeline_insert</code>, <code>clip_split</code>, <code>render_frame</code>) in 3 of 3 runs, with no screenshots.
+    <strong>Illustrative.</strong> Tool names are real or planned; the values are invented, and rendered frames are still planned (<code>render_frame</code>, WP-1J.02). A <a href={realRunHref}>real run without frames</a> is recorded from the built MCP server. A Phase 0 spike ran a four-call version with frames (<code>media_import</code>, <code>timeline_insert</code>, <code>clip_split</code>, <code>render_frame</code>) in 3 of 3 runs, with no screenshots.{' '}
     <a href={SPIKE_REPORT}>Read the spike run report<Icon name="external-link" size="sm" /></a>
   </p>
 
