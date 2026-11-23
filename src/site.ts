@@ -3,7 +3,7 @@
 
 export const SITE = {
   name: 'Cutweave',
-  url: 'https://cutweave.github.io',
+  url: 'https://cutweave.app',
   tagline: 'An open-source video editor for creators and the AI agents that work with them.',
   description:
     'Cutweave is an open-source desktop video editor in development: CapCut-class editing, full MCP control for AI agents, your own AI keys and plugins at every layer.',

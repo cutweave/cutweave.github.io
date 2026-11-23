@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Comparison rows. Source: docs/content-inventory.md section 4 (derived from docs/03-feature-parity.md in the main repo).
-// CapCut statements are limited to what the inventory lists. The Cutweave column is the 1.0 plan, not what exists.
+// CapCut statements are limited to what the inventory lists. The Cutweave column is the 1.0 plan, not what exists;
+// each cell's status is as of product HEAD 7728d7c (2026-11-23). Built means code and tests exist, not that you can use it.
 
 export type CellStatus = 'built' | 'in-progress' | 'planned' | 'later' | 'not-planned';
 
@@ -25,14 +26,16 @@ export interface CompareRow {
     status: CellStatus;
     /** Phase or milestone for planned items, e.g. "P2" or "M1". Shown in the chip. */
     phase?: string;
+    /** Replaces the chip word, for example "Built · engine" when only part of the row exists. */
+    label?: string;
     text: string;
   };
   /** Shown in the landing-page teaser (6-8 high-signal rows). */
   teaser?: boolean;
 }
 
-export const AS_OF = 'November 2026';
-export const AS_OF_ISO = '2026-11';
+export const AS_OF = '23 November 2026';
+export const AS_OF_ISO = '2026-11-23';
 
 export const GROUPS: { id: GroupId; title: string }[] = [
   { id: 'ownership', title: 'Ownership and privacy' },
@@ -48,7 +51,7 @@ export const GROUPS: { id: GroupId; title: string }[] = [
 export const ROWS: CompareRow[] = [
   // Ownership and privacy
   { id: 'account', group: 'ownership', topic: 'Account required', capcut: 'Yes', teaser: true,
-    cutweave: { status: 'planned', phase: 'P1', text: 'No account. No telemetry by default.' } },
+    cutweave: { status: 'built', label: 'Built · engine', text: 'No account. No telemetry by default. The engine has no sign-in and opens no outbound connections, and a test checks that.' } },
   { id: 'price', group: 'ownership', topic: 'Price and tiers', capcut: 'Free tier, Pro paywall',
     cutweave: { status: 'built', text: 'No tiers. The core is GPL-3.0, and the license is in the repo today.' } },
   { id: 'watermark', group: 'ownership', topic: 'Export watermark', capcut: 'Yes, on some paths', teaser: true,
@@ -58,9 +61,9 @@ export const ROWS: CompareRow[] = [
   { id: 'offline', group: 'ownership', topic: 'Offline use', capcut: 'Needs an account and internet for AI',
     cutweave: { status: 'planned', phase: 'P5', text: 'Local-first. Local AI arrives as a plugin.' } },
   { id: 'format', group: 'ownership', topic: 'Project format', capcut: 'Proprietary draft', teaser: true,
-    cutweave: { status: 'built', text: 'Open JSON folder, with atomic save. OpenTimelineIO import and export is planned for P6.' } },
+    cutweave: { status: 'built', text: 'Open JSON folder, with atomic save, a journal and rotating backups. OpenTimelineIO import and export is planned for P6.' } },
   { id: 'crash', group: 'ownership', topic: 'Crash safety', capcut: 'Local drafts',
-    cutweave: { status: 'in-progress', phase: 'P1', text: 'Journal replay and rotating backups. Atomic save is built; the journal is not.' } },
+    cutweave: { status: 'built', label: 'Built · engine', text: 'A journal replayed after a crash, autosave, rotating backups, and an engine that restarts itself. A kill test passes. There is no editing workflow to use it in yet.' } },
   { id: 'cloud', group: 'ownership', topic: 'Cloud storage and team spaces', capcut: 'Yes',
     cutweave: { status: 'not-planned', text: 'Deliberately not offered. Use any synced folder. Collaboration is a later question.' } },
 
@@ -116,9 +119,9 @@ export const ROWS: CompareRow[] = [
 
   // Agents and automation
   { id: 'mcp', group: 'agents', topic: 'Drive it from an external agent', capcut: 'One ChatGPT plugin', teaser: true,
-    cutweave: { status: 'in-progress', phase: 'P1', text: 'Full MCP: every command is a tool. A spike passed; the production server is under way.' } },
+    cutweave: { status: 'built', label: 'Built · v0', text: 'Full MCP: tools come from the command registry, and one execute tool reaches every command. HTTP and stdio both work. It cannot render a frame or export yet.' } },
   { id: 'cli', group: 'agents', topic: 'Headless and command-line rendering', capcut: 'None',
-    cutweave: { status: 'planned', phase: 'P1–P2', text: 'cutweave render, from the same binary as the editor.' } },
+    cutweave: { status: 'built', label: 'Built · core only', text: 'The cutweave command line runs commands and queries from scripts. cutweave render is wired but returns unsupported until media decoding lands.' } },
 
   // Extensibility
   { id: 'plugins', group: 'extensibility', topic: 'Plugins', capcut: 'None on desktop', teaser: true,
@@ -139,21 +142,21 @@ export const CAPCUT_BETTER: { title: string; text: string }[] = [
   { title: 'It is a finished app', text: 'CapCut ships on desktop, mobile and web today. Cutweave is a pre-alpha project with nothing to download.' },
   { title: 'A far larger library', text: 'CapCut has hundreds of effects and a large template marketplace. Cutweave plans fewer, and plugins to close the gap over time.' },
   { title: 'Generation is bundled', text: 'CapCut includes AI generation in the app. Cutweave will ask you to bring your own provider keys.' },
-  { title: 'Polish', text: 'CapCut is a finished product. Cutweave has a design system and an editor shell, and no working editor yet.' },
+  { title: 'Polish', text: 'CapCut is a finished product. Cutweave has a design system, an engine and the first editor panels, and no working editor yet.' },
 ];
 
 export const DIFFERENCES: { title: string; text: string; status: CellStatus; phase?: string; statusLabel?: string }[] = [
-  { title: 'No account, no watermark', text: 'You open the app and edit. Exports carry nothing of ours.', status: 'planned', phase: 'P1' },
+  { title: 'No account, no watermark', text: 'You open the app and edit. Exports carry nothing of ours. There is no account system to build, and there is no export yet.', status: 'planned', phase: 'M1' },
   { title: 'An open project format', text: 'A folder with a JSON document, a journal and backups, documented so other tools can read it.', status: 'built', statusLabel: 'Built · format' },
   { title: 'Your keys instead of credits', text: 'You pay providers directly. The cost is shown before anything runs.', status: 'planned', phase: 'P5' },
-  { title: 'MCP first', text: 'Every command is a tool, so an agent you already use can edit the same timeline you do.', status: 'in-progress', phase: 'P1' },
+  { title: 'MCP first', text: 'Every command is a tool, so an agent you already use can edit the same timeline you do. The server exists; frames and export are not in it yet.', status: 'built', statusLabel: 'Built · v0' },
   { title: 'Plugins at every layer', text: 'Data packs, GPU effects, compositions, WASM and UI panels. Built-in features use the same interfaces.', status: 'planned', phase: 'P6' },
-  { title: 'Undo per actor', text: 'You can undo the agent’s last change without touching yours. Command logs can be replayed.', status: 'built', statusLabel: 'Built · library only' },
-  { title: 'A headless CLI', text: 'Render from a script or a server with the same binary as the editor.', status: 'planned', phase: 'P1–P2' },
+  { title: 'Undo per actor', text: 'You can undo the agent’s last change without touching yours. The journal can be replayed after a crash.', status: 'built', statusLabel: 'Built · engine' },
+  { title: 'A headless CLI', text: 'Run commands from a script or a server with the same binary as the editor. Rendering from it waits on media decoding.', status: 'built', statusLabel: 'Built · core only' },
 ];
 
 export const NOT_YET: { title: string; text: string }[] = [
-  { title: 'Anyone who needs a working editor today', text: 'You cannot import, play or export a video in Cutweave yet. Use CapCut, Kdenlive or Shotcut for real work.' },
+  { title: 'Anyone who needs a working editor today', text: 'You cannot import, play or export a real video in Cutweave yet. Use CapCut, Kdenlive or Shotcut for real work.' },
   { title: 'People who edit on a phone', text: 'A mobile app is not in 1.0.' },
   { title: 'People who rely on the template marketplace', text: 'Cutweave plans at least 30 first-party templates. That is not a marketplace.' },
   { title: 'Teams that need cloud collaboration', text: 'Cloud storage and team spaces are deliberately not offered. Real-time collaboration is a later question.' },

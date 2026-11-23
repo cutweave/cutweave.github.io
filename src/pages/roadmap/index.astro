@@ -1,8 +1,10 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// /roadmap/: where the project is, what exists, what is measured, and what comes after 1.0.
-// Facts: docs/content-inventory.md sections 3.11, 9 and 10 (state as of HEAD 6ca1af7, 2026-11-22).
+// /roadmap/: where the project is, what exists, what merged since Phase 0, what is measured, and what comes after 1.0.
+// Facts: docs/content-inventory.md sections 3.11, 9 and 10 (state as of product HEAD 7728d7c, 2026-11-23).
+// Built is not the same as usable: nothing here can import, play or export real video yet.
 import '../../styles/area-s3.css';
+import '../../styles/area-progress.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
 import Section from '../../components/ui/Section.astro';
@@ -10,13 +12,14 @@ import Card from '../../components/ui/Card.astro';
 import StatusChip from '../../components/ui/StatusChip.astro';
 import Button from '../../components/ui/Button.astro';
 import RoadmapTimeline from '../../components/roadmap/RoadmapTimeline.astro';
+import RecentlyMerged from '../../components/roadmap/RecentlyMerged.astro';
 import ProofStrip from '../../components/roadmap/ProofStrip.astro';
-import { BUILT, NEXT_IN_P1, AFTER_1_0 } from '../../data/roadmap';
+import { BUILT, NEXT_IN_P1, AFTER_1_0, AS_OF } from '../../data/roadmap';
 import { LINKS } from '../../site';
 ---
 <BaseLayout
   title="Where Cutweave is"
-  description="The Cutweave roadmap: Phase 0 is done, Phase 1 is under way, and there is no download yet. What is built, what is measured in spikes, and what comes after 1.0."
+  description="The Cutweave roadmap: Phase 0 is done, Phase 1 is 40 of 60 work packages in, and there is no download yet. What is built, what merged since Phase 0, what is measured, and what comes after 1.0."
 >
   <header class="hero">
     <Container>
@@ -24,15 +27,15 @@ import { LINKS } from '../../site';
         <p class="eyebrow">Roadmap</p>
         <h1>Where Cutweave is</h1>
         <p class="lede">
-          Phase 0 is done with a provisional go, Phase 1 is under way, and there is no download yet.
+          Phase 0 is done: go with changes, signed off on 23 November. Phase 1 is {AS_OF.p1Done} of {AS_OF.p1Total} work packages in, and there is no download yet.
         </p>
         <p class="stamp">
           <StatusChip status="in-progress" label="Pre-alpha · Phase 1 of 7" />
-          <span>State as of November 2026. Dates are rough and are re-estimated after each phase.</span>
+          <span>As of <time datetime={AS_OF.iso}>{AS_OF.label}</time>. Dates are rough and are re-estimated after each phase.</span>
         </p>
         <p class="note">
-          The plan is about 14 months to 1.0 and about 7.5 months to a Public Alpha. Human review capacity is the
-          stated bottleneck.
+          Built is not the same as usable. The engine, the agent interface and the first editor panels exist and are
+          tested, but nothing can import, play or export a real video yet: real decode starts with the FFmpeg spike (S3), which began on 23 November.
         </p>
       </div>
     </Container>
@@ -40,33 +43,47 @@ import { LINKS } from '../../site';
 
   <Section id="phases" eyebrow="The plan" title="Eight phases to 1.0" lede="Each phase ends at a milestone with a test you can check. The marigold marker shows the phase being worked on now.">
     <RoadmapTimeline />
+    <p class="plan-note">
+      The plan is about 14 months to 1.0 and about 7.5 months to a Public Alpha. Human review capacity is the stated
+      bottleneck.
+    </p>
   </Section>
 
-  <Section id="built" tone="raised" eyebrow="In the repo today" title="Built so far" lede="This is code that exists and runs in tests. None of it lets you edit a video yet: no media can be imported, played or exported.">
+  <Section id="built" tone="raised" eyebrow="In the repo today" title="What exists" lede="This is code that runs in tests. Each card says what it is attached to, because most of it is not something you can use yet.">
     <ul class="cards">
       {BUILT.map((b) => (
         <Card as="li">
-          <div><StatusChip status="built" /></div>
+          <div><StatusChip status="built" {...(b.chip ? { label: b.chip } : {})} /></div>
           <h3 class="card-title">{b.title}</h3>
           <p class="card-text">{b.text}</p>
         </Card>
       ))}
     </ul>
+  </Section>
 
-    <h3 class="sub">Next in Phase 1</h3>
-    <p class="sub-lede">Not merged yet. Together these make up the M1 milestone.</p>
+  <Section id="recent" eyebrow="Built since Phase 0" title={`${AS_OF.recentlyMerged} work packages in two days`} lede="Merged to the main branch on 22 and 23 November 2026, newest first. Most of it is written by AI coding agents from public work packages, under human review. The hash links to the merge commit.">
+    <RecentlyMerged headingLevel={3} />
+  </Section>
+
+  <Section id="next" tone="raised" eyebrow="Still to merge" title="What is left in Phase 1" lede={`${AS_OF.p1Total - AS_OF.p1Done} of ${AS_OF.p1Total} work packages. Together they make up the M1 milestone: an agent and the interface both import, cut and export.`}>
     <ul class="cards">
       {NEXT_IN_P1.map((n) => (
         <Card as="li">
-          <div><StatusChip status="planned" label="Planned · P1" /></div>
-          <h4 class="card-title">{n.title}</h4>
+          <div><StatusChip status="planned" label={n.blocked ? 'Waits on S3' : 'Planned · P1'} /></div>
+          <h3 class="card-title">{n.title}</h3>
           <p class="card-text">{n.text}</p>
+          <p class="card-wps">{n.wps}</p>
         </Card>
       ))}
     </ul>
+    <p class="plan-note">
+      The FFmpeg spike (S3) was unblocked on 23 November and is running. Meanwhile the work that does not need it goes ahead against stand-ins: a stub media
+      backend for dev builds, generated audio and synthetic frames. These do not replace the M1 exit, which needs real
+      media.
+    </p>
   </Section>
 
-  <Section id="proof" eyebrow="Evidence" title="Measured in the Phase 0 spikes" lede="Throwaway prototypes tested the riskiest ideas before the product was built on them. These are the results.">
+  <Section id="proof" eyebrow="Evidence" title="Measured so far" lede="Numbers from tests in the real code, and from the throwaway Phase 0 prototypes that tested the riskiest ideas first. Each group carries its own label.">
     <ProofStrip variant="full" headingLevel={3} />
   </Section>
 
@@ -98,13 +115,13 @@ import { LINKS } from '../../site';
   h1 { font-family: var(--font-display); font-size: var(--display-hero-size); line-height: var(--display-hero-line); font-weight: 700; letter-spacing: -0.02em; }
   .lede { font-size: var(--text-lede-size); line-height: var(--text-lede-line); color: var(--text-secondary); }
   .stamp { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
-  .note { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .note { padding: var(--space-3) var(--space-4); border: var(--border-thin) dashed var(--border-control); border-radius: var(--radius-md); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
 
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-4); }
   .card-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
   .card-text { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
-  .sub { margin-top: var(--space-12); font-family: var(--font-display); font-size: 28px; line-height: 34px; font-weight: 700; }
-  .sub-lede { margin: var(--space-2) 0 var(--space-6); color: var(--text-secondary); }
+  .card-wps { margin-top: auto; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); }
+  .plan-note { margin-top: var(--space-6); max-width: var(--prose-max); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
 
   .later { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-3); counter-reset: later; }
   .later li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border: var(--border-thin) dashed var(--border-default); border-radius: var(--radius-md); color: var(--text-secondary); }

@@ -9,12 +9,14 @@
  *                        page; it fits 360px with no horizontal scroll (names appear from 640px up).
  *  - headingLevel?: 3 | 4   level for phase names in the full variant (default 3)
  *  - cta?: boolean       compact only: show a "See the roadmap" link under the strip (default false)
+ * The current phase shows its work-package progress (merged of total) as a bar with the same numbers in text.
  * Data: src/data/roadmap.ts.
  */
 import '../../styles/area-s3.css';
+import '../../styles/area-progress.css';
 import Icon from '../ui/Icon.astro';
 import Button from '../ui/Button.astro';
-import { PHASES, type PhaseState } from '../../data/roadmap';
+import { PHASES, AS_OF, type PhaseState } from '../../data/roadmap';
 
 interface Props {
   compact?: boolean;
@@ -40,6 +42,10 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
         </li>
       ))}
     </ol>
+    <p class="p1-note">
+      Phase 1: <strong>{AS_OF.p1Done} of {AS_OF.p1Total}</strong> work packages merged, as of {AS_OF.label}. Real video
+      still waits on the FFmpeg spike (S3).
+    </p>
     {cta && <div class="cta"><Button href="/roadmap/" iconEnd="arrow-right">See the roadmap</Button></div>}
   </div>
 ) : (
@@ -57,10 +63,16 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
             <span class="pid">{p.id}</span>
             <span class="dur">{p.duration}</span>
             {p.state === 'current' && <span class="tag-here"><Icon name="loader" size="sm" /> You are here</span>}
-            {p.state === 'done' && <span class="tag-done"><Icon name="circle-check" size="sm" /> Done, provisional</span>}
+            {p.state === 'done' && <span class="tag-done"><Icon name="circle-check" size="sm" /> Done</span>}
           </div>
           <Heading class="name">{p.name}</Heading>
           <p class="delivers">{p.delivers}</p>
+          {p.progress && (
+            <div class="progress">
+              <progress class="bar" value={p.progress.done} max={p.progress.total} aria-label={`Phase 1 work packages merged: ${p.progress.done} of ${p.progress.total}`}>{p.progress.done} of {p.progress.total}</progress>
+              <p class="ptext"><strong>{p.progress.done} of {p.progress.total}</strong> work packages merged, as of {AS_OF.label}. <a href="#recent">See what merged</a>.</p>
+            </div>
+          )}
           <p class="milestone"><span class="mlabel">Milestone and exit</span> {p.milestone}</p>
         </div>
       </li>
@@ -148,6 +160,22 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
     background: var(--marigold-subtle);
   }
   .phase-current .milestone { color: var(--text-primary); }
+  .progress { display: flex; flex-direction: column; gap: var(--space-1-5); max-width: var(--prose-max); }
+  .bar {
+    appearance: none;
+    width: 100%;
+    height: var(--progress-bar-height);
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--surface-3);
+    overflow: hidden;
+  }
+  .bar::-webkit-progress-bar { background: var(--surface-3); }
+  .bar::-webkit-progress-value { background: var(--marigold); border-radius: var(--radius-full); }
+  .bar::-moz-progress-bar { background: var(--marigold); border-radius: var(--radius-full); }
+  .ptext { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .ptext strong { color: var(--text-primary); }
+  .ptext a { color: var(--text-primary); text-decoration: underline; text-underline-offset: var(--space-0-5); }
 
   /* Future phases are quieter: no weight on the name, secondary text. */
   .phase-future .name { font-weight: 600; color: var(--s3-future-text); }
@@ -217,6 +245,8 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
     overflow-wrap: anywhere;
   }
   .cell-current .pname, .cell-done .pname { color: var(--text-primary); }
+  .p1-note { margin-top: var(--space-4); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); max-width: var(--prose-max); }
+  .p1-note strong { color: var(--text-primary); }
   .cta { margin-top: var(--space-6); }
 
   @media (min-width: 640px) {

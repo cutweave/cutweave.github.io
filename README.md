@@ -1,6 +1,6 @@
 # Cutweave website
 
-Source of [cutweave.github.io](https://cutweave.github.io/), the public site for [Cutweave](https://github.com/cutweave/cutweave): an open-source (GPL-3.0) desktop video editor for creators and their AI agents.
+Source of [cutweave.app](https://cutweave.app/), the public site for [Cutweave](https://github.com/cutweave/cutweave): an open-source (GPL-3.0) desktop video editor for creators and their AI agents.
 
 Built with [Astro](https://astro.build/) (static output), TypeScript (strict) and pnpm. The site makes **zero third-party requests** at runtime: fonts and icons are self-hosted, there are no analytics and no cookies. Privacy is a product pillar, so keep it that way.
 

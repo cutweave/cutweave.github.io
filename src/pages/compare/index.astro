@@ -63,7 +63,7 @@ const chipFor = (d: (typeof DIFFERENCES)[number]): { status: 'built' | 'in-progr
     </p>
   </Section>
 
-  <Section id="differ" eyebrow="On purpose" title="Where we differ on purpose" lede="These are design commitments. Each one carries its status, and most are not built yet.">
+  <Section id="differ" eyebrow="On purpose" title="Where we differ on purpose" lede="These are design commitments. Each one carries its status. Some exist in the engine today, and none is ready to use.">
     <ul class="cards">
       {DIFFERENCES.map((d) => {
         const chip = chipFor(d);

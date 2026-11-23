@@ -2,50 +2,59 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
  * LifeOfEdit: steps one command, clip.split, from a client to the screen.
- * Facts: arch §5.1 (envelope, typed errors), §5.2 (Tx, patches, snapshots), §8 (render).
+ * Facts: arch §5.1 (envelope, typed errors), §5.2 (Tx, patches, snapshots), §8 (render). Status as of product HEAD 7728d7c.
  * Without JS every step is shown. With JS, Previous and Next step through, one detail at a time.
- * Payloads are illustrative: real names, invented values.
+ * Message shapes are real (docs/reference/rpc.md, schema/patch-fixtures.json in the product repo); IDs and revisions are invented.
  * Props: none.
  */
 import '../../styles/area-s2.css';
+import StatusChip from '../ui/StatusChip.astro';
 
-const steps = [
+const steps: { title: string; text: string; code: string; status: 'built' | 'in-progress'; chip?: string }[] = [
   {
     title: 'Validate',
-    text: 'The client sends the command with a request_id and, optionally, the expected_rev it last saw. The engine checks the arguments against the JSON Schema, then runs semantic checks, such as whether the item exists and the time falls inside the clip. The actor comes from the credential, not from anything the client claims.',
-    code: `clip.split {
-  request_id: "0192…",      // UUIDv7, deduplicated for 10 minutes
-  expected_rev: 41,
-  item: "itm_0192…",
-  at: 2116800000            // 3 s, in flicks
-}`,
+    status: 'built',
+    text: 'The client sends the command over JSON-RPC, or an agent calls the matching MCP tool. params._meta carries a request_id, which every change needs, and optionally the expected_rev the client last saw. The engine checks the arguments against the JSON Schema, then runs semantic checks, such as whether the clip exists and the time falls strictly inside it. The actor comes from the credential, not from anything the client claims.',
+    code: `{"jsonrpc":"2.0","id":7,"method":"clip.split",
+ "params":{"item":"itm_…","at":"4s",
+           "_meta":{"request_id":"0190f5c2-…","expected_rev":41}}}`,
   },
   {
     title: 'Tx records forward and inverse patches',
-    text: 'The command runs inside a transaction. The Tx records the forward patch ops and their inverses (RFC 6902). A gesture, such as a drag, and a proposal, which is an agent turn, are transaction kinds that still commit as one undo step.',
-    code: `forward:  replace /items/itm_0192…/duration
-          add     /items/itm_0193…
-inverse:  remove  /items/itm_0193…
-          replace /items/itm_0192…/duration`,
+    status: 'built',
+    text: 'The command runs inside a transaction. The Tx records the forward patch ops with the values they replace, so each can be inverted (RFC 6902, addressed by ID). A gesture, such as a drag, and a proposal, which is an agent turn, are transaction kinds that still commit as one undo step.',
+    code: `forward:  replace …/items/itm_a/duration   7056000000 → 2822400000
+          add     …/items/itm_b            // the right half
+inverse:  remove  …/items/itm_b
+          replace …/items/itm_a/duration   2822400000 → 7056000000`,
   },
   {
     title: 'A new snapshot revision',
-    text: 'One writer owns the project document. It applies the patch and publishes an immutable snapshot at the next revision. Readers hold an Arc to a revision, so the hot path takes no locks.',
+    status: 'built',
+    text: 'One writer owns the project document. It writes the commit to the journal, applies the patch and publishes an immutable snapshot at the next revision. Readers hold an Arc to a revision, so the hot path takes no locks.',
     code: `rev 41  →  rev 42   // earlier snapshots stay valid for readers`,
   },
   {
     title: 'Event: doc.patched',
-    text: 'The engine streams the change to every subscriber, with the revision, who made it and the patch ops.',
-    code: `doc.patched { rev: 42, actor: "agent:claude-code", ops: [ … ] }`,
+    status: 'built',
+    text: 'The engine streams the change to every subscriber, with the revision, the one before it, who made it and the patch ops.',
+    code: `{"method":"doc.patched",
+ "params":{"rev":42,"prev_rev":41,"committed_rev":42,
+           "actor":"agent:mcp","tx_id":"tx_9","cause":"command",
+           "request_id":"0190f5c2-…","ops":[…]}}`,
   },
   {
     title: 'UI projection updates',
-    text: 'The editor keeps a read-only projection of the document. It updates from doc.patched, and never writes to it directly. Any other client can follow the same stream.',
-    code: `docStore.apply(patched)   // read-only projection`,
+    status: 'built',
+    text: 'The editor keeps a read-only mirror of the document. If an event continues from its revision it applies the ops, and if it missed one it fetches a fresh snapshot. It never writes to the mirror directly, and any other client can follow the same stream.',
+    code: `if (prev_rev === mirror.rev) applyPatch(mirror, ops)   // @cutweave/protocol
+else resync()                                          // project.snapshot`,
   },
   {
     title: 'Render',
-    text: 'Rendering is a pure function of the snapshot, the sequence, the time and the quality. The same revision gives the same frame, so frames can be cached. The preview, an export and an agent’s image all come from this one pipeline.',
+    status: 'in-progress',
+    chip: 'Wiring pending',
+    text: 'Rendering is a pure function of the snapshot, the sequence, the time and the quality. The same revision gives the same frame, so frames can be cached. The compositor and the frame readback are built and tested on synthetic test cards. They are not wired to the engine yet, and nothing decodes real video.',
     code: `render(snapshot@42, sequence, t, quality) → frame`,
   },
 ];
@@ -62,7 +71,10 @@ inverse:  remove  /items/itm_0193…
       <li data-step={i}>
         <span class="n" aria-hidden="true">{i + 1}</span>
         <div class="c">
-          <h3>{s.title}</h3>
+          <div class="st">
+            <h3>{s.title}</h3>
+            <StatusChip status={s.status} {...(s.chip ? { label: s.chip } : {})} />
+          </div>
           <div class="detail">
             <p>{s.text}</p>
             <pre tabindex="0"><code>{s.code}</code></pre>
@@ -75,11 +87,11 @@ inverse:  remove  /items/itm_0193…
   <div class="envelope">
     <h3>What protects a retry or a race</h3>
     <ul>
-      <li><code>request_id</code> makes a command idempotent. A repeat inside 10 minutes returns the original result, so a client can resend after an engine restart.</li>
-      <li><code>expected_rev</code> is optimistic concurrency. If the document has moved on, the command fails with <code>Conflict</code> instead of overwriting.</li>
-      <li>Errors are typed: <code>NotFound</code>, <code>Locked</code>, <code>Conflict&#123;current_rev&#125;</code>, <code>Invalid&#123;path,msg&#125;</code> and <code>Unsupported</code>, each with a human message and a machine code.</li>
+      <li><code>request_id</code> makes a command idempotent. A repeat inside 10 minutes by the same actor, with the same method and parameters, returns the original result, so a client can resend after an engine restart.</li>
+      <li><code>expected_rev</code> is optimistic concurrency. If the document has moved on, the command fails with <code>conflict</code> and the current revision instead of overwriting.</li>
+      <li>Errors are typed: <code>not_found</code>, <code>locked</code>, <code>conflict</code>, <code>invalid</code> (with a JSON Pointer to the bad parameter), <code>forbidden</code>, <code>unsupported</code> and <code>internal</code>, each with a human message.</li>
     </ul>
-    <p class="foot">Illustrative payloads. The names and shapes are from the architecture doc; the values are invented.</p>
+    <p class="foot">The message shapes are real, from the JSON-RPC reference and the engine’s generated patch fixtures. IDs, revisions and the request id are invented.</p>
   </div>
 </div>
 
@@ -153,6 +165,7 @@ inverse:  remove  /items/itm_0193…
     color: var(--text-secondary);
   }
   .c { min-width: 0; display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+  .st { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
   h3 { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
   .detail { display: flex; flex-direction: column; gap: var(--space-3); color: var(--text-secondary); font-size: 15px; line-height: 23px; max-width: var(--prose-max); }
   pre {

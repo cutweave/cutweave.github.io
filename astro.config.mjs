@@ -2,9 +2,9 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// Static site served from the root of https://cutweave.github.io/ (base stays "/").
+// Static site served from the root of https://cutweave.app/ (base stays "/").
 export default defineConfig({
-  site: 'https://cutweave.github.io',
+  site: 'https://cutweave.app',
   base: '/',
   output: 'static',
   trailingSlash: 'always',

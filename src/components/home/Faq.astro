@@ -1,9 +1,9 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
- * Faq: seven questions as native <details>/<summary> (works without JS, keyboard accessible).
- * Answers are short and plain, from docs/content-inventory.md sections 2, 6, 10 and 11. Nothing here claims a
- * feature exists that does not. No props.
+ * Faq: eight questions as native <details>/<summary> (works without JS, keyboard accessible).
+ * Answers are short and plain, from docs/content-inventory.md sections 2, 3, 5, 6, 10 and 11 (status as of product
+ * HEAD 7728d7c, 2026-11-23). Nothing here claims a feature exists that does not. No props.
  */
 import '../../styles/area-s4.css';
 import Icon from '../ui/Icon.astro';
@@ -12,12 +12,17 @@ import { LINKS } from '../../site';
 const items = [
   {
     q: 'Is it ready?',
-    a: 'No. Cutweave is pre-alpha, in Phase 1 of 7, and there is no download yet. The scaffold, design system and five technical spikes are done. The first working build is the Phase 1 milestone. The roadmap shows where things stand.',
+    a: 'No. Cutweave is pre-alpha, in Phase 1 of 7, and there is no download yet. The engine, an MCP server and the first editor panels are built and tested: 40 of 60 Phase 1 work packages are merged. But nothing can import, play or export a real video yet, because real decode starts with the FFmpeg spike (S3), which began on 23 November. The first working build is the Phase 1 milestone. The roadmap shows what is built and what is left.',
     link: { href: '/roadmap/', label: 'See the roadmap' },
   },
   {
     q: 'Do I need an account?',
-    a: 'No. There is no account, no watermark and no feature tiers. Crash reports are opt-in, and update checks can be turned off. This is the plan for 1.0, written into the project principles.',
+    a: 'No. There is no account, no watermark and no feature tiers. The engine in the repo has no sign-in and opens no outbound connections, and a test checks that. Crash reports will be opt-in, and update checks can be turned off. These are written into the project principles.',
+  },
+  {
+    q: 'Can an agent use it today?',
+    a: 'Partly, in the repo and not in an app you can install. The engine serves MCP over HTTP and over stdio, with 18 tools and one execute tool that reaches every command. A recorded session on the agent page shows an agent creating a project, importing stub media, inserting, splitting, undoing and reading the timeline. It cannot render a frame or export yet.',
+    link: { href: '/agents/#real-run', label: 'Read a real run' },
   },
   {
     q: 'What do AI features cost?',

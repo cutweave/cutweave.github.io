@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
-const origin = 'https://cutweave.github.io';
+const origin = 'https://cutweave.app';
 
 if (!existsSync(dist)) {
   console.error('dist/ not found. Run "pnpm build" first.');

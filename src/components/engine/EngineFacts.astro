@@ -1,15 +1,17 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
- * EngineFacts: engineering facts with status and source, performance budgets (targets) and spike
- * measurements. Data: src/data/engine-facts.ts (docs/content-inventory.md §9).
- * GAP-09: spike numbers are informal; replace with formal runs when reference hardware exists.
+ * EngineFacts: engineering facts with status and source, performance budgets (targets) beside what has been
+ * measured so far, numbers measured in work-package tests ("Measured in a work package test") and spike
+ * measurements ("Measured in a spike"). Data: src/data/engine-facts.ts (docs/content-inventory.md §9).
+ * GAP-09: all measured numbers are informal; replace with formal runs when reference hardware exists.
  * Props: none.
  */
 import '../../styles/area-s2.css';
+import '../../styles/area-progress.css';
 import StatusChip from '../ui/StatusChip.astro';
 import Icon from '../ui/Icon.astro';
-import { ENGINE_FACTS, FACT_GROUPS, BUDGETS, SPIKE_RESULTS, SPIKE_FOOTNOTE } from '../../data/engine-facts';
+import { ENGINE_FACTS, FACT_GROUPS, BUDGETS, WP_RESULTS, WP_FOOTNOTE, SPIKE_RESULTS, SPIKE_FOOTNOTE } from '../../data/engine-facts';
 ---
 <div class="facts">
   {FACT_GROUPS.map((g, gi) => (
@@ -33,20 +35,50 @@ import { ENGINE_FACTS, FACT_GROUPS, BUDGETS, SPIKE_RESULTS, SPIKE_FOOTNOTE } fro
 
   <section aria-labelledby="budgets">
     <h3 id="budgets" class="group">Performance budgets <span class="tag">Targets</span></h3>
-    <p class="blurb">Budgets are features: each is benchmarked in CI on reference machines. These are targets. Not all of them are measured yet.</p>
+    <p class="blurb">Budgets are features: each is benchmarked in CI on reference machines. The target column is a target. The measured column is what has been seen so far, informally, and many rows have nothing yet.</p>
     <div class="table-wrap">
       <table>
         <caption class="sr-only">Performance budgets</caption>
-        <thead><tr><th scope="col">What</th><th scope="col">Target</th></tr></thead>
+        <thead><tr><th scope="col">What</th><th scope="col">Target</th><th scope="col">Measured so far</th></tr></thead>
         <tbody>
-          {BUDGETS.map((b) => <tr><th scope="row">{b.what}</th><td class="mono">{b.target}</td></tr>)}
+          {BUDGETS.map((b) => (
+            <tr>
+              <th scope="row">{b.what}</th>
+              <td class="mono">{b.target}</td>
+              <td>
+                {b.measured ? (
+                  <>
+                    <span>{b.measured.text}</span>{' '}
+                    <span class="kind">{b.measured.kind === 'wp' ? 'Work package test' : 'Spike'}</span>
+                  </>
+                ) : (
+                  <span class="none">Not measured yet</span>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   </section>
 
+  <section aria-labelledby="wp-results">
+    <h3 id="wp-results" class="group">In the real code <span class="tag">Measured in a work package test</span></h3>
+    {/* GAP-09: informal numbers from merge and commit messages. Replace with formal runs on the reference machines. */}
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">Results from work-package tests since Phase 0</caption>
+        <thead><tr><th scope="col">Work package</th><th scope="col">Result</th></tr></thead>
+        <tbody>
+          {WP_RESULTS.map((r) => <tr><th scope="row">{r.wp}</th><td>{r.result}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">{WP_FOOTNOTE}</p>
+  </section>
+
   <section aria-labelledby="spikes">
-    <h3 id="spikes" class="group">Spike numbers <span class="tag">Measured in a spike</span></h3>
+    <h3 id="spikes" class="group">Phase 0 spike numbers <span class="tag">Measured in a spike</span></h3>
     {/* GAP-09: informal numbers. Replace with formal runs on the reference machines. */}
     <div class="table-wrap">
       <table>
@@ -110,4 +142,14 @@ import { ENGINE_FACTS, FACT_GROUPS, BUDGETS, SPIKE_RESULTS, SPIKE_FOOTNOTE } fro
   td { color: var(--text-secondary); }
   .mono { font-family: var(--font-mono); font-size: var(--mono-small); color: var(--text-primary); }
   .foot { margin-top: var(--space-3); color: var(--text-secondary); font-size: 14px; }
+  .kind {
+    padding: 0 var(--space-1-5);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: var(--progress-text-xs);
+    line-height: var(--progress-text-xs-line);
+    white-space: nowrap;
+  }
+  .none { color: var(--text-muted); }
 </style>
