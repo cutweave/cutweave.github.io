@@ -1,7 +1,13 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 // /how-it-works/: "One engine, many clients". Architecture for developers (docs/site-plan.md §4, work package S2).
-// Facts: docs/content-inventory.md §8, §9. Gap: GAP-09 (spike numbers are informal; see EngineFacts).
+// Facts: docs/content-inventory.md §8, §9 (status as of product HEAD 7728d7c, 2026-11-23).
+// Gaps: GAP-09 (measured numbers are informal; see EngineFacts), GAP-19 (golden frames from the production compositor
+// are real renders, but of synthetic test cards; sources in src/assets/README.md), GAP-08 (generated references are
+// linked on GitHub, not on a docs site).
+import '../../styles/area-progress.css';
+import contactSheet from '../../assets/render/contact-sheet.png';
+import pipRotated from '../../assets/render/pip-rotated-cropped.png';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
 import Section from '../../components/ui/Section.astro';
@@ -23,7 +29,7 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
         <p class="eyebrow">How it works</p>
         <h1 id="how-title">One engine, many clients.</h1>
         <p class="lede">The desktop UI is not special. It uses the same command API as AI agents over MCP, the command line and plugins. Every edit is a registered command, applied to one project document by one Rust engine.</p>
-        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" /> <span>This page describes the design. Each fact below says what is built.</span></p>
+        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" /> <span>This page describes the design. Each fact below says what is built, and built is not the same as usable: nothing decodes real video yet.</span></p>
       </div>
       <div class="diagram">
         <ArchitectureDiagram />
@@ -61,25 +67,46 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
       <li>
         <h3>Preview and export share one pipeline</h3>
         <p>There is no separate, faster preview renderer to drift from the export. Preview frames are downscaled into a shared-memory ring and drawn on a WebGPU canvas. Export goes to the encoder. An agent&rsquo;s frame goes to JPEG or PNG.</p>
-        <p class="chip"><StatusChip status="planned" label="Planned" /></p>
+        <p class="chip"><StatusChip status="in-progress" /> <span>The compositor, the readback and the preview transport are built. Export is not.</span></p>
       </li>
       <li>
         <h3>Deterministic by construction</h3>
         <p>A frame is a pure function of the snapshot, the sequence, the time and the quality. Randomness is seeded from item IDs, and nothing reads the wall clock. That makes frame caching, parallel chunked export and golden tests possible.</p>
-        <p class="chip"><StatusChip status="in-progress" /> <span>Verified in a spike.</span></p>
+        <p class="chip"><StatusChip status="built" /> <span>In the production compositor, which renders test cards for now.</span></p>
       </li>
       <li>
         <h3>Linear light, in float</h3>
         <p>The working space is <code>Rgba16Float</code> in linear light. PQ and HLG sources are tone-mapped to SDR.</p>
-        <p class="chip"><StatusChip status="in-progress" /> <span>Spike S4.</span></p>
+        <p class="chip"><StatusChip status="built" /> <span>In the production compositor.</span></p>
       </li>
       <li>
         <h3>Same pixels across GPU vendors</h3>
-        <p>In the S4 compositor spike, output on an NVIDIA GPU and an AMD GPU differed by at most one code value.</p>
-        <p class="chip"><span class="measured">Measured in a spike</span></p>
-        <p class="foot">Informal, one Windows laptop. Formal runs pending.</p>
+        <p>In the S4 compositor spike, output on an NVIDIA GPU and an AMD GPU differed by at most one code value. The production compositor’s golden test now holds each GPU to its own frames bit for bit, and every set within one 8-bit code of the software renderer.</p>
+        <p class="chip"><span class="measured">Measured in a spike</span> <span class="foot">Informal, one Windows laptop. Formal runs pending.</span></p>
+        <p class="chip"><span class="measured">Measured in a work package test</span> <span class="foot">Informal, one dev machine. Formal runs pending.</span></p>
       </li>
     </ul>
+
+    <div class="renders">
+      <h3 class="renders-title">Real frames from the production compositor</h3>
+      <p class="renders-lede">These are the compositor’s own test goldens, drawn on an RTX 3080 laptop GPU. The sources are synthetic test cards, because nothing decodes video yet.</p>
+      <div class="figs">
+        <figure class="fig fig-wide">
+          <img src={contactSheet.src} width={contactSheet.width} height={contactSheet.height} alt="A grid of six frames with timecodes burned in from 00:00:00:00 to 00:00:06:20. Color bars and a gradient sweep are layered with a solid blue clip." loading="lazy" decoding="async" />
+          <figcaption>
+            <span class="measured">Rendered by the production compositor (test golden)</span>
+            <span class="cap">What an agent gets from render.contact_sheet: six frames spread over 8 seconds, with timecodes burned in. Color bars, a gradient sweep and a solid blue clip are layered on the timeline.</span>
+          </figcaption>
+        </figure>
+        <figure class="fig">
+          <img src={pipRotated.src} width={pipRotated.width} height={pipRotated.height} alt="Color bars with a smaller gradient test card laid over them, tilted, cropped and partly transparent." loading="lazy" decoding="async" />
+          <figcaption>
+            <span class="measured">Rendered by the production compositor (test golden)</span>
+            <span class="cap">A picture-in-picture layer rotated 17 degrees, cropped and at 80% opacity, composited in linear light.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
   </Section>
 
   <Section
@@ -104,11 +131,18 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
     </dl>
   </Section>
 
-  <Section id="next" title="Read the design" lede="The architecture doc is the contract the code is written against. Decisions are recorded as ADRs.">
+  <Section id="next" title="Read the design" lede="The architecture doc is the contract the code is written against. Decisions are recorded as ADRs. The command reference is generated from the code, so it cannot drift from it.">
     <div class="closing">
       <Button variant="primary" href={DOC_LINKS.architecture} external iconEnd="external-link">Read the architecture doc</Button>
       <Button href={DOC_LINKS.adrIndex} external iconEnd="external-link">Browse the ADRs</Button>
+      <Button href={DOC_LINKS.commandReference} external iconEnd="external-link">Command reference</Button>
     </div>
+    <p class="refs">
+      Also generated from the code: the{' '}
+      <a href={DOC_LINKS.rpcReference} target="_blank" rel="noopener">JSON-RPC reference</a>, the{' '}
+      <a href={DOC_LINKS.cliReference} target="_blank" rel="noopener">command-line reference</a> and the{' '}
+      <a href={DOC_LINKS.launchProtocol} target="_blank" rel="noopener">engine launch protocol</a>.
+    </p>
   </Section>
 </BaseLayout>
 
@@ -157,6 +191,26 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
     line-height: 22px;
   }
   .foot { font-size: 14px; color: var(--text-muted); }
+
+  .renders { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-12); }
+  .renders-title { font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .renders-lede { color: var(--text-secondary); max-width: var(--prose-max); }
+  .figs { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-6); }
+  .fig {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    max-width: var(--progress-figure-max);
+    flex: 1 1 var(--progress-figure-max);
+  }
+  .fig-wide { max-width: var(--progress-figure-wide-max); flex-basis: var(--progress-figure-wide-max); }
+  .fig :global(img) { display: block; width: 100%; height: auto; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-md); }
+  .fig figcaption { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1-5); }
+  .cap { color: var(--text-secondary); font-size: 14px; line-height: 21px; }
+  .refs { margin-top: var(--space-4); color: var(--text-secondary); max-width: var(--prose-max); }
+  .refs a { color: var(--text-primary); text-decoration: underline; text-underline-offset: var(--space-0-5); }
 
   .stack { display: grid; gap: var(--space-4); grid-template-columns: 1fr; margin: 0; }
   @media (min-width: 720px) { .stack { grid-template-columns: repeat(2, 1fr); } }

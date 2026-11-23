@@ -1,0 +1,106 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * RecentlyMerged: the work packages merged since Phase 0 closed, grouped by area, each with its merge date,
+ * work package id and merge commit. Built is not the same as usable: the section that holds this component says so.
+ * Data: src/data/roadmap.ts (RECENTLY_MERGED), from the product repo's first-parent merge history.
+ * Props:
+ *  - headingLevel?: 3 | 4   level for the area headings (default 3)
+ */
+import '../../styles/area-s3.css';
+import '../../styles/area-progress.css';
+import { RECENTLY_MERGED } from '../../data/roadmap';
+import { LINKS } from '../../site';
+
+interface Props {
+  headingLevel?: 3 | 4;
+}
+const { headingLevel = 3 } = Astro.props;
+const Heading = `h${headingLevel}` as 'h3';
+
+const fmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const day = (iso: string) => fmt.format(new Date(`${iso}T00:00:00Z`));
+---
+<div class="merged">
+  {RECENTLY_MERGED.map((g) => (
+    <section aria-labelledby={`merged-${g.id}`} class="group">
+      <Heading id={`merged-${g.id}`} class="gtitle">{g.title} <span class="count">{g.items.length}</span></Heading>
+      <ol class="rows">
+        {g.items.map((it) => (
+          <li class="row">
+            <p class="when"><time datetime={it.date}>{day(it.date)}</time></p>
+            <p class="wp">{it.wp}</p>
+            <div class="what">
+              <p class="title">{it.title}</p>
+              <p class="text">{it.text}</p>
+            </div>
+            <p class="commit">
+              {it.commits.map((c, i) => (
+                <>
+                  {i > 0 && ' '}
+                  <a href={`${LINKS.repo}/commit/${c}`} target="_blank" rel="noopener" aria-label={`Merge commit ${c}, opens GitHub`}>{c}</a>
+                </>
+              ))}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  ))}
+</div>
+
+<style>
+  .merged { display: flex; flex-direction: column; gap: var(--space-12); }
+  .gtitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    font-size: var(--display-card-size);
+    line-height: 28px;
+    font-weight: 650;
+  }
+  .count {
+    padding-inline: var(--space-2);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: var(--s3-text-xs);
+    line-height: calc(var(--s3-text-xs-line) + var(--space-1));
+    font-weight: 500;
+  }
+  .rows {
+    margin: 0;
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'wp commit' 'what what' 'when when';
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+  .row + .row { border-top: var(--border-thin) solid var(--border-subtle); }
+  .when { grid-area: when; color: var(--text-muted); font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); font-variant-numeric: tabular-nums; }
+  .wp { grid-area: wp; font-family: var(--font-mono); font-size: var(--progress-mono); color: var(--text-secondary); }
+  .what { grid-area: what; display: flex; flex-direction: column; gap: var(--space-0-5); min-width: 0; }
+  .title { font-weight: 600; }
+  .text { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .commit { grid-area: commit; font-family: var(--font-mono); font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); text-align: end; }
+  .commit a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: var(--space-0-5); }
+  .commit a:hover { color: var(--text-primary); }
+
+  @media (min-width: 720px) {
+    .row {
+      grid-template-columns: var(--progress-date-col) var(--progress-wp-col) minmax(0, 1fr) auto;
+      grid-template-areas: 'when wp what commit';
+      column-gap: var(--space-4);
+      align-items: baseline;
+    }
+    .when, .wp { padding-top: var(--space-0-5); }
+  }
+</style>

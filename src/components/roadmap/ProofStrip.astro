@@ -1,48 +1,74 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
- * ProofStrip: spike results as large numbers with a one-line meaning each.
- * Labelled "Measured in a spike", with the footnote "Informal, one Windows laptop. Formal runs pending."
+ * ProofStrip: measured results as large numbers with a one-line meaning each, in two honesty groups.
+ *  - "Measured in a work package test": the real code, footnote "Informal, one dev machine. Formal runs pending."
+ *  - "Measured in a spike": Phase 0 prototypes, footnote "Informal, one Windows laptop. Formal runs pending."
  * GAP-09: informal numbers; replace with the formal, multi-OS budget dashboard (WP-0C.04, 0D.02, 0E.03, 0F.03, WP-7D).
  * Props:
- *  - variant?: 'full' | 'four'   full = all six numbers plus the plain note that the S3 FFmpeg decode spike is
- *                                blocked (default). four = the four featured numbers (scrub p95, 5,000 clips,
- *                                35/35 sandbox escapes, 3/3 agent runs) for the landing page.
- *  - showBlocked?: boolean       show the "S3 is blocked" note (default: true for full, false for four)
- *  - headingLevel?: 2 | 3 | 4    level of the visually small "Measured in a spike" heading (default 3)
+ *  - variant?: 'full' | 'four' | 'wp' | 'both'
+ *        full = every number, work-package group first, then spikes, plus the plain note that the S3 FFmpeg decode
+ *               spike is blocked (default).
+ *        four = the four featured spike numbers (scrub p95, 5,000 clips, 35/35 sandbox escapes, 3/3 agent runs).
+ *        wp   = the four featured work-package numbers.
+ *        both = wp then four, for the landing page.
+ *  - showBlocked?: boolean       show the "S3 is blocked" note (default: true for full, false otherwise)
+ *  - headingLevel?: 2 | 3 | 4    level of the visually small label heading (default 3)
  * Data: src/data/proof.ts.
  */
 import '../../styles/area-s3.css';
+import '../../styles/area-progress.css';
 import Icon from '../ui/Icon.astro';
-import { PROOF, PROOF_LABEL, PROOF_FOOTNOTE, PROOF_BLOCKED } from '../../data/proof';
+import {
+  PROOF, PROOF_WP, PROOF_LABEL, PROOF_FOOTNOTE, PROOF_WP_LABEL, PROOF_WP_FOOTNOTE, PROOF_BLOCKED,
+  type ProofItem,
+} from '../../data/proof';
 
 interface Props {
-  variant?: 'full' | 'four';
+  variant?: 'full' | 'four' | 'wp' | 'both';
   showBlocked?: boolean;
   headingLevel?: 2 | 3 | 4;
 }
 const { variant = 'full', showBlocked = variant === 'full', headingLevel = 3 } = Astro.props;
-const items = variant === 'four' ? PROOF.filter((p) => p.featured) : PROOF;
+const feat = (xs: ProofItem[]) => xs.filter((p) => p.featured);
+const groups: { id: string; label: string; foot: string; items: ProofItem[] }[] = [];
+if (variant === 'full') {
+  groups.push({ id: 'wp', label: PROOF_WP_LABEL, foot: PROOF_WP_FOOTNOTE, items: PROOF_WP });
+  groups.push({ id: 'spike', label: PROOF_LABEL, foot: PROOF_FOOTNOTE, items: PROOF });
+} else if (variant === 'wp') {
+  groups.push({ id: 'wp', label: PROOF_WP_LABEL, foot: PROOF_WP_FOOTNOTE, items: feat(PROOF_WP) });
+} else if (variant === 'both') {
+  groups.push({ id: 'wp', label: PROOF_WP_LABEL, foot: PROOF_WP_FOOTNOTE, items: feat(PROOF_WP) });
+  groups.push({ id: 'spike', label: PROOF_LABEL, foot: PROOF_FOOTNOTE, items: feat(PROOF) });
+} else {
+  groups.push({ id: 'spike', label: PROOF_LABEL, foot: PROOF_FOOTNOTE, items: feat(PROOF) });
+}
 const Heading = `h${headingLevel}` as 'h3';
 ---
-<figure class:list={['proof', `proof-${variant}`]}>
-  <figcaption class="label">
-    <Heading class="label-text"><Icon name="clock" size="sm" /> {PROOF_LABEL}</Heading>
-  </figcaption>
-  <ul class="grid">
-    {items.map((item) => (
-      <li class="stat">
-        <p class="value"><span class="num">{item.value}</span>{item.unit && <span class="unit"> {item.unit}</span>}</p>
-        <p class="what">{item.label}</p>
-        <p class="meaning">{item.meaning}</p>
-      </li>
-    ))}
-  </ul>
-  <p class="foot">{PROOF_FOOTNOTE}</p>
+<div class:list={['proof-groups', `proof-${variant}`]}>
+  {groups.map((g) => (
+    <figure class="proof">
+      <figcaption class="label">
+        <Heading class="label-text"><Icon name="clock" size="sm" /> {g.label}</Heading>
+      </figcaption>
+      <ul class="grid">
+        {g.items.map((item) => (
+          <li class="stat">
+            <p class="value"><span class="num">{item.value}</span>{item.unit && <span class="unit"> {item.unit}</span>}</p>
+            <p class="what">{item.label}</p>
+            <p class="meaning">{item.meaning}</p>
+            {item.source && <p class="src">{item.source}</p>}
+          </li>
+        ))}
+      </ul>
+      <p class="foot">{g.foot}</p>
+    </figure>
+  ))}
   {showBlocked && <p class="blocked"><Icon name="circle-dashed" size="md" /> <span>{PROOF_BLOCKED}</span></p>}
-</figure>
+</div>
 
 <style>
+  .proof-groups { display: flex; flex-direction: column; gap: var(--space-8); }
   .proof { margin: 0; display: flex; flex-direction: column; gap: var(--space-4); }
   .label-text {
     display: inline-flex;
@@ -83,6 +109,7 @@ const Heading = `h${headingLevel}` as 'h3';
   .unit { color: var(--text-secondary); font-size: var(--s3-text-sm); font-weight: 600; }
   .what { font-weight: 600; }
   .meaning { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .src { margin-top: auto; padding-top: var(--space-1); color: var(--text-muted); font-family: var(--font-mono); font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); }
   .foot { color: var(--text-muted); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
   .blocked {
     display: flex;

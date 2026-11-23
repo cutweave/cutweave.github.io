@@ -39,9 +39,9 @@ const sections = grouped
   ? GROUPS.map((g) => ({ title: g.title, id: g.id, rows: shown.filter((r) => r.group === g.id) })).filter((s) => s.rows.length > 0)
   : [{ title: '', id: 'all', rows: shown }];
 
-const chipFor = (status: CellStatus, phase?: string): { status: 'built' | 'in-progress' | 'planned' | 'later'; label?: string } => {
+const chipFor = (status: CellStatus, phase?: string, label?: string): { status: 'built' | 'in-progress' | 'planned' | 'later'; label?: string } => {
   switch (status) {
-    case 'built': return { status: 'built' };
+    case 'built': return label ? { status: 'built', label } : { status: 'built' };
     case 'in-progress': return phase ? { status: 'in-progress', label: `In progress · ${phase}` } : { status: 'in-progress' };
     case 'planned': return phase ? { status: 'planned', label: `Planned · ${phase}` } : { status: 'planned' };
     case 'later': return { status: 'later' };
@@ -68,7 +68,7 @@ const Heading = `h${headingLevel}` as 'h3';
           </tr>
         )}
         {section.rows.map((row) => {
-          const chip = chipFor(row.cutweave.status, row.cutweave.phase);
+          const chip = chipFor(row.cutweave.status, row.cutweave.phase, row.cutweave.label);
           return (
             <tr class="row" id={grouped ? `row-${row.id}` : undefined}>
               <th scope="row" class="topic">{row.topic}</th>

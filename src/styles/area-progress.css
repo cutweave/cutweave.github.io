@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/*
+ * Progress tokens (roadmap progress, "recently merged" list, measured-number tables, real-render figures).
+ * Imported by the components that use them. Built from existing design tokens where possible.
+ */
+:root {
+  /* Micro labels ("Work package test" tags). Same values as the roadmap pages use; defined here so pages that do not
+     import the roadmap styles can use them. */
+  --progress-text-xs: 12px;
+  --progress-text-xs-line: 16px;
+  /* Monospace size for ids and hashes (the engine pages define their own; this page set does not import them). */
+  --progress-mono: 13px;
+  /* Height of the work-package progress bar on the current roadmap phase. */
+  --progress-bar-height: var(--space-2);
+  /* Width of the date column in the "recently merged" list, wide enough for "23 Nov 2026" in the UI font. */
+  --progress-date-col: 6.5rem;
+  /* Width of the work-package id column in the "recently merged" list (WP-1B.03 in the mono face). */
+  --progress-wp-col: 7rem;
+  /* Largest width of a real-render figure: the golden frames are 384 px wide and are never scaled up. */
+  --progress-figure-max: 384px;
+  /* Contact-sheet golden: 640 px wide, never scaled up. */
+  --progress-figure-wide-max: 640px;
+}
