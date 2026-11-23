@@ -1,7 +1,7 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 // /agents/: "Built for agents". MCP and agent deep dive (docs/site-plan.md §4, work package S2).
-// Facts: docs/content-inventory.md §2.4, §5. Gaps: GAP-03, GAP-05, GAP-07, GAP-08, GAP-18.
+// Facts: docs/content-inventory.md §2.4, §5. Gaps: GAP-03 (real run recorded, frames still planned), GAP-05, GAP-07, GAP-08, GAP-18.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
 import Section from '../../components/ui/Section.astro';
@@ -13,52 +13,62 @@ import ToolCatalog from '../../components/agents/ToolCatalog.astro';
 import ProposalFlow from '../../components/agents/ProposalFlow.astro';
 import BudgetTiers from '../../components/agents/BudgetTiers.astro';
 import AgentKit from '../../components/agents/AgentKit.astro';
+import RealRun from '../../components/agents/RealRun.astro';
+import ConnectClients from '../../components/agents/ConnectClients.astro';
 import AgentDemo from '../../components/demo/AgentDemo.astro';
 import { LINKS } from '../../site';
 import { DOC_LINKS } from '../../data/engine-facts';
 
-// GAP-05: this snippet is planned, not tested. Replace with a copyable, tested config once
-// WP-1J (MCP v0), WP-1K (CLI) and WP-6G/6H (Agent Kit) land.
-const mcpConfig = `{
-  "mcpServers": {
-    "cutweave": {
-      "command": "cutweave",
-      "args": ["mcp", "--attach"]
-    }
-  }
-}`;
-const installCmd = `# Writes the MCP config and installs the skills for your client.
-cutweave agent-kit install --client claude
-# also: codex, gemini, cursor, vscode`;
+// GAP-05: the per-client snippets are in ConnectClients (from the product repo's docs/reference/mcp-clients.md).
+// There is no installer and no agent-kit command yet, so the build step below is from source.
+const REPO_DOCS = `${LINKS.repo}/blob/main/docs`;
+const buildCmd = `git clone ${LINKS.repo}
+cd cutweave
+cargo build -p cutweave-cli
+# The binary is target/debug/cutweave. Put it on your PATH.`;
 
 const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_frame'];
 ---
 <BaseLayout
   title="Built for agents"
-  description="Every Cutweave edit is a command and every command is an MCP tool. Agents get structured state and rendered frames, not screenshots. Planned catalog, spending limits enforced by the engine, and evidence from a spike."
+  description="Every Cutweave edit is a command and every command is an MCP tool. The MCP server is built (v0): an agent can edit the timeline today. Rendered frames and spending limits are planned. A recorded real run, the tool list and client setup."
 >
   <section class="hero" aria-labelledby="agents-title">
     <Container>
       <div class="hero-copy">
         <p class="eyebrow">Built for agents</p>
         <h1 id="agents-title">Agents see frames, not screenshots.</h1>
-        <p class="lede">Every edit in Cutweave is a command. Every command is an MCP tool. The agent gets structured state and rendered frames, so it works on the same timeline you do without guessing at pixels.</p>
-        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" /> <span>The MCP surface below is the plan. One spike run is real.</span></p>
+        <p class="lede">Every edit in Cutweave is a command. Every command is an MCP tool. The agent gets structured state, and rendered frames once <code>render_frame</code> lands, so it works on the same timeline you do without guessing at pixels.</p>
+        <p class="status">
+          <StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" />
+          <StatusChip status="built" label="MCP server: built (v0)" />
+          <StatusChip status="planned" label="Frames: planned · WP-1J.02" />
+        </p>
+        <p class="status-note">An agent can edit the timeline over MCP today. It cannot see a rendered frame yet.</p>
         <div class="actions">
           <Button variant="primary" href="#demo" iconEnd="arrow-right">See an agent edit</Button>
-          <Button href="#evidence">Read the spike evidence</Button>
+          <Button href="#real-run">Read a real run</Button>
         </div>
       </div>
       <ol class="chain" aria-label="From command to agent">
         <li><span class="k">Command</span><code>clip.split</code><span class="d">One registered command, applied through one transaction.</span></li>
         <li><span class="k">MCP tool</span><code>clip_split</code><span class="d">The same schema, reachable by any MCP client. A CI test checks parity.</span></li>
-        <li><span class="k">Agent gets</span><code>state + frame</code><span class="d">New revision, what changed, and a rendered image with metadata.</span></li>
+        <li><span class="k">Agent gets</span><code>rev + state</code><span class="d">The new revision and what changed. A rendered frame joins it when <code>render_frame</code> lands (planned, WP-1J.02).</span></li>
       </ol>
     </Container>
   </section>
 
-  <Section id="demo" tone="raised" eyebrow="Watch it work" title="Watch an agent edit" lede="A scripted session with real tool names and invented values.">
+  <Section id="demo" tone="raised" eyebrow="Watch it work" title="Watch an agent edit" lede="A scripted session about the plan: tool names are real or planned, values are invented, frames are not built yet.">
     <AgentDemo id="agents-demo" />
+  </Section>
+
+  <Section
+    id="real-run"
+    eyebrow="Built today"
+    title="A real run, no frames yet"
+    lede="This session was recorded from the MCP server in a headless engine, then trimmed for reading. An agent imports two clips, places them, cuts one, checks the timeline and undoes a delete."
+  >
+    <RealRun />
   </Section>
 
   <Section
@@ -74,8 +84,8 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
     id="tools"
     tone="raised"
     eyebrow="The tool surface"
-    title="About 30 core tools, and four for everything else"
-    lede="Every non-view command is also an MCP tool with an identical schema. The core tools are always listed. The long tail is one search away."
+    title="14 tools listed today, and four for everything else"
+    lede="Every non-view command is reachable over MCP with an identical schema. The core tools are always listed. The rest are one search away."
   >
     <ToolCatalog />
   </Section>
@@ -113,25 +123,27 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
     tone="raised"
     eyebrow="Connect your client"
     title="Point your agent at Cutweave"
-    lede="This is how it is meant to work. There is nothing to run yet."
+    lede="The MCP server works today, over stdio. There is no installer yet, so you build the binary from source."
   >
-    {/* GAP-05: planned config. Replace with a tested snippet and the real install command. */}
     <div class="connect">
-      <p class="status"><StatusChip status="planned" label="Planned, not runnable yet" /> <span>No build exists to connect to.</span></p>
-      <div class="code-grid">
-        <CodeBlock label="MCP client config (planned)" lang="json" code={mcpConfig} />
-        <CodeBlock label="Agent Kit installer (planned)" lang="sh" code={installCmd} />
-      </div>
-      <p class="note">
-        <code>--attach</code> is a stdio proxy into the running app, so you watch the agent edit live. For CI and servers there is a headless mode: <code>cutweave mcp --headless --project X</code>.
-      </p>
+      <p class="status"><StatusChip status="built" label="Built, pre-alpha" /> <span>Tested in the product repository. Nothing is packaged or signed.</span></p>
+      <p class="caveat"><strong>No installer yet.</strong> Build <code>cutweave</code> from source and put the binary on your PATH, or put its full path in your client’s <code>command</code>. Setup for Rust and the other tools is in the <a href={`${REPO_DOCS}/06-dev-process.md`}>dev process doc</a>.</p>
+      <CodeBlock label="Build from source" lang="sh" code={buildCmd} />
+      <ConnectClients />
+      <ul class="notes">
+        <li><strong>Attach</strong> proxies to a running engine, so you watch the agent edit your open project. The desktop app is not released, so today that means running <code>cutweave engine</code> yourself.</li>
+        <li><strong>Headless</strong> runs an engine inside the MCP process. The agent can only import from the <code>--allow-root</code> folders. Until the FFmpeg backend lands, add <code>--dev-stub-media</code> to import files with made-up probe data (dev only).</li>
+        <li><strong>Profiles.</strong> <code>--profile minimal</code> lists fewer tools for small context windows. The default is <code>standard</code>.</li>
+        <li><StatusChip status="planned" label="Planned" />{' '}<code>cutweave agent-kit install --client …</code> would write the config and install skills for you. That command does not exist yet (Agent Kit, Phase 3 and 6).</li>
+      </ul>
+      <p><Button href={`${REPO_DOCS}/reference/mcp-clients.md`} external iconEnd="external-link">Read the client setup doc</Button></p>
     </div>
   </Section>
 
   <Section
     id="evidence"
-    eyebrow="Evidence today"
-    title="One real run: three of three"
+    eyebrow="Earlier evidence"
+    title="The Phase 0 spike: three of three, with frames"
     lede="In a Phase 0 spike, Claude Code ran headless against a spike MCP server. The prompt: import a fixture video, cut it at 2 s, and show the frame at 3 s."
   >
     <div class="evidence">
@@ -213,10 +225,13 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
 
   .connect { display: flex; flex-direction: column; gap: var(--space-4); }
   .connect .status { color: var(--text-secondary); }
-  .code-grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
-  @media (min-width: 840px) { .code-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
-  .note { color: var(--text-secondary); max-width: var(--prose-max); }
-  .note code, .facts code { font-size: var(--mono-small); color: var(--text-primary); }
+  .connect { min-width: 0; }
+  .notes { display: flex; flex-direction: column; gap: var(--space-3); max-width: var(--prose-max); color: var(--text-secondary); }
+  .notes li { display: block; }
+  .notes strong { color: var(--text-primary); }
+  .caveat a, .notes a { text-decoration: underline; text-underline-offset: 2px; }
+  .lede code, .chain .d code, .notes code, .caveat code, .facts code { font-size: var(--mono-small); color: var(--text-primary); }
+  .status-note { color: var(--text-secondary); font-size: 15px; }
 
   .evidence { display: flex; flex-direction: column; gap: var(--space-6); }
   .calls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }

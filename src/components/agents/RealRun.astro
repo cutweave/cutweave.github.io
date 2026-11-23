@@ -1,0 +1,140 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * RealRun: a recorded MCP session, trimmed for reading (GAP-03).
+ * Everything shown comes from src/data/mcp-real-run.json, which scripts/capture-mcp-run.mjs writes from a
+ * real `cutweave mcp --headless` run. Values are verbatim; each cut is marked with an ellipsis and listed.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+import Icon from '../ui/Icon.astro';
+import StatusChip from '../ui/StatusChip.astro';
+import Button from '../ui/Button.astro';
+import CodeBlock from '../ui/CodeBlock.astro';
+import run from '../../data/mcp-real-run.json';
+import { LINKS } from '../../site';
+
+const captureUrl = `${LINKS.siteRepo}/blob/main/${run.capture_file}`;
+const steps = run.steps;
+// Stub media are 10 s; flicks are 705,600,000 per second.
+---
+<div class="run">
+  <p class="bar">
+    <span class="real-chip"><Icon name="circle-check" size="sm" /> Real run</span>
+    <StatusChip status="built" label="Built, pre-alpha" />
+    <span class="bar-note">{run.call_count} tool calls, {run.error_count} errors, {run.date}.</span>
+  </p>
+
+  <CodeBlock label="Command" lang="sh" code={run.command} />
+  <p class="meta"><code>{run.binary_version}</code></p>
+
+  <ol class="steps" aria-label="The recorded session, in order">
+    {steps.map((s, i) => (
+      <li class:list={['step', s.kind !== 'call' && 'setup', s.isError && 'err']}>
+        <header class="head">
+          <span class="n" aria-hidden="true">{i + 1}</span>
+          <code class="tool">{s.label}</code>
+          {s.kind === 'call' && <span class="kind">tools/call</span>}
+          {s.isError && <span class="kind bad">error</span>}
+        </header>
+        <div class="io">
+          <div class="cell">
+            <p class="k">{s.kind === 'call' ? 'Arguments' : 'Request'}</p>
+            <pre tabindex="0"><code>{s.args}</code></pre>
+          </div>
+          <div class="cell">
+            <p class="k">Result</p>
+            <p class="sum">{s.summary}</p>
+            <pre tabindex="0"><code>{s.result}</code></pre>
+          </div>
+        </div>
+        {s.trimmed.length > 0 && <p class="trim">Trimmed: {s.trimmed.join('; ')}.</p>}
+      </li>
+    ))}
+  </ol>
+
+  <p class="foot">
+    Recorded from <code>cutweave mcp --headless</code> at <code>{run.product_commit}</code>, with dev stub media (made-up probe data until the FFmpeg backend lands). No frames yet: <code>render_frame</code> arrives with WP-1J.02.
+  </p>
+  <p class="foot small">
+    Times are integer flicks, 705,600,000 per second, so <code>2822400000</code> is 4 s. Ids are deterministic: the same script gives the same ids. Trimming only drops whole fields, cuts lists and shortens long text; nothing is reworded.
+  </p>
+  <p class="links">
+    <Button href={captureUrl} external iconEnd="external-link">Read the full capture</Button>
+  </p>
+</div>
+
+<style>
+  .run { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .real-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1-5);
+    padding: var(--space-1) var(--space-3);
+    border: var(--border-thin) solid var(--border-control);
+    border-radius: var(--radius-full);
+    background: var(--surface-2);
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 650;
+  }
+  .bar-note { color: var(--text-secondary); font-size: 15px; }
+  .meta { color: var(--text-secondary); margin-top: calc(var(--space-2) * -1); }
+  .meta code { font-size: var(--mono-small); overflow-wrap: anywhere; }
+
+  .steps { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-4);
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+  }
+  .step.setup { background: var(--surface-1); }
+  .step.err { border-color: var(--border-control); border-inline-start-width: var(--border-thick); }
+  .head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+  .n {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  /* The tool a client calls is the agent's side of the exchange: agent blue. */
+  .tool { font-size: 15px; line-height: 22px; color: var(--agent-text); font-weight: 600; overflow-wrap: anywhere; }
+  .kind { color: var(--text-muted); font-size: 12px; font-family: var(--font-mono); }
+  .kind.bad { color: var(--text-primary); font-weight: 650; }
+
+  .io { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 960px) { .io { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+  .cell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .k { font-size: 12px; line-height: 16px; letter-spacing: var(--eyebrow-tracking); text-transform: uppercase; color: var(--text-secondary); font-weight: 650; }
+  .sum { color: var(--text-secondary); font-size: 14px; line-height: 20px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0;
+    padding: var(--space-3);
+    border: var(--border-thin) solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    max-height: 14rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .step.setup pre { background: var(--surface-2); }
+  pre code { font-family: var(--font-mono); font-size: var(--mono-small); line-height: 20px; }
+  .trim { color: var(--text-muted); font-size: 13px; line-height: 18px; }
+
+  .foot { color: var(--text-secondary); max-width: var(--prose-max); }
+  .foot.small { font-size: 14px; color: var(--text-muted); }
+  .foot code { font-size: var(--mono-small); color: var(--text-primary); }
+</style>
