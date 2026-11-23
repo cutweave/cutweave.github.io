@@ -320,7 +320,7 @@ export const SPIKE_RESULTS: SpikeResult[] = [
   },
   {
     spike: 'S3 decode, seek, hardware acceleration',
-    result: 'Not passed: blocked on FFmpeg.',
+    result: 'Not passed yet: unblocked and running since 2026-11-23, against generated test media.',
   },
 ];
 

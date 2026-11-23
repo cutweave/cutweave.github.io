@@ -2,7 +2,7 @@
 
 Compiled 2026-11-22 from the main repo (`D:\projects\Vidai`, 166 commits, HEAD `6ca1af7`) and refreshed 2026-11-23 to HEAD `7728d7c` (310 commits; 28 work packages merged in between). Statuses below are as of `7728d7c`; merge-commit refs are short hashes in the main repo. Every claim cites a doc, a WP id or a commit. Anything not in the docs is marked *illustrative*.
 
-**Read this first: the project is pre-alpha.** There is no installer, no public demo video, and no way to import, play or export real video yet: the FFmpeg backend (spike S3) is still blocked. Phase 0 spikes are done (provisional go, `docs/milestones/M0-go-no-go.md`) and Phase 1 is under way: 40 of its 60 work packages are merged (`docs/wbs/P1-skeleton.md`). The engine now has a command bus with undo, a journal and crash recovery, a JSON-RPC server, an MCP server, a core-only CLI, an audio mixer with a device clock, a wgpu compositor and a live timeline in the editor, all exercised by tests and, in dev builds, against a stub media backend (R27). The repo's README and `AGENTS.md` were corrected to say Phase 1 in `e653c75`. The site must not imply a product you can download. See section 12.
+**Read this first: the project is pre-alpha.** There is no installer, no public demo video, and no way to import, play or export real video yet: the FFmpeg backend is not in yet (spike S3 was unblocked on 2026-11-23 and is running). Phase 0 spikes are done (go with changes, signed off 2026-11-23, `docs/milestones/M0-go-no-go.md`; facts re-checked against origin/main `981e5a2`) and Phase 1 is under way: 40 of its 60 work packages are merged (`docs/wbs/P1-skeleton.md`). The engine now has a command bus with undo, a journal and crash recovery, a JSON-RPC server, an MCP server, a core-only CLI, an audio mixer with a device clock, a wgpu compositor and a live timeline in the editor, all exercised by tests and, in dev builds, against a stub media backend (R27). The repo's README and `AGENTS.md` were corrected to say Phase 1 in `e653c75`. The site must not imply a product you can download. See section 12.
 
 Source key: `arch §N` = `docs/01-architecture.md §N`; `brief` = `docs/00-product-brief.md`; `parity` = `docs/03-feature-parity.md`; `roadmap` = `docs/04-roadmap.md`; `M0` = `docs/milestones/M0-go-no-go.md`; `ADR-NNNN` = `docs/adr/`.
 
@@ -92,7 +92,7 @@ Six pillars. Pillars 1–4 and 6 mirror the README pillar table; pillar 5 (Yours
 - **Planned for v1**: in the roadmap with a phase and WP epic; no code yet.
 - **Later**: post-1.0 (`roadmap` "After 1.0") or deferred.
 
-Phase map: P0 foundations and spikes (done, provisional) · P1 walking skeleton (in progress) · P2 core editor · P3 text, captions, transcripts (Public Alpha) · P4 effects, transitions, color · P5 AI gateway and AI Studio · P6 plugins, templates, Agent Kit, copilot (Beta) · P7 hardening and 1.0. Dates are rough; `roadmap` says about 14 months to 1.0 and about 7.5 to Public Alpha.
+Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-11-23) · P1 walking skeleton (in progress) · P2 core editor · P3 text, captions, transcripts (Public Alpha) · P4 effects, transitions, color · P5 AI gateway and AI Studio · P6 plugins, templates, Agent Kit, copilot (Beta) · P7 hardening and 1.0. Dates are rough; `roadmap` says about 14 months to 1.0 and about 7.5 to Public Alpha.
 
 ### 3.1 Editing and timeline
 
@@ -112,7 +112,7 @@ Phase map: P0 foundations and spikes (done, provisional) · P1 walking skeleton 
 | Live read-only timeline from the engine (RPC connection, stores, document mirror) | **Built** | P1 | merge `5fbf6f5` (WP-1M.02) |
 | Timeline interactions: select, move, trim, split, delete, snapping, marquee, gesture transactions (one history entry per drag) | **Built** (tested against a real engine with stub media) | P1 | merge `41fe7cd` (WP-1M.06) |
 | Media bin: import dialog, OS drag-drop, cards, removal, keyboard, drop onto the timeline (placeholder thumbnails) | **Built** (stub media only) | P1 | merge `d0ab5d2` (WP-1M.03) |
-| Import real media, playback, preview panel, inspector, save/open UI, export on a 2-track timeline | In progress (blocked on FFmpeg for real media) | P1 (M1) | `docs/wbs/P1-skeleton.md`; WP-1M.04, 1M.07, 1M.08; gate WP-1O.04 |
+| Import real media, playback, preview panel, inspector, save/open UI, export on a 2-track timeline | In progress (real media follows the S3 FFmpeg spike, unblocked 2026-11-23) | P1 (M1) | `docs/wbs/P1-skeleton.md`; WP-1M.04, 1M.07, 1M.08; gate WP-1O.04 |
 | Crash recovery UI (restore or discard dialog on open) | Planned for v1 | P1 | WP-1M.07; the engine side and automatic recovery after an engine restart are built (WP-1C.02, WP-1L.03) |
 | Engine supervision: restart after a crash, journal recovery, exactly-once resend of unacknowledged commands, failed dialog after a fourth crash in 60 s | **Built** | P1 | merges `043114c` and `149370d` (WP-1L.03) |
 | Unlimited tracks, magnetic main track, ripple/roll/slip/slide, snapping, markers, linked clips, multi-select | Planned for v1 | P2 (M2) | `roadmap` P2, `parity` §2 |
@@ -163,7 +163,7 @@ Phase map: P0 foundations and spikes (done, provisional) · P1 walking skeleton 
 | Audio-clock master, time-stretch, loudness meter, 8-track mixer | Built as a **spike** only | P0 | `spikes/s2-audio-clock`; 10-min soak 0 underruns, drift +11 ppm (`M0`) |
 | Mixer graph (per-track lanes, sample-exact edit hand-off, resampling, offline mixdown equal to real-time) over generated sources | **Built** (no decoded clip audio until FFmpeg) | P1 | merge `42f7fbc` (WP-1G.01, R29) |
 | cpal device output, device-change supervision, lock-free master clock, meters | **Built** | P1 | merge `e97ed82` (WP-1G.02) |
-| Clip audio playback from real files, transport and A/V sync | In progress (blocked on FFmpeg for real clips) | P1 | WP-1H.01 (R31: against synthetic frames first), WP-1D.03 |
+| Clip audio playback from real files, transport and A/V sync | In progress (real clips follow the S3 spike) | P1 | WP-1H.01 (R31: against synthetic frames first), WP-1D.03 |
 | Fades, keyframed volume, pan, buses, master limiter, loudness presets (-14 social, -16 podcast) | Planned for v1 | P2 | `roadmap` P2, `arch §9` |
 | Auto-ducking, offline voice effects, voiceover recording, extract audio | Planned for v1 | P2 | `roadmap` P2 |
 | Music and SFX library with per-asset license metadata (CC0, CC-BY) | Planned for v1 | P3 | `roadmap` P3, R7 |
@@ -225,7 +225,7 @@ Phase map: P0 foundations and spikes (done, provisional) · P1 walking skeleton 
 
 | Feature | Status | Phase | Evidence |
 |---|---|---|---|
-| H.264/AAC MP4 export (hardware and software) | In progress, **blocked on FFmpeg spike S3** | P1 | `M0` "Hold until S3 passes"; WP-1E; R27–R31 describe the FFmpeg-free path |
+| H.264/AAC MP4 export (hardware and software) | In progress, **follows FFmpeg spike S3** (unblocked and running since 2026-11-23; if S3 fails, 1D and 1E stop) | P1 | `M0` (sequenced via R27–R31 rather than held); WP-1E; R27–R31 describe the FFmpeg-free path |
 | Presets: YouTube 1080p/4K, Shorts/Reels/TikTok, GIF, audio-only, ProRes; HEVC, AV1; CBR/VBR/CRF; export queue; range or marker-set export | Planned for v1 | P2 | `roadmap` P2 |
 | Parallel chunked export across `cutweave worker` processes | Planned for v1 | P2 | `arch §8` |
 | `cutweave` CLI, core-only: `engine`, `exec`, `query`, `commands`, `describe`, `mcp`; generated `docs/reference/cli.md` | **Built** | P1 | merge `8542aa4` (WP-1K.01, R28) |
@@ -254,7 +254,7 @@ Phase map: P0 foundations and spikes (done, provisional) · P1 walking skeleton 
 ### 3.11 What actually exists and runs today
 
 - **Rust crates with real code (13 of 20):** `cutweave-model`, `-commands`, `-commands-derive`, `-ops`, `-engine` (project I/O, journal, autosave, session lifecycle, launch protocol, dev stub media), `-api` (local server, JSON-RPC over WebSocket, MCP), `-jobs`, `-render` (scene evaluation and the wgpu compositor), `-audio` (mixer and cpal output), `-playback` (shared-memory ring), `-bridge` (napi addon), `-cli` and `-tokens`.
-- **Stub crates (about 20 lines each, 7 of 20):** `ai`, `cache`, `compose`, `interchange`, `media`, `plugins`, `text`. `media` is the FFmpeg backend, still on hold (R27).
+- **Stub crates (about 20 lines each, 7 of 20):** `ai`, `cache`, `compose`, `interchange`, `media`, `plugins`, `text`. `media` is the FFmpeg backend, sequenced behind S3 (R27).
 - **Registered commands today: 43** (`docs/reference/commands.md`, generated from the registry): `project.*` (new, open, save, save_as, close, rename, info, recover, discard_recovery), `media.*` (import, list, register, remove), `track.*` (add, remove, set), `timeline.insert` and `timeline.get`, `clip.split`, `clip.trim`, `item.move`, `item.delete`, `item.set_props`, `item.get`, `edit.*` (begin_tx, commit_tx, cancel_tx, undo, redo, history, checkpoint, restore, list_checkpoints, locks), `job.*` (status, list, wait, cancel) and `view.*`. 14 are core MCP tools (`project_open`, `project_info`, `media_import`, `media_list`, `timeline_get`, `timeline_insert`, `clip_split`, `clip_trim`, `item_move`, `item_delete`, `item_set_props`, `edit_undo`, `job_status`, `job_wait`); the rest are reachable through `cutweave_execute` and the catalog tools. `render.frame` and `render.contact_sheet` exist in `cutweave-render` but are not registered in the engine yet (WP-1I.05, WP-1J.02). `export.start` does not exist.
 - **TypeScript packages:** `packages/ui` (22 components, see 8.4), `packages/timeline` (production Canvas2D renderer and an interaction state machine), `packages/editor` (shell with media bin, Preview, Inspector, Timeline and Transport panels, toasts, engine-restart notices), `packages/protocol` (generated types, typed RPC client, document mirror) and `packages/plugin-sdk` (a stub).
 - **Desktop app:** an Electron app that launches the shell, with a hardened window and an engine supervisor (restart, journal recovery, resend). With `--dev-stub-media` the editor can import stub media, drag it onto the timeline and move, trim, split and delete clips against the real engine. No real media can be imported, played or exported yet, and the preview panel (WP-1M.04), inspector and save/open UI (WP-1M.07) and export dialog (WP-1M.08) are not merged.
@@ -523,7 +523,7 @@ All **informal**: one Windows 11 laptop (RTX 3080 laptop GPU and an AMD iGPU), m
 | S4 text | 1,000 animated glyphs: 0.70 ms on iGPU, 0.06 ms on RTX; 4K SSIM 0.9976; no shimmer |
 | S4b compositions | Transpile 0.14 ms; deterministic across runs; **35/35** sandbox escapes contained; 200 fully animated nodes 2.6 ms (budget 1 ms, conditional pass) |
 | S5 command bus and MCP | 73 tests; standard `tools/list` about 2.7k tokens (13 tools); Claude Code 3/3 on "import, cut, render frame" with no screenshots |
-| Not passed or not run | S3 decode, seek and hardware acceleration: **blocked on FFmpeg**; the M0 record says GO "except where FFmpeg is required" |
+| Not passed or not run | S3 decode, seek and hardware acceleration: **unblocked 2026-11-23, running, not passed yet** (FFmpeg 8.1.3, generated test media); ADR-003 stays Proposed until S3 reports |
 
 ### Numbers measured in work-package tests (since Phase 0)
 Site label: **Measured in a work package test**, footnote "Informal, one dev machine. Formal runs pending." These come from merge and commit messages and test output recorded in the main repo, on one Windows 11 dev machine that was often loaded by other builds; some in a debug build. None is a formal benchmark. The numbers are the ones the commit messages state; the WP acceptance records are the sources.
@@ -555,7 +555,7 @@ Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days a
 
 | Phase | Delivers | Milestone and exit |
 |---|---|---|
-| **P0 Foundations and spikes** (about 5 weeks) | Repo, CI, governance, design tokens and `packages/ui`, ADRs 0001–0017, spikes S1–S5 | M0 Go/No-Go: **provisional GO 2026-11-22**; S3 (FFmpeg) blocked; product-owner sign-off box unchecked |
+| **P0 Foundations and spikes** (about 5 weeks) | Repo, CI, governance, design tokens and `packages/ui`, ADRs 0001–0017, spikes S1–S5 | M0 Go/No-Go: **GO with changes, signed off 2026-11-23**; S3 (FFmpeg) unblocked and running, not passed |
 | **P1 Walking skeleton** (about 10 weeks) | Model, command bus, persistence, media probe/decode, H.264 export, preview, MCP v0 (15 core tools), CLI, Electron shell and basic UI | **M1**: UI and an MCP agent both import, cut and export; byte-identical documents; recovery after engine kill (WP-1O.04) |
 | **P2 Core editor** (about 9 weeks) | Multi-track magnetic timeline, keyframes, speed, audio features, proxies, export presets and queue, dockable workspaces, ~30 MCP tools, perf benchmarks | **M2 Dogfood**: a non-developer edits a 10-min YouTube video and a 9:16 short; 20 forced crashes, no data loss |
 | **P3 Text, captions, transcripts** (about 8 weeks) | Text engine, compositions, transcripts, >= 25 caption styles, text-based editing, sticker and music packs, Agent Kit v0, unsigned installers | **M3 Public Alpha**: new user makes a captioned, silence-cut 9:16 short in under 5 minutes; an agent does it from one instruction |
@@ -567,9 +567,9 @@ Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days a
 **After 1.0 (rough order):** browser "lite" editor; real-time collaboration (Loro CRDT); CLAP then VST3; HDR output; multicam; face and body effects; screen and webcam recording; region-prompt generative edits; node compositing view; distributed rendering; mobile companion; OFX bridge.
 
 ### Where the project is now (HEAD `7728d7c`, 2026-11-23)
-- **P0:** built and merged (spikes S1, S2, S4, S4b, S5; scaffold; governance; design system). S3 decode is blocked on FFmpeg. M0 is provisional.
+- **P0:** built and merged (spikes S1, S2, S4, S4b, S5; scaffold; governance; design system). S3 decode is unblocked (2026-11-23) and running, not passed yet. M0 is GO with changes, signed off 2026-11-23.
 - **P1: in progress, 40 of 60 work packages merged** (28 of them since `6ca1af7`, all on 2026-11-22 and 2026-11-23). Merged: 1A.01–03, 1B.01–09, 1C.01–04, 1D.07, 1F.01–03, 1G.01–02, 1H.02–03, 1I.01, 1I.02, 1I.04, 1J.01, 1J.03, 1K.01, 1L.01–03, 1M.01–03, 1M.05–06, 1N.01–02. Not yet: real media (1D.01–1D.06, blocked on FFmpeg), export (1E.01–1E.03), transport and A/V sync (1H.01), media HTTP endpoints (1I.03), subsystem wiring (1I.05), `render_frame` over MCP (1J.02), preview panel (1M.04), inspector, save/open and recovery dialog (1M.07), export dialog (1M.08), and the M1 acceptance suite (1O.01–1O.04).
-- **FFmpeg-free path (R27–R31):** while S3 is blocked, work proceeds against existing seams: the engine's dev stub media backend (`--dev-stub-media`), generated audio sources, synthetic frames, and a core-only CLI and stdio MCP. These are not substitutes for the M1 exit, which needs real media.
+- **FFmpeg-free path (R27–R31):** while S3 runs, work proceeds against existing seams: the engine's dev stub media backend (`--dev-stub-media`), generated audio sources, synthetic frames, and a core-only CLI and stdio MCP. These are not substitutes for the M1 exit, which needs real media.
 - README and `AGENTS.md` now say Phase 1 (fixed in `e653c75`).
 
 ---

@@ -12,7 +12,7 @@ import { LINKS } from '../../site';
 const items = [
   {
     q: 'Is it ready?',
-    a: 'No. Cutweave is pre-alpha, in Phase 1 of 7, and there is no download yet. The engine, an MCP server and the first editor panels are built and tested: 40 of 60 Phase 1 work packages are merged. But nothing can import, play or export a real video yet, because the FFmpeg backend is still blocked. The first working build is the Phase 1 milestone. The roadmap shows what is built and what is left.',
+    a: 'No. Cutweave is pre-alpha, in Phase 1 of 7, and there is no download yet. The engine, an MCP server and the first editor panels are built and tested: 40 of 60 Phase 1 work packages are merged. But nothing can import, play or export a real video yet, because real decode starts with the FFmpeg spike (S3), which began on 23 November. The first working build is the Phase 1 milestone. The roadmap shows what is built and what is left.',
     link: { href: '/roadmap/', label: 'See the roadmap' },
   },
   {
@@ -21,8 +21,8 @@ const items = [
   },
   {
     q: 'Can an agent use it today?',
-    a: 'Partly, in the repo and not in an app you can install. The engine serves MCP over HTTP and over stdio, with 18 tools and one execute tool that reaches every command. In tests, a scripted agent creates a project, imports stub media, inserts, splits, undoes and reads the timeline. It cannot render a frame or export yet.',
-    link: { href: '/agents/', label: 'See the agent page' },
+    a: 'Partly, in the repo and not in an app you can install. The engine serves MCP over HTTP and over stdio, with 18 tools and one execute tool that reaches every command. A recorded session on the agent page shows an agent creating a project, importing stub media, inserting, splitting, undoing and reading the timeline. It cannot render a frame or export yet.',
+    link: { href: '/agents/#real-run', label: 'Read a real run' },
   },
   {
     q: 'What do AI features cost?',

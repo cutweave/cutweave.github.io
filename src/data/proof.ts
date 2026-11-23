@@ -65,4 +65,4 @@ export const PROOF_FOOTNOTE = 'Informal, one Windows laptop. Formal runs pending
 export const PROOF_WP_LABEL = 'Measured in a work package test';
 export const PROOF_WP_FOOTNOTE = 'Informal, one dev machine. Formal runs pending.';
 export const PROOF_BLOCKED =
-  'Not passed: the S3 spike for decode, seek and hardware acceleration is blocked on FFmpeg. The Phase 0 go/no-go reads go except where FFmpeg is required.';
+  'Not passed yet: the S3 spike for decode, seek and hardware acceleration was unblocked on 23 November and is running. The Phase 0 go/no-go was signed off as go with changes; if S3 fails, the media and export work stops.';

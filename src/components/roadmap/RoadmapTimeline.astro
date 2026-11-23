@@ -44,7 +44,7 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
     </ol>
     <p class="p1-note">
       Phase 1: <strong>{AS_OF.p1Done} of {AS_OF.p1Total}</strong> work packages merged, as of {AS_OF.label}. Real video
-      still waits on the FFmpeg backend.
+      still waits on the FFmpeg spike (S3).
     </p>
     {cta && <div class="cta"><Button href="/roadmap/" iconEnd="arrow-right">See the roadmap</Button></div>}
   </div>
@@ -63,7 +63,7 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
             <span class="pid">{p.id}</span>
             <span class="dur">{p.duration}</span>
             {p.state === 'current' && <span class="tag-here"><Icon name="loader" size="sm" /> You are here</span>}
-            {p.state === 'done' && <span class="tag-done"><Icon name="circle-check" size="sm" /> Done, provisional</span>}
+            {p.state === 'done' && <span class="tag-done"><Icon name="circle-check" size="sm" /> Done</span>}
           </div>
           <Heading class="name">{p.name}</Heading>
           <p class="delivers">{p.delivers}</p>

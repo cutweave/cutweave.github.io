@@ -34,7 +34,7 @@ export const AS_OF = {
 export const PHASES: Phase[] = [
   { id: 'P0', name: 'Foundations and spikes', state: 'done', duration: 'About 5 weeks',
     delivers: 'Repo, CI, governance, design tokens and the UI package, ADRs 0001–0017, and spikes S1, S2, S4, S4b and S5.',
-    milestone: 'M0 go/no-go: provisional go on 2026-11-22. The FFmpeg decode spike (S3) is blocked, and the product-owner sign-off is not yet ticked.' },
+    milestone: 'M0 go/no-go: go with changes, signed off on 2026-11-23. The FFmpeg decode spike (S3) was unblocked that day and is running; if it fails, the media and export work stops and the decision is revisited.' },
   { id: 'P1', name: 'Walking skeleton', state: 'current', duration: 'About 10 weeks',
     delivers: 'Model, command bus, persistence, media probe and decode, H.264 export, preview, MCP v0 with 14 core tools and four generic ones, a CLI, and the Electron shell with a basic UI.',
     milestone: 'M1: the UI and an MCP agent both import, cut and export, the two project documents are byte-identical, and the project recovers after an engine kill.',
@@ -94,8 +94,8 @@ export interface NextItem {
 
 /** Still to merge in Phase 1: 20 of 60 work packages. Together these finish M1. */
 export const NEXT_IN_P1: NextItem[] = [
-  { title: 'Real media', text: 'Probe, decode, frame-exact seek, thumbnails and waveforms from real files. This waits on the FFmpeg spike (S3).', wps: 'WP-1D.01 to 1D.06', blocked: true },
-  { title: 'Export', text: 'H.264 and AAC MP4, with hardware encoders and a software fallback. Also waits on S3.', wps: 'WP-1E.01 to 1E.03', blocked: true },
+  { title: 'Real media', text: 'Probe, decode, frame-exact seek, thumbnails and waveforms from real files. This starts with the FFmpeg spike (S3), which began on 23 November.', wps: 'WP-1D.01 to 1D.06', blocked: true },
+  { title: 'Export', text: 'H.264 and AAC MP4, with hardware encoders and a software fallback. Also follows S3.', wps: 'WP-1E.01 to 1E.03', blocked: true },
   { title: 'Transport and A/V sync', text: 'Play, pause, scrub and step, with video following the audio clock. It is being built against synthetic frames first.', wps: 'WP-1H.01' },
   { title: 'Preview, inspector and dialogs', text: 'The preview panel, the inspector, undo and redo in the UI, save and open, the recovery dialog and the export dialog.', wps: 'WP-1M.04, 1M.07, 1M.08' },
   { title: 'Engine wiring', text: 'Media, render, audio and playback attached to the engine, and media thumbnails and frames over HTTP.', wps: 'WP-1I.03, 1I.05' },
