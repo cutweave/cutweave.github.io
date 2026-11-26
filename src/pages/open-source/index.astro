@@ -1,7 +1,7 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 // /open-source/: license model, plugin layers, files and keys, how it is built, how to contribute.
-// Facts: docs/content-inventory.md sections 2.5, 2.6, 7 and 11 (status as of product HEAD 7728d7c, 2026-11-23).
+// Facts: docs/content-inventory.md sections 2.5, 2.6, 7 and 11 (status as of product origin/main e129848, 2026-11-26).
 // GAP-17: the plugin exception is a draft pending legal review. State it as in effect once ADR-0011 review closes.
 // GAP-15: short privacy note only; a full privacy page arrives with WP-7F.04.
 // GAP-11: GitHub is the only community channel; Discussions and a chat link arrive with WP-7G.03.
@@ -41,7 +41,7 @@ const contribute = [
           open folder of files you can read.
         </p>
         <p class="stamp">
-          <StatusChip status="in-progress" label="Pre-alpha · Phase 1 of 7" />
+          <StatusChip status="in-progress" label="Pre-alpha · Phase 2 of 7" />
           <span>The license and the code are real today. Most of the product promises below are plans.</span>
         </p>
         <div class="actions">
@@ -89,9 +89,9 @@ const contribute = [
   <Section id="yours" eyebrow="Ownership" title="Your files, your keys" lede="These are design commitments from the architecture. Each shows how far it has got.">
     <ul class="cards">
       <Card as="li">
-        <div><StatusChip status="built" label="Built · engine" /></div>
+        <div><StatusChip status="built" label="Built · Windows only" /></div>
         <h3 class="card-title">An open project folder</h3>
-        <p class="card-text">A JSON document, a journal and rotating backups, in a folder you can open, copy and version. Saving is atomic, the journal replays after a crash, and autosave keeps the last ten backups. The editor has no save or open UI yet.</p>
+        <p class="card-text">A JSON document, a journal and rotating backups, in a folder you can open, copy and version. Saving is atomic, the journal replays after a crash, and autosave keeps the last ten backups. The editor has save, save as, open and recent projects, and a restore dialog after a crash.</p>
       </Card>
       <Card as="li">
         <div><StatusChip status="planned" label="Planned · P5" /></div>
@@ -124,8 +124,8 @@ const contribute = [
         <h3 class="card-title">Most of the code is written by AI agents</h3>
         <p class="card-text">
           Most of this code is written by AI coding agents working from public work packages. People review it, and
-          human review capacity is the bottleneck. On 22 and 23 November 2026 alone, {AS_OF.recentlyMerged} work
-          packages merged: <a href="/roadmap/#recent">see the list</a>. AI-assisted contributions are welcome under
+          human review capacity is the bottleneck. Between 23 and 26 November 2026 the main branch took {AS_OF.commitsSince} commits
+          and {AS_OF.mergesSince} merges, including the Phase 1 sign-off and 26 Phase 2 work packages: <a href="/roadmap/#recent">see the list</a>. AI-assisted contributions are welcome under
           the rules in <a href={LINKS.contributing}>CONTRIBUTING.md</a>.
         </p>
       </div>

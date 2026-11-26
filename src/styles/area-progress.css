@@ -21,3 +21,13 @@
   /* Contact-sheet golden: 640 px wide, never scaled up. */
   --progress-figure-wide-max: 640px;
 }
+
+/* Real-editor figures (recording and stills of the editor, from the M1 test run). */
+:root {
+  /* Largest width of the M1 recording: it is 1280 x 800 and is never scaled up. */
+  --progress-video-max: 1040px;
+  /* Largest width of a still from the recording (shown three across on wide screens). */
+  --progress-still-max: 640px;
+  /* Compositor frames from the M1 gate, stored at 960 px wide. */
+  --progress-render-max: 480px;
+}

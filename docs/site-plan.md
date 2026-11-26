@@ -18,7 +18,7 @@ Audiences, in launch order:
 - **Headline (home hero):** "Edit by hand. Or hand it to an agent."
 - **Subhead:** "Cutweave is an open-source video editor for creators and their AI agents. Every edit is a command, so you and your agent work on the same timeline, and the agent sees rendered frames, not screenshots."
 - **Second line for creators:** "CapCut-class editing you own: no account, no watermark, your own AI keys."
-- **Status chip (always visible in the hero):** "Pre-alpha · Phase 1 of 7 · No download yet"
+- **Status chip (always visible in the hero):** "Pre-alpha · Phase 2 of 7 · No download yet"
 - **Hero actions:** primary (marigold) "See an agent edit" → `#demo`; secondary "Follow on GitHub" → https://github.com/cutweave/cutweave.
 - **Spare lines to reuse:** "Agents see frames, not screenshots." · "No account. No watermark. No paywall." · "Say what it costs before it runs." · "Every edit is a command."
 

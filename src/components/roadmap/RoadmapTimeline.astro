@@ -43,8 +43,8 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
       ))}
     </ol>
     <p class="p1-note">
-      Phase 1: <strong>{AS_OF.p1Done} of {AS_OF.p1Total}</strong> work packages merged, as of {AS_OF.label}. Real video
-      still waits on the FFmpeg spike (S3).
+      Phase 1 is done: M1 was signed off on {AS_OF.m1Label}, on Windows. Phase 2: <strong>{AS_OF.p2Done} of {AS_OF.p2Total}</strong> work
+      packages merged, as of {AS_OF.label}.
     </p>
     {cta && <div class="cta"><Button href="/roadmap/" iconEnd="arrow-right">See the roadmap</Button></div>}
   </div>
@@ -69,8 +69,8 @@ const stateWord: Record<PhaseState, string> = { done: 'Done', current: 'You are 
           <p class="delivers">{p.delivers}</p>
           {p.progress && (
             <div class="progress">
-              <progress class="bar" value={p.progress.done} max={p.progress.total} aria-label={`Phase 1 work packages merged: ${p.progress.done} of ${p.progress.total}`}>{p.progress.done} of {p.progress.total}</progress>
-              <p class="ptext"><strong>{p.progress.done} of {p.progress.total}</strong> work packages merged, as of {AS_OF.label}. <a href="#recent">See what merged</a>.</p>
+              <progress class="bar" value={p.progress.done} max={p.progress.total} aria-label={`${p.id} work packages merged: ${p.progress.done} of ${p.progress.total}`}>{p.progress.done} of {p.progress.total}</progress>
+              <p class="ptext"><strong>{p.progress.done} of {p.progress.total}</strong> work packages merged, as of {AS_OF.label}. <a href="/roadmap/#recent">See what merged</a>.</p>
             </div>
           )}
           <p class="milestone"><span class="mlabel">Milestone and exit</span> {p.milestone}</p>

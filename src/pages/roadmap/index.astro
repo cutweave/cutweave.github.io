@@ -1,8 +1,9 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// /roadmap/: where the project is, what exists, what merged since Phase 0, what is measured, and what comes after 1.0.
-// Facts: docs/content-inventory.md sections 3.11, 9 and 10 (state as of product HEAD 7728d7c, 2026-11-23).
-// Built is not the same as usable: nothing here can import, play or export real video yet.
+// /roadmap/: where the project is, what M1 proved, what exists, what merged since, what is left, what is measured, and what comes after 1.0.
+// Facts: docs/content-inventory.md sections 3.11, 9 and 10 (state as of product origin/main e129848, 2026-11-26).
+// Built is not the same as usable: there is no installer, and what exists is verified on Windows only.
+// GAP-01 and GAP-02 (partly closed): the recording and stills are from the M1 test run, not a designed screenshot set.
 import '../../styles/area-s3.css';
 import '../../styles/area-progress.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -14,12 +15,13 @@ import Button from '../../components/ui/Button.astro';
 import RoadmapTimeline from '../../components/roadmap/RoadmapTimeline.astro';
 import RecentlyMerged from '../../components/roadmap/RecentlyMerged.astro';
 import ProofStrip from '../../components/roadmap/ProofStrip.astro';
-import { BUILT, NEXT_IN_P1, AFTER_1_0, AS_OF } from '../../data/roadmap';
+import RealEditor from '../../components/home/RealEditor.astro';
+import { BUILT, NEXT_IN_P2, AFTER_1_0, AS_OF, M1_PROVED, M1_CAVEATS } from '../../data/roadmap';
 import { LINKS } from '../../site';
 ---
 <BaseLayout
   title="Where Cutweave is"
-  description="The Cutweave roadmap: Phase 0 is done, Phase 1 is 40 of 60 work packages in, and there is no download yet. What is built, what merged since Phase 0, what is measured, and what comes after 1.0."
+  description="The Cutweave roadmap: Phase 1 is done, with M1 signed off on 25 November. Phase 2 is 26 of 82 work packages in, and there is no download yet. What M1 proved, what is built, what merged, what is left, what is measured, and what comes after 1.0."
 >
   <header class="hero">
     <Container>
@@ -27,15 +29,15 @@ import { LINKS } from '../../site';
         <p class="eyebrow">Roadmap</p>
         <h1>Where Cutweave is</h1>
         <p class="lede">
-          Phase 0 is done: go with changes, signed off on 23 November. Phase 1 is {AS_OF.p1Done} of {AS_OF.p1Total} work packages in, and there is no download yet.
+          Phase 1 is done: M1 was signed off as go on {AS_OF.m1Label}, on Windows. Phase 2, the core editor, is {AS_OF.p2Done} of {AS_OF.p2Total} work packages in. There is still no download or installer.
         </p>
         <p class="stamp">
-          <StatusChip status="in-progress" label="Pre-alpha · Phase 1 of 7" />
+          <StatusChip status="in-progress" label="Pre-alpha · Phase 2 of 7" />
           <span>As of <time datetime={AS_OF.iso}>{AS_OF.label}</time>. Dates are rough and are re-estimated after each phase.</span>
         </p>
         <p class="note">
-          Built is not the same as usable. The engine, the agent interface and the first editor panels exist and are
-          tested, but nothing can import, play or export a real video yet: real decode starts with the FFmpeg spike (S3), which began on 23 November.
+          Built is not the same as usable. In the repo you can import, cut, preview and export real video in the editor, and an agent can do the same over MCP. It runs
+          from source and has only been verified on Windows. Phase 2 is what turns it into an editor you can make a whole video in.
         </p>
       </div>
     </Container>
@@ -49,7 +51,36 @@ import { LINKS } from '../../site';
     </p>
   </Section>
 
-  <Section id="built" tone="raised" eyebrow="In the repo today" title="What exists" lede="This is code that runs in tests. Each card says what it is attached to, because most of it is not something you can use yet.">
+  <Section id="m1" tone="raised" eyebrow="Phase 1 is done" title="What M1 proved" lede={`The owner signed off M1 as go on ${AS_OF.m1Label}. The record is docs/milestones/M1-exit.md in the repo, and the evidence is in docs/milestones/m1-evidence.`}>
+    <ul class="cards">
+      {M1_PROVED.map((p) => (
+        <Card as="li">
+          <div><StatusChip status="built" label="Passed · Windows" /></div>
+          <h3 class="card-title">{p.title}</h3>
+          <p class="card-text">{p.text}</p>
+        </Card>
+      ))}
+    </ul>
+    <p class="measured-line">
+      <span class="measured">Measured in a work package test</span>
+      <span class="foot">Informal, one dev machine. Formal runs pending.</span>
+      <span class="foot">M1 gate run (WP-1O.04): one Windows 11 machine with an RTX 3080 laptop GPU, FFmpeg n8.1.3.</span>
+    </p>
+    <h3 class="sub">What M1 does not say</h3>
+    <ul class="caveats">
+      {M1_CAVEATS.map((c) => <li>{c}</li>)}
+    </ul>
+    <p class="plan-note">
+      <a href={`${LINKS.repo}/blob/main/docs/milestones/M1-exit.md`} target="_blank" rel="noopener">Read the M1 record</a>{' '}
+      and its <a href={`${LINKS.repo}/tree/main/docs/milestones/m1-evidence`} target="_blank" rel="noopener">evidence folder</a>.
+    </p>
+  </Section>
+
+  <Section id="real-editor" eyebrow="The real editor today" title="This is the app, not a mock-up" lede="A recording of the editor doing the M1 run, made by the test itself. The home page hero is still a labelled design preview.">
+    <RealEditor idPrefix="roadmap" />
+  </Section>
+
+  <Section id="built" tone="raised" eyebrow="In the repo today" title="What exists" lede="This is code that runs in tests, mostly on one Windows machine. Each card says how far it goes, because none of it is something you can install yet.">
     <ul class="cards">
       {BUILT.map((b) => (
         <Card as="li">
@@ -61,15 +92,32 @@ import { LINKS } from '../../site';
     </ul>
   </Section>
 
-  <Section id="recent" eyebrow="Built since Phase 0" title={`${AS_OF.recentlyMerged} work packages in two days`} lede="Merged to the main branch on 22 and 23 November 2026, newest first. Most of it is written by AI coding agents from public work packages, under human review. The hash links to the merge commit.">
-    <RecentlyMerged headingLevel={3} />
+  <Section id="p2" eyebrow="Phase 2" title={`${AS_OF.p2Done} of ${AS_OF.p2Total} work packages merged`} lede={`The core editor. Counted from the merge history and docs/wbs/P2-core-editor.md, as of ${AS_OF.label}.`}>
+    <div class="p2-progress">
+      <progress class="bar" value={AS_OF.p2Done} max={AS_OF.p2Total} aria-label={`Phase 2 work packages merged: ${AS_OF.p2Done} of ${AS_OF.p2Total}`}>{AS_OF.p2Done} of {AS_OF.p2Total}</progress>
+      <p class="p2-text"><strong>{AS_OF.p2Done} of {AS_OF.p2Total}</strong> merged, {AS_OF.p2Total - AS_OF.p2Done} to go. As of <time datetime={AS_OF.iso}>{AS_OF.label}</time>, product commit {AS_OF.head}. Decisions ADR-0023 to ADR-0032 are accepted.</p>
+    </div>
   </Section>
 
-  <Section id="next" tone="raised" eyebrow="Still to merge" title="What is left in Phase 1" lede={`${AS_OF.p1Total - AS_OF.p1Done} of ${AS_OF.p1Total} work packages. Together they make up the M1 milestone: an agent and the interface both import, cut and export.`}>
+  <Section id="recent" tone="raised" eyebrow="Built since Phase 1" title="Phase 2 so far" lede={`Merged to the main branch on 25 and 26 November 2026, newest first within each area. Between the last update of this site (${AS_OF.previousHead}) and ${AS_OF.head} the main branch took ${AS_OF.commitsSince} commits and ${AS_OF.mergesSince} merges. Most of it is written by AI coding agents from public work packages, under human review. The hash links to the commit.`}>
+    <RecentlyMerged set="p2" headingLevel={3} />
+    <div class="earlier">
+      <h3 class="sub">Closing Phase 1, 23 to 25 November</h3>
+      <p class="plan-note">Real media, preview and export, then the M1 exit suite.</p>
+      <RecentlyMerged set="p1-late" headingLevel={4} />
+    </div>
+    <details class="earlier-details">
+      <summary>Phase 1 before that: 28 work packages merged on 22 and 23 November</summary>
+      <p class="plan-note">As written on 23 November. Some of what these rows say was not built yet, such as real media and export, has been built since.</p>
+      <RecentlyMerged set="p1-early" headingLevel={4} />
+    </details>
+  </Section>
+
+  <Section id="next" eyebrow="Still to merge" title="What is left in Phase 2" lede={`${AS_OF.p2Total - AS_OF.p2Done} of ${AS_OF.p2Total} work packages. Together they make up the M2 milestone: a non-developer edits a 10-minute YouTube video and a 9:16 short, and 20 forced crashes lose no data.`}>
     <ul class="cards">
-      {NEXT_IN_P1.map((n) => (
+      {NEXT_IN_P2.map((n) => (
         <Card as="li">
-          <div><StatusChip status="planned" label={n.blocked ? 'Waits on S3' : 'Planned · P1'} /></div>
+          <div><StatusChip status="planned" label={`Planned · P2 · ${n.n} WPs`} /></div>
           <h3 class="card-title">{n.title}</h3>
           <p class="card-text">{n.text}</p>
           <p class="card-wps">{n.wps}</p>
@@ -77,17 +125,15 @@ import { LINKS } from '../../site';
       ))}
     </ul>
     <p class="plan-note">
-      The FFmpeg spike (S3) was unblocked on 23 November and is running. Meanwhile the work that does not need it goes ahead against stand-ins: a stub media
-      backend for dev builds, generated audio and synthetic frames. These do not replace the M1 exit, which needs real
-      media.
+      Phase 2 work that is specified or proposed but not merged is not built. That includes on-screen edit-lock feedback, detached panels, speed, compound clips, the export queue and the keyframe graph editor.
     </p>
   </Section>
 
-  <Section id="proof" eyebrow="Evidence" title="Measured so far" lede="Numbers from tests in the real code, and from the throwaway Phase 0 prototypes that tested the riskiest ideas first. Each group carries its own label.">
+  <Section id="proof" tone="raised" eyebrow="Evidence" title="Measured so far" lede="Numbers from tests in the real code, and from the throwaway Phase 0 prototypes that tested the riskiest ideas first. Each group carries its own label.">
     <ProofStrip variant="full" headingLevel={3} />
   </Section>
 
-  <Section id="after" tone="raised" eyebrow="Beyond the plan" title="After 1.0" lede="In rough order. None of this is promised for 1.0.">
+  <Section id="after" eyebrow="Beyond the plan" title="After 1.0" lede="In rough order. None of this is promised for 1.0.">
     <ol class="later">
       {AFTER_1_0.map((item) => (
         <li><StatusChip status="later" /> <span>{item}</span></li>
@@ -95,7 +141,7 @@ import { LINKS } from '../../site';
     </ol>
   </Section>
 
-  <Section id="follow" width="narrow" eyebrow="Keep up" title="How to follow along" lede="The work happens in public on GitHub. There is no newsletter, and nothing to sign up for.">
+  <Section id="follow" tone="raised" width="narrow" eyebrow="Keep up" title="How to follow along" lede="The work happens in public on GitHub. There is no newsletter, and nothing to sign up for.">
     <ul class="follow">
       <li><a href={LINKS.repo}>The repository</a>: the code and its history.</li>
       <li><a href={LINKS.issues}>Issues</a>: work packages, bugs and requests.</li>
@@ -122,6 +168,27 @@ import { LINKS } from '../../site';
   .card-text { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
   .card-wps { margin-top: auto; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--s3-text-xs); line-height: var(--s3-text-xs-line); }
   .plan-note { margin-top: var(--space-6); max-width: var(--prose-max); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .plan-note a { color: var(--text-primary); text-decoration: underline; text-underline-offset: var(--space-0-5); }
+
+  .sub { margin-top: var(--space-8); margin-bottom: var(--space-3); font-size: var(--display-card-size); line-height: 28px; font-weight: 650; }
+  .caveats { display: flex; flex-direction: column; gap: var(--space-2); max-width: var(--prose-max); padding-left: var(--space-6); list-style: disc; color: var(--text-secondary); }
+  .measured-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-6); }
+  .measured { padding: 0 var(--space-2); border: var(--border-thin) dashed var(--border-control); border-radius: var(--radius-sm); font-size: var(--progress-text-xs); line-height: calc(var(--progress-text-xs-line) + var(--space-1-5)); }
+  .foot { color: var(--text-muted); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+
+  .p2-progress { display: flex; flex-direction: column; gap: var(--space-2); max-width: var(--prose-max); }
+  .bar { appearance: none; width: 100%; height: var(--progress-bar-height); border: 0; border-radius: var(--radius-full); background: var(--surface-3); overflow: hidden; }
+  .bar::-webkit-progress-bar { background: var(--surface-3); }
+  .bar::-webkit-progress-value { background: var(--marigold); border-radius: var(--radius-full); }
+  .bar::-moz-progress-bar { background: var(--marigold); border-radius: var(--radius-full); }
+  .p2-text { color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .p2-text strong { color: var(--text-primary); }
+
+  .earlier { margin-top: var(--space-12); }
+  .earlier .sub { margin-top: 0; }
+  .earlier-details { margin-top: var(--space-8); }
+  .earlier-details summary { display: flex; align-items: center; min-height: var(--hit-touch); cursor: pointer; font-weight: 600; }
+  .earlier-details summary:focus-visible { outline: var(--border-thick) solid var(--focus-ring); outline-offset: var(--border-thick); border-radius: var(--radius-sm); }
 
   .later { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--s3-card-min)), 1fr)); gap: var(--space-3); counter-reset: later; }
   .later li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border: var(--border-thin) dashed var(--border-default); border-radius: var(--radius-md); color: var(--text-secondary); }

@@ -1,8 +1,8 @@
 # Cutweave website content inventory
 
-Compiled 2026-11-22 from the main repo (`D:\projects\Vidai`, 166 commits, HEAD `6ca1af7`) and refreshed 2026-11-23 to HEAD `7728d7c` (310 commits; 28 work packages merged in between). Statuses below are as of `7728d7c`; merge-commit refs are short hashes in the main repo. Every claim cites a doc, a WP id or a commit. Anything not in the docs is marked *illustrative*.
+Compiled 2026-11-22 from the main repo (`D:\projects\Vidai`, 166 commits, HEAD `6ca1af7`), refreshed 2026-11-23 to HEAD `7728d7c` (310 commits), and re-pinned 2026-11-26 to **origin/main `e129848`** (about 543 commits and 113 merges after `981e5a2`, the previous pin; the product repo is now at `E:\projects\Vidai`). Statuses below are as of `e129848`; merge-commit refs are short hashes in the main repo. Every claim cites a doc, a WP id or a commit. Anything not in the docs is marked *illustrative*. The product repo's local `main`, `README.md` and `AGENTS.md` "current stage" text are stale and still say Phase 1; the M1 record and the merge history are the source.
 
-**Read this first: the project is pre-alpha.** There is no installer, no public demo video, and no way to import, play or export real video yet: the FFmpeg backend is not in yet (spike S3 was unblocked on 2026-11-23 and is running). Phase 0 spikes are done (go with changes, signed off 2026-11-23, `docs/milestones/M0-go-no-go.md`; facts re-checked against origin/main `981e5a2`) and Phase 1 is under way: 40 of its 60 work packages are merged (`docs/wbs/P1-skeleton.md`). The engine now has a command bus with undo, a journal and crash recovery, a JSON-RPC server, an MCP server, a core-only CLI, an audio mixer with a device clock, a wgpu compositor and a live timeline in the editor, all exercised by tests and, in dev builds, against a stub media backend (R27). The repo's README and `AGENTS.md` were corrected to say Phase 1 in `e653c75`. The site must not imply a product you can download. See section 12.
+**Read this first: the project is pre-alpha.** There is no installer and no download. **Phase 1 is done**: the owner signed off **M1 as GO on 2026-11-25** (`docs/milestones/M1-exit.md`, evidence in `docs/milestones/m1-evidence/`), verified on Windows only (R34); macOS and Linux are deferred until those machines exist, not dropped. In the real editor a scripted run imports three clips, arranges, trims, splits and exports a 1080p MP4 that plays; over MCP headless a scripted agent does the same and the two exports are byte-identical; 40 crash trials (20 engine kills, 20 app kills) lost and doubled no commands; 18 of 18 golden frames are bit-identical and CLI = MCP = RPC parity is 8 of 8. Spike S3 (FFmpeg) passed on Windows on 2026-11-24 (ADR-0003 accepted with fallback), so real probe, frame-exact decode with hardware decode, preview, playback and export are built. **Phase 2 (core editor) is in progress**: 26 of its 82 work packages are merged (`docs/wbs/P2-core-editor.md`, counted from the merge history), and ADRs 0023 to 0032 are accepted. Things to say plainly: it runs from source on Windows, there is no installer, and Phase 2 work that is spec-only, Proposed or not merged (speed, compound clips, export queue and codecs, the keyframe graph editor, detached panels, edit-lock UI feedback) is not built. See section 12.
 
 Source key: `arch §N` = `docs/01-architecture.md §N`; `brief` = `docs/00-product-brief.md`; `parity` = `docs/03-feature-parity.md`; `roadmap` = `docs/04-roadmap.md`; `M0` = `docs/milestones/M0-go-no-go.md`; `ADR-NNNN` = `docs/adr/`.
 
@@ -44,7 +44,7 @@ Six pillars. Pillars 1–4 and 6 mirror the README pillar table; pillar 5 (Yours
 - Every mutation is a registered command on one bus; the UI, MCP server, CLI and plugins are all clients (`arch §1`, `brief` principle 1).
 - A CI parity test enumerates the command registry and asserts every non-`view` command is reachable over MCP with an identical schema (`arch §14`, ADR-0002, ADR-0005).
 - One Rust binary, `cutweave`, runs as GUI engine, MCP server, CLI or headless renderer (`arch §2`, ADR-0002).
-- The engine runs in its own process; a GPU, decoder or plugin crash does not take the UI down, and the engine recovers from a journal (`arch §2`; the journal itself is not built yet).
+- The engine runs in its own process; a GPU, decoder or plugin crash does not take the UI down, and the engine recovers from a journal (`arch §2`; built and tested, see 3.1).
 
 ### 2.2 Creator-grade editing, CapCut-familiar
 **Claim:** The workflow creators know, without the paywall.
@@ -86,13 +86,13 @@ Six pillars. Pillars 1–4 and 6 mirror the README pillar table; pillar 5 (Yours
 
 ## 3. Feature catalog
 
-**Status legend (honest, as of HEAD `7728d7c`)**
-- **Built**: code exists in the repo now. This does **not** mean a user can do it in the app today; the editor is a shell over a stub media backend and no real video can be imported, played or exported (see 3.11).
-- **In progress**: a current Phase 1 WP, partly merged.
+**Status legend (honest, as of `e129848`)**
+- **Built**: code exists in the repo now. This does **not** mean a user can do it in the app today; it has been run on Windows only, there is no installer, and the M1 test is the evidence (see 3.11).
+- **In progress**: a current Phase 2 WP, or an epic with some work packages merged.
 - **Planned for v1**: in the roadmap with a phase and WP epic; no code yet.
 - **Later**: post-1.0 (`roadmap` "After 1.0") or deferred.
 
-Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-11-23) · P1 walking skeleton (in progress) · P2 core editor · P3 text, captions, transcripts (Public Alpha) · P4 effects, transitions, color · P5 AI gateway and AI Studio · P6 plugins, templates, Agent Kit, copilot (Beta) · P7 hardening and 1.0. Dates are rough; `roadmap` says about 14 months to 1.0 and about 7.5 to Public Alpha.
+Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-11-23) · P1 walking skeleton (done; M1 GO, signed off 2026-11-25, Windows only) · P2 core editor (in progress, 26 of 82 WPs) · P3 text, captions, transcripts (Public Alpha) · P4 effects, transitions, color · P5 AI gateway and AI Studio · P6 plugins, templates, Agent Kit, copilot (Beta) · P7 hardening and 1.0. Dates are rough; `roadmap` says about 14 months to 1.0 and about 7.5 to Public Alpha.
 
 ### 3.1 Editing and timeline
 
@@ -110,19 +110,20 @@ Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-
 | Timeline evaluation to a scene description | **Built** | P1 | `cutweave-render`, merge `bb9617c` (WP-1F.01) |
 | Editor shell: dockable CapCut-style layout, workspaces, themes, i18n scaffold | **Built** (shell) | P1 | `packages/editor`, merge `1817e7b` (WP-1M.01) |
 | Live read-only timeline from the engine (RPC connection, stores, document mirror) | **Built** | P1 | merge `5fbf6f5` (WP-1M.02) |
-| Timeline interactions: select, move, trim, split, delete, snapping, marquee, gesture transactions (one history entry per drag) | **Built** (tested against a real engine with stub media) | P1 | merge `41fe7cd` (WP-1M.06) |
-| Media bin: import dialog, OS drag-drop, cards, removal, keyboard, drop onto the timeline (placeholder thumbnails) | **Built** (stub media only) | P1 | merge `d0ab5d2` (WP-1M.03) |
-| Import real media, playback, preview panel, inspector, save/open UI, export on a 2-track timeline | In progress (real media follows the S3 FFmpeg spike, unblocked 2026-11-23) | P1 (M1) | `docs/wbs/P1-skeleton.md`; WP-1M.04, 1M.07, 1M.08; gate WP-1O.04 |
-| Crash recovery UI (restore or discard dialog on open) | Planned for v1 | P1 | WP-1M.07; the engine side and automatic recovery after an engine restart are built (WP-1C.02, WP-1L.03) |
+| Timeline interactions: select, move, trim, split, delete, snapping, marquee, gesture transactions (one history entry per drag) | **Built** (tested against a real engine and real media) | P1 | merge `41fe7cd` (WP-1M.06) |
+| Media bin: import dialog, OS drag-drop, cards, removal, keyboard, drop onto the timeline (real thumbnails, filmstrips and waveforms, search, filters and folders since WP-1I.03, 1M.12 and 2F.07 to 2F.09) | **Built** (Windows only) | P1 | merge `d0ab5d2` (WP-1M.03) |
+| Import real media, playback, preview panel, inspector, save/open UI, export of a cut timeline | **Built** (Windows only; the M1 exit test) | P1 (M1) | merges `abcd2b8`, `dcbc215`, `affb4b3`, `9d154bb`, `0dda193`, `caaf900`, `3536da5`, `04346d8`, `1215877`; `docs/milestones/M1-exit.md` |
+| Crash recovery UI (restore or discard dialog on open) | **Built** (Windows only) | P1 | WP-1M.07 (merge `caaf900`); 20 whole-app kill trials in the M1 gate; opening a project never drops unsaved work (ADR-0029, merge `a6b550c`) |
 | Engine supervision: restart after a crash, journal recovery, exactly-once resend of unacknowledged commands, failed dialog after a fourth crash in 60 s | **Built** | P1 | merges `043114c` and `149370d` (WP-1L.03) |
-| Unlimited tracks, magnetic main track, ripple/roll/slip/slide, snapping, markers, linked clips, multi-select | Planned for v1 | P2 (M2) | `roadmap` P2, `parity` §2 |
-| Compound clips, replace clip, multiple sequences, aspect presets (16:9, 9:16, 1:1, 4:5, 21:9), background fill | Planned for v1 | P2 | `roadmap` P2, `parity` §3 |
-| Keyframes on every animatable property, easing, graph editor | Planned for v1 | P2 | `roadmap` P2 |
+| Unlimited tracks, magnetic main track, ripple/roll/slip/slide, snapping, markers, linked clips, multi-select | In progress: placement (insert, overwrite, move, lift, extract, ripple delete), the trim family (trim, ripple trim, roll, slip, slide), linked clips, attachments and groups, markers and in/out are **built** as commands; the snapping engine, tool UI, clipboard, replace clip, source marks and edit-lock UI feedback are not merged | P2 (M2) | merges `68bf40f` (WP-2A.03), `69c9075` (WP-2A.04), `2a6bc5f` (WP-2A.05), `8d01c08` (WP-2A.02), `be7894e` (WP-2A.01, spec and over 120 fixtures, ADR-0023); `roadmap` P2, `parity` §2 |
+| Compound clips, replace clip, multiple sequences, aspect presets (16:9, 9:16, 1:1, 4:5, 21:9), background fill | In progress: several sequences with aspect and frame-rate presets that reframe and retime the timeline are **built**; compound clips, replace clip and background fill are planned | P2 | merge `ccb2073` (WP-2B.01); `roadmap` P2, `parity` §3 |
+| Keyframes on every animatable property, easing, graph editor | In progress: the spec (ADR-0024), the interpolation core (every easing, bit-exact native and wasm), the keyframe and property commands (keys follow splits and trims) and inspector keyframe diamonds are **built**; timeline lanes, the bezier graph editor and layouts are not merged | P2 | merges `66912db` (WP-2C.01), `01e9acc` (WP-2C.02), `7046c35` (WP-2C.03), `671828f` (WP-2H.03a) |
 | Speed 0.1x–100x, reverse, freeze frame, pitch-preserving | Planned for v1 | P2 | `parity` §2 |
 | Speed curves (montage, hero, bullet), optical-flow slow-mo | Planned for v1 | P4 | `parity` §2 |
-| Proxies, relink, collect and archive, media bin search and tags | Planned for v1 | P2 | `roadmap` P2 |
-| Shortcut editor with NLE and CapCut presets; command palette listing every command | Planned for v1 | P2 | `arch §16`, `parity` §2 |
+| Proxies, relink, collect and archive, media bin search and tags | In progress: proxy generation (policy auto, all, off; ADR-0027) is **built**, bin search, filters and sort are **built** (WP-1M.12), and media folders with Import folder are **built** (ADR-0020); proxy-aware selection UI, relink, collect, image import and tags are planned | P2 | merges `0bfe09d` (WP-2F.01), `74ae37b`, `eade087`, `434be89`, `cd4b1a1` (WP-2F.07 to 2F.09) |
+| Shortcut editor with NLE and CapCut presets; command palette listing every command | **Built** (Windows only). Some CapCut bindings are marked `unverified` (N7); NLE keys for tools that do not exist yet arrive with them | P2 | merges `0cbc2ad` (WP-2H.05), `3bca87f` (WP-2H.04), `9f7d1a8` (WP-2H.13 context menus), `5388e09` (WP-2H.01 panels), `838ce19` (WP-2H.11 History panel) |
 | Multicam | Later | post-1.0 | `parity` §2, `roadmap` After 1.0 |
+| Detached panels in their own windows (ADR-0031 accepted 2026-11-26) | Planned; unblocked, **not merged** | P2 | WP-2H.14, 2H.15 |
 
 ### 3.2 Text and captions
 
@@ -143,11 +144,11 @@ Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-
 
 | Feature | Status | Phase | Evidence |
 |---|---|---|---|
-| Linear-light `Rgba16Float` render graph, color conversion, transforms, premultiplied over, PQ/HLG-to-SDR tone-map, per-adapter golden frames | **Built** (production compositor; synthetic test cards only until the media backend lands) | P1 | `cutweave-render`, merge `c6cef43` (WP-1F.02); spike `spikes/s4-compositor` before it |
-| Quality ladder, asynchronous readback, `render.frame` and `render.contact_sheet` queries (image results with metadata) | **Built** in `cutweave-render`; not yet exposed over MCP (WP-1J.02) | P1 | merge `f23d206` (WP-1F.03) |
+| Linear-light `Rgba16Float` render graph, color conversion, transforms, premultiplied over, PQ/HLG-to-SDR tone-map, per-adapter golden frames | **Built** (production compositor; it renders decoded real media since the engine wiring, WP-1I.05, merge `04346d8`) | P1 | `cutweave-render`, merge `c6cef43` (WP-1F.02); spike `spikes/s4-compositor` before it |
+| Quality ladder, asynchronous readback, `render.frame` and `render.contact_sheet` queries (image results with metadata) | **Built**; `render_frame` is on the MCP tool list as image content (WP-1J.02) | P1 | merges `f23d206` (WP-1F.03), `6cdf63d` (WP-1J.02) |
 | WGSL effect framework (`effect.toml`, multi-pass, keyframeable, GPU budgets, hot reload) | Planned for v1 | P4 (M4) | `roadmap` P4, WP-4A |
 | >= 40 transitions, >= 50 effects, >= 40 filters/LUTs, clip animations | Planned for v1 | P4 | `roadmap` P4 |
-| Core blend modes (8) | Planned for v1 | P2 | `arch §8` |
+| Core blend modes (8), transform, crop, flip and opacity | **Built** (preview and export identical) | P2 | merge `4d0b926` (WP-2C.04), `arch §8` |
 | Extended blend modes | Planned for v1 | P4 | `arch §8` |
 | Basic adjustments, HSL, curves, LUT import (.cube), color wheels | Planned for v1 | P4 | `roadmap` P4 |
 | Scopes (waveform, vectorscope, histogram), auto color correct, color match | Planned for v1 | P4 (match skill P6) | `roadmap` P4 |
@@ -163,8 +164,8 @@ Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-
 | Audio-clock master, time-stretch, loudness meter, 8-track mixer | Built as a **spike** only | P0 | `spikes/s2-audio-clock`; 10-min soak 0 underruns, drift +11 ppm (`M0`) |
 | Mixer graph (per-track lanes, sample-exact edit hand-off, resampling, offline mixdown equal to real-time) over generated sources | **Built** (no decoded clip audio until FFmpeg) | P1 | merge `42f7fbc` (WP-1G.01, R29) |
 | cpal device output, device-change supervision, lock-free master clock, meters | **Built** | P1 | merge `e97ed82` (WP-1G.02) |
-| Clip audio playback from real files, transport and A/V sync | In progress (real clips follow the S3 spike) | P1 | WP-1H.01 (R31: against synthetic frames first), WP-1D.03 |
-| Fades, keyframed volume, pan, buses, master limiter, loudness presets (-14 social, -16 podcast) | Planned for v1 | P2 | `roadmap` P2, `arch §9` |
+| Clip audio playback from real files, transport and A/V sync | **Built** (Windows only) | P1 | merges `a95ffdf` (WP-1H.01), `dcbc215` (WP-1D.03), `04346d8` (WP-1I.05) |
+| Fades, keyframed volume, pan, buses, master limiter, loudness presets (-14 social, -16 podcast) | In progress: fades (four curves), keyframed volume and pan are **built**, mixed the same in preview and export (WP-2E.01, merge `8597145`); buses, limiter, loudness presets and the audio UI are planned | P2 | `roadmap` P2, `arch §9` |
 | Auto-ducking, offline voice effects, voiceover recording, extract audio | Planned for v1 | P2 | `roadmap` P2 |
 | Music and SFX library with per-asset license metadata (CC0, CC-BY) | Planned for v1 | P3 | `roadmap` P3, R7 |
 | Voice enhance/denoise, stem split, beat detection | Planned for v1 | P5 | `roadmap` P5 |
@@ -192,13 +193,13 @@ Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-
 |---|---|---|---|
 | Command registry, schema and TypeScript generation (`cargo xtask gen`: JSON Schemas, generated types, a generated command and CLI reference) | **Built** | P1 | `cutweave-commands`, merges `f634210` (WP-1N.01), `5e92362` (WP-1N.02) |
 | MCP server (rmcp), hybrid tool catalog, `render_frame` as image content, both spec revisions | Built as a **spike** (73 tests, 13 core tools) | P0 | `spikes/s5-command-bus`, `M0` |
-| Production MCP v0: tools derived from the registry (14 core plus 4 generic = 18 on `/mcp`, 9 on `/mcp/minimal`), `cutweave_execute`, both spec revisions, HTTP in the engine and stdio (`cutweave mcp --attach` proxy, `--headless` in-process) | **Built** (v0; `render_frame` and `export_start` not in yet) | P1 | merges `c74300f` (WP-1J.01), `3ce9ccf` (WP-1J.03); WP-1J.02 (`render_frame`) and WP-1E.03 (`export_start`) pending |
-| ~30 core tools, contact sheet, filmstrip, waveform images, checkpoints, `expected_rev`, tool profiles | Planned for v1 | P2 | WP-2I.01–05 |
+| Production MCP: tools derived from the registry (the standard list on `/mcp`, `/mcp/minimal` for small contexts), `cutweave_execute`, both spec revisions, HTTP in the engine and stdio (`cutweave mcp --attach` proxy, `--headless` in-process); `render_frame` as image content; `export_start`; agents choose among several engines; result schemas describe the MCP shape | **Built** (tested on Windows; the M1 scripted agent) | P1 | merges `c74300f`, `3ce9ccf`, `6cdf63d` (WP-1J.02), `18552cd` (WP-1J.04), `f89cdab` (#146, ADR-0028), `1215877`; registry now 115 commands and queries (`docs/reference/commands.md`); the Phase 2 list is gated at 36 tools and 8k tokens (R36) |
+| ~30 core tools, contact sheet, filmstrip, waveform images, checkpoints, `expected_rev`, tool profiles | In progress: checkpoints (journaled, survive saves and crashes, `edit.delete_checkpoint`) are **built** (WP-2I.03, merge `8d844e8`); the rest is planned | P2 | WP-2I.01, 2I.02, 2I.04, 2I.05 |
 | Agent Kit v0 (captions/transcript tools; skills `cutweave-basics`, `captions-and-styling`, `transcript-editing`, `reframe-and-aspect`; prompts `caption-pass`, `tighten`) | Planned for v1 | P3 | `roadmap` P3 |
 | Agent Kit v1: ~14 skills, 13 MCP prompts, packs, client installers, nightly evals (>= 80% on two clients) | Planned for v1 | P6 (M6) | `arch §14b`, WP-6G, 6H |
 | Built-in copilot: plan, preview, apply, per-turn undo, cost gates | Planned for v1 | P6 | WP-6I |
 | Core-tool parity test (each core tool returns exactly what the engine call returns) | **Built** | P1 | `crates/cutweave-api/tests/mcp.rs` (WP-1J.01) |
-| 100% command-to-MCP parity CI across the whole surface (CLI = MCP = RPC), tool-list size budget in CI | Planned for v1 | P1, P6 | WP-1O.02, WP-6J.01–02 |
+| Command-to-MCP parity: CLI = MCP = RPC byte-identical documents, every registry entry reachable | **Built** (8 of 8 parity tests, M1 gate); tool-list size budget in CI and the 100% parity CI across the whole surface are planned | P1, P6 | merge `341564c` (WP-1O.02), WP-6J.01–02 |
 
 ### 3.7 Plugins
 
@@ -225,11 +226,11 @@ Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-
 
 | Feature | Status | Phase | Evidence |
 |---|---|---|---|
-| H.264/AAC MP4 export (hardware and software) | In progress, **follows FFmpeg spike S3** (unblocked and running since 2026-11-23; if S3 fails, 1D and 1E stop) | P1 | `M0` (sequenced via R27–R31 rather than held); WP-1E; R27–R31 describe the FFmpeg-free path |
-| Presets: YouTube 1080p/4K, Shorts/Reels/TikTok, GIF, audio-only, ProRes; HEVC, AV1; CBR/VBR/CRF; export queue; range or marker-set export | Planned for v1 | P2 | `roadmap` P2 |
+| H.264/AAC MP4 export (hardware and software) | **Built** (Windows only): x264 or NVENC, AMF, QSV with a software restart from frame 0 if a hardware encoder fails; 3.0x realtime with NVENC, 2.9x with AMF (debug build, loaded laptop). VideoToolbox and VA-API paths exist and have not been run | P1 | merges `affb4b3` (WP-1E.01), `9d154bb` (WP-1E.03), `b9ecca4` (WP-1E.02), `fe05661` (WP-1E.03b); `arch §19`, `docs/reference/export-quality.md` |
+| Presets: YouTube 1080p/4K, Shorts/Reels/TikTok, GIF, audio-only, ProRes; HEVC, AV1; CBR/VBR/CRF; export queue; range or marker-set export | In progress: a built-in preset pack and custom presets on a base, with rate control, are **built** (WP-2G.01, merge `2d365d6`); other codecs, the background queue, range export and the queue panel are planned | P2 | `roadmap` P2 |
 | Parallel chunked export across `cutweave worker` processes | Planned for v1 | P2 | `arch §8` |
-| `cutweave` CLI, core-only: `engine`, `exec`, `query`, `commands`, `describe`, `mcp`; generated `docs/reference/cli.md` | **Built** | P1 | merge `8542aa4` (WP-1K.01, R28) |
-| Headless CLI render (`cutweave render`) | Wired, returns `unsupported` until the media backend lands | P1 | WP-1I.05, WP-1E.03 (R28) |
+| `cutweave` CLI: `engine`, `exec`, `query`, `commands`, `describe`, `mcp`, `render`; generated `docs/reference/cli.md` | **Built** (tested on Windows). `worker` is not built | P1 | merge `8542aa4` (WP-1K.01), `1215877` (the M1 gate compares exported frames with `cutweave render`) |
+| Headless CLI render (`cutweave render`) | **Built** (used by the M1 gate) | P1 | WP-1I.05, WP-1E.03; `docs/milestones/M1-exit.md` |
 | SRT/VTT/ASS | Planned for v1 | P3 | `roadmap` P3 |
 | OTIO import/export, EDL, FCPXML export | Planned for v1 (FCPXML may slip) | P6 | `roadmap` P6 |
 | CapCut draft import | Investigation, go/no-go | P6 | WP-6E.04–05 |
@@ -251,13 +252,13 @@ Phase map: P0 foundations and spikes (done; M0 go with changes, signed off 2026-
 | Accessibility audit (WCAG 2.2 AA for UI chrome), en plus >= 6 languages | Planned for v1 | P7 | `roadmap` P7 |
 | Web and mobile apps, real-time collaboration, hosted inference | Later / non-goal | post-1.0 | `brief` non-goals |
 
-### 3.11 What actually exists and runs today
+### 3.11 What actually exists and runs today (as of `e129848`)
 
-- **Rust crates with real code (13 of 20):** `cutweave-model`, `-commands`, `-commands-derive`, `-ops`, `-engine` (project I/O, journal, autosave, session lifecycle, launch protocol, dev stub media), `-api` (local server, JSON-RPC over WebSocket, MCP), `-jobs`, `-render` (scene evaluation and the wgpu compositor), `-audio` (mixer and cpal output), `-playback` (shared-memory ring), `-bridge` (napi addon), `-cli` and `-tokens`.
-- **Stub crates (about 20 lines each, 7 of 20):** `ai`, `cache`, `compose`, `interchange`, `media`, `plugins`, `text`. `media` is the FFmpeg backend, sequenced behind S3 (R27).
-- **Registered commands today: 43** (`docs/reference/commands.md`, generated from the registry): `project.*` (new, open, save, save_as, close, rename, info, recover, discard_recovery), `media.*` (import, list, register, remove), `track.*` (add, remove, set), `timeline.insert` and `timeline.get`, `clip.split`, `clip.trim`, `item.move`, `item.delete`, `item.set_props`, `item.get`, `edit.*` (begin_tx, commit_tx, cancel_tx, undo, redo, history, checkpoint, restore, list_checkpoints, locks), `job.*` (status, list, wait, cancel) and `view.*`. 14 are core MCP tools (`project_open`, `project_info`, `media_import`, `media_list`, `timeline_get`, `timeline_insert`, `clip_split`, `clip_trim`, `item_move`, `item_delete`, `item_set_props`, `edit_undo`, `job_status`, `job_wait`); the rest are reachable through `cutweave_execute` and the catalog tools. `render.frame` and `render.contact_sheet` exist in `cutweave-render` but are not registered in the engine yet (WP-1I.05, WP-1J.02). `export.start` does not exist.
-- **TypeScript packages:** `packages/ui` (22 components, see 8.4), `packages/timeline` (production Canvas2D renderer and an interaction state machine), `packages/editor` (shell with media bin, Preview, Inspector, Timeline and Transport panels, toasts, engine-restart notices), `packages/protocol` (generated types, typed RPC client, document mirror) and `packages/plugin-sdk` (a stub).
-- **Desktop app:** an Electron app that launches the shell, with a hardened window and an engine supervisor (restart, journal recovery, resend). With `--dev-stub-media` the editor can import stub media, drag it onto the timeline and move, trim, split and delete clips against the real engine. No real media can be imported, played or exported yet, and the preview panel (WP-1M.04), inspector and save/open UI (WP-1M.07) and export dialog (WP-1M.08) are not merged.
+- **Rust crates with real code:** `cutweave-model`, `-commands`, `-commands-derive`, `-ops`, `-engine` (project I/O, journal, autosave, session lifecycle, launch protocol, export job, proxy generation, full subsystems wiring), `-api` (local server, JSON-RPC over WebSocket, MCP, media HTTP endpoints), `-jobs`, `-media` (the FFmpeg backend: probe, frame-exact seek, hardware decode, encode), `-cache` (frame cache, thumbnails, filmstrips, waveforms, proxies), `-render` (scene evaluation and the wgpu compositor), `-audio` (mixer and cpal output), `-playback` (transport and shared-memory ring), `-bridge` (napi addon), `-cli` and `-tokens`. Stubs (not built): `ai`, `compose`, `interchange`, `plugins`, `text`.
+- **Registered commands and queries today: 115** (`docs/reference/commands.md`, generated from the registry; 43 on 2026-11-23). New namespaces since then include `keyframe.*`, `audio.*`, `sequence.*`, `export.*`, the trim family (`clip.ripple_trim`, `clip.roll`, `clip.slip`, `clip.slide`), `item.*` placement and link commands, `media.*` folder and proxy commands and `edit.*` checkpoints and history. The `core` MCP commands are `audio.set`, `clip.split`, `clip.trim`, `edit.undo`, `export.start`, `item.delete`, `item.move`, `item.set_props`, `job.status`, `job.wait`, `keyframe.set`, `media.import`, `media.list`, `project.info`, `project.open`, `sequence.create`, `sequence.set_format`, `timeline.get` and `timeline.insert`, plus `render_frame` and the four generic tools; the rest are reachable through `cutweave_execute` and the catalog tools.
+- **TypeScript packages:** `packages/ui` (components, tokens, Storybook with visual regression), `packages/timeline` (production Canvas2D renderer and an interaction state machine), `packages/editor` (media bin with folders, search and real thumbnails, Preview with transport and Source view, schema-driven Inspector, Timeline, History panel, command palette, shortcut editor, settings pages, context menus, export dialog), `packages/protocol` (generated types, typed RPC client, document mirror) and `packages/plugin-sdk` (a stub).
+- **Desktop app:** an Electron app with a hardened window, a custom title bar and an engine supervisor. The M1 exit test (`apps/desktop/e2e/m1/m1-exit.spec.ts`) imports three clips, places and trims them, splits one, saves and exports a 1080p MP4 through the UI. `just m1-demo` records that run (`target/m1/demo/m1-demo.webm`), and the site uses that recording. Run from source on Windows; no installer.
+- **Not built (Phase 2 remainder, 56 of 82 WPs):** the snapping engine, timeline tools UI, clipboard, replace clip, edit-lock UI feedback (WP-2A.06 to 2A.14); compound clips, background fill, sequence tabs (2B.02 to 2B.05); keyframe lanes, graph editor, layouts (2C.05 to 2C.08); speed (2D); buses, limiter, loudness, voiceover, ducking, voice effects (2E.02 to 2E.08); proxy-aware selection, relink, collect, image import, tags (2F.02 to 2F.06); codecs, export queue, queue panel, advanced controls (2G.02 to 2G.05); inspector audio, speed and sequence sections, project, Appearance and Playback settings, detached panels (2H.03b, 2H.07 to 2H.10, 2H.14, 2H.15); the rest of the MCP core set (2I.01, 2I.02, 2I.04 to 2I.06); benchmarks, the crash harness, dogfood and the M2 exit (2J).
 
 ---
 
@@ -269,11 +270,11 @@ Derived from `docs/03-feature-parity.md` (131 CapCut features tracked: Must-1.0 
 |---|---|---|---|
 | Account required | Yes | **No account**, no telemetry by default | P1 |
 | Price and tiers | Free tier, Pro paywall | No tiers; GPL-3.0 | all |
-| Export watermark | Yes on some paths | **None, ever** | M1 |
-| Export resolution limits | Tier-gated | Up to 4K+, no gating | P2 |
-| Multi-track, magnetic main track, snapping | Yes | Yes | P2 |
-| Ripple, roll, slip, slide | Partial | Yes | P2 |
-| Keyframes + graph editor | Yes | Yes | P2 |
+| Export watermark | Yes on some paths | **None, ever.** The M1 export is a plain MP4 | M1 (done, Windows) |
+| Export resolution limits | Tier-gated | Up to 4K+, no gating. 1080p H.264 export is built; presets are built; HEVC, AV1 and ProRes are planned | P2 |
+| Multi-track, magnetic main track, snapping | Yes | Yes. Tracks, snapping and placement commands are built; the magnetic-track tools and a faster timeline are not merged | P2 (in progress) |
+| Ripple, roll, slip, slide | Partial | Yes. Built as commands; the toolbar tools are not in the editor yet | P2 (in progress) |
+| Keyframes + graph editor | Yes | Yes. Keyframes, easing and inspector diamonds are built; lanes and the graph editor are not merged | P2 (in progress) |
 | Compound clips | Yes | Yes (nested sequences) | P2 |
 | Multicam | Pro | **Later** (post-1.0) | - |
 | Auto captions | Yes (account, credits for some) | Yes: cloud or local whisper.cpp, offline-capable, free | P3 |
@@ -292,12 +293,12 @@ Derived from `docs/03-feature-parity.md` (131 CapCut features tracked: Must-1.0 
 | Long video to shorts | Yes | Yes (headline feature) | P5 |
 | Stock library | Built-in | Pexels/Pixabay-class search, license shown per asset | P5 |
 | Natural-language edit assistant | EditPilot (credits) | Built-in copilot **or any MCP agent** | P6 |
-| Drive it from an external agent | One ChatGPT plugin | **Full MCP: every command is a tool.** MCP server v0 built (HTTP and stdio); `render_frame` and `export_start` not in yet | P1+ |
+| Drive it from an external agent | One ChatGPT plugin | **Full MCP: every command is a tool.** Built and tested on Windows: `render_frame` image content, `export_start`, checkpoints, several engines; the M1 scripted agent matched the UI export byte for byte | P1 (done), P2 |
 | Plugins | None on desktop | L0 to L3 (data, GPU, TS, WASM, UI), signed index | P6 |
-| Project format | Proprietary draft | **Open JSON folder**, OTIO import/export | P1, P6 |
+| Project format | Proprietary draft | **Open JSON folder** with media folders, save, open and recent projects built; OTIO import/export planned | P1 (done), P6 |
 | Offline | Needs account and internet for AI | Local-first; local AI plugin | P5 |
-| Crash safety | Local drafts | Command journal, replay, autosave and rotating backups, engine auto-recovery (built in the engine; no editing workflow to use them in yet) | P1 |
-| Headless/CLI rendering | None | `cutweave` CLI core-only built; `cutweave render` returns `unsupported` until the media backend lands | P1–P2 |
+| Crash safety | Local drafts | Command journal, replay, autosave and rotating backups, engine auto-recovery and a restore dialog; 40 forced crashes lost and doubled no commands (M1, Windows) | P1 (done) |
+| Headless/CLI rendering | None | `cutweave` CLI built, including `cutweave render`; a headless MCP session exports | P1 (done), P2 |
 | Direct upload | Yes | YouTube; TikTok may slip | P6 |
 | Cloud storage, team spaces | Yes | **Deliberately not offered** (use any synced folder; collaboration later) | post-1.0 |
 | Mobile app, AI avatars bundle, face/AR effects, beauty | Yes | **Not in 1.0** | post-1.0 |
@@ -497,16 +498,16 @@ All sourced. Prefer "measured in a spike" language where marked.
 | **Every edit is undoable and invertible.** Undo applies stored inverse patch ops (RFC 6902); property tests assert `undo(apply(doc)) == doc` for every command. | `arch §5.2`, ADR-0005 | Core built (`cutweave-commands`) |
 | **Per-actor history.** `user`, `agent:<label>`, `plugin:<id>`; the actor comes from the credential, never from the client. "Undo the agent's last change". | `arch §5.2`, ADR-0016 | **Built** in the engine: per-actor undo and redo stacks, conflict detection, checkpoints (WP-1B.04, merge `bfb6e46`); over RPC an MCP session is `agent:mcp` and the UI is `user` |
 | **Idempotent commands.** `request_id` dedup within 10 minutes, so retries after an engine restart are safe. | `arch §5.1`, ADR-0015 | **Built**: the dedup window survives a restart through the journal (WP-1B.03, 1C.02); the editor resends unacknowledged commands exactly once after a restart (WP-1L.03, e2e) |
-| **Deterministic rendering.** `render(snapshot, sequence, t, quality) -> frame` is a pure function; randomness seeded from item IDs; no wall clock. Enables frame caching, parallel chunked export and golden tests. | `arch §8` | Spike S4 verified: GPU output within <= 1 code value across NVIDIA and AMD (`M0`) |
+| **Deterministic rendering.** `render(snapshot, sequence, t, quality) -> frame` is a pure function; randomness seeded from item IDs; no wall clock. Enables frame caching, parallel chunked export and golden tests. | `arch §8` | Spike S4 verified: GPU output within <= 1 code value across NVIDIA and AMD (`M0`); the M1 gate holds 18 of 18 golden frames bit-identical on the software adapter |
 | **Deterministic IDs for tests.** `--deterministic-ids <seed>` lets CLI, MCP and RPC paths produce byte-identical project documents. | `arch §5.1`, M1 exit | **Built** (`SeededGen`; seeded entity, request and job streams; refused for a GUI engine; merge `d9acbe3`, WP-1B.08) |
-| **Single headless binary.** `cutweave` is the GUI engine, MCP server, CLI and worker. | `arch §2`, ADR-0002 | **Built** (core): `cutweave engine`, `exec`, `query`, `commands`, `describe`, `mcp`; `render` and `worker` not yet (WP-1K.01) |
+| **Single headless binary.** `cutweave` is the GUI engine, MCP server, CLI and worker. | `arch §2`, ADR-0002 | **Built**: `cutweave engine`, `exec`, `query`, `commands`, `describe`, `mcp` and `render`; `worker` not yet |
 | **Engine in its own process.** A GPU, decoder or plugin crash does not take the UI down. | `arch §2` | **Built**: the editor talks to the engine over a loopback WebSocket; a supervisor restarts it (0.5 s, 1 s, 2 s; failed after a fourth crash in 60 s) and recovers from the journal (WP-1L.03). Decoder and plugin crashes are not exercised yet (the compositor does recover from a lost GPU device in tests) |
 | **Crash-safe saves.** Temp file, fsync, rename; autosave idle and every 30 s; journal replay on restart. | `arch §17`, ADR-0006 | **Built** (engine): atomic save and lock (WP-1C.01), journal with replay (WP-1C.02), autosave on 2 s idle or every 30 s with 10 backups (WP-1C.03). Kill test: 500 random operations, process killed at 20 random points, recovery equals the uninterrupted run at an operation boundary |
-| **Linear-light, float rendering.** `Rgba16Float` working space, PQ/HLG tone-mapped to SDR. | `arch §8` | **Built** in the production compositor (WP-1F.02, merge `c6cef43`); synthetic test cards only until the media backend lands |
-| **Preview and export share one pipeline.** | `brief` principle 4 | Design. The compositor, the readback that backs `render.frame` and the preview ring publisher are built (WP-1F.02, 1F.03, 1H.02, 1H.03); export is not |
-| **Performance budgets are features** (CI-benchmarked on reference machines): app start < 2.5 s; open a 1-hour 400-item project < 2 s; command round trip p95 < 16 ms; scrub p95 < 80 ms (proxy), < 150 ms (4K long-GOP); timeline 5,000 items >= 55 fps; A/V sync < 40 ms, drift < 1 frame per 30 min; 1080p H.264 export >= 2x realtime; idle memory < 1.5 GB. | `arch §19` | Targets, not yet all measured |
+| **Linear-light, float rendering.** `Rgba16Float` working space, PQ/HLG tone-mapped to SDR. | `arch §8` | **Built** in the production compositor (WP-1F.02, merge `c6cef43`); renders decoded real media since WP-1I.05 |
+| **Preview and export share one pipeline.** | `brief` principle 4 | **Built**: every exported frame is rendered like `render.frame`, and the export test checks bit-identity before encoding (WP-1E.03); transforms and blend modes are identical in preview and export (WP-2C.04); fades, volume and pan mix the same (WP-2E.01) |
+| **Performance budgets are features** (CI-benchmarked on reference machines): app start < 2.5 s; open a 1-hour 400-item project < 2 s; command round trip p95 < 16 ms; scrub p95 < 80 ms (proxy), < 150 ms (4K long-GOP); timeline 5,000 items >= 55 fps; A/V sync < 40 ms, drift < 1 frame per 30 min; 1080p H.264 export >= 2x realtime; idle memory < 1.5 GB. | `arch §19` | Targets, not yet all measured. Measured so far: 4K long-GOP hardware seek p95 102 to 129 ms with a 1 s GOP (S3); 1080p export 3.0x realtime with NVENC, 2.9x with AMF (WP-1E.03b); proxy scrub p95 1.8 ms (WP-2F.01); the Phase 2 benchmarks (WP-2J) are not merged |
 | **Lock-free real-time audio thread**, no allocation. | `arch §9` | **Built** (WP-1G.01, 1G.02): the mixer render does no allocation, locks or syscalls (tested with a counting allocator); on a real WASAPI device a 10-minute soak of the 8-source mix had 0 underruns and 0 callback heap operations |
-| **Agents get frames, not screenshots**; image tools carry structured metadata. | `arch §14` | Spike S5. `render.frame` and `render.contact_sheet` are built in `cutweave-render` (WP-1F.03) but not exposed over MCP until WP-1J.02 |
+| **Agents get frames, not screenshots**; image tools carry structured metadata. | `arch §14` | **Built**: `render_frame` returns MCP image content (up to 1 MB, resource links for larger frames; WP-1J.02, merge `6cdf63d`). The contact sheet, filmstrip and waveform tools are WP-2I.02, not merged |
 | **Secrets never leave the engine**; `#[secret]` params are redacted before the journal. | `arch §14, §18` | **Built** for journaling: redaction is enforced at the journal sink and tested ("secrets never on disk", WP-1C.02); keychain and the AI gateway are not built |
 
 ### Benchmark numbers from spikes
@@ -523,7 +524,7 @@ All **informal**: one Windows 11 laptop (RTX 3080 laptop GPU and an AMD iGPU), m
 | S4 text | 1,000 animated glyphs: 0.70 ms on iGPU, 0.06 ms on RTX; 4K SSIM 0.9976; no shimmer |
 | S4b compositions | Transpile 0.14 ms; deterministic across runs; **35/35** sandbox escapes contained; 200 fully animated nodes 2.6 ms (budget 1 ms, conditional pass) |
 | S5 command bus and MCP | 73 tests; standard `tools/list` about 2.7k tokens (13 tools); Claude Code 3/3 on "import, cut, render frame" with no screenshots |
-| Not passed or not run | S3 decode, seek and hardware acceleration: **unblocked 2026-11-23, running, not passed yet** (FFmpeg 8.1.3, generated test media); ADR-003 stays Proposed until S3 reports |
+| S3 decode, seek, hardware acceleration | **Passed on Windows, 2026-11-24** (merges `def3767`, `add5052`): 500 random seeks frame-exact on 16 generated files on the CPU; NVDEC and D3D11VA bit-exact against software on 18 files (500 seeks each), except AMD D3D11VA on open-GOP H.264 after a seek (wrong pixels; starting one keyframe earlier fixes it); zero-copy D3D11VA to D3D12 to wgpu works on both GPUs; 4K long-GOP CPU seek p95 282 to 804 ms misses the 150 ms budget, hardware brings it to 102 to 129 ms with a 1 s GOP (518 to 768 ms with an 8 s GOP), proxies pass (p95 0.2 to 1.0 ms). ADR-0003 accepted with fallback; macOS and Linux pending (WP-0E.03) |
 
 ### Numbers measured in work-package tests (since Phase 0)
 Site label: **Measured in a work package test**, footnote "Informal, one dev machine. Formal runs pending." These come from merge and commit messages and test output recorded in the main repo, on one Windows 11 dev machine that was often loaded by other builds; some in a debug build. None is a formal benchmark. The numbers are the ones the commit messages state; the WP acceptance records are the sources.
@@ -540,9 +541,14 @@ Site label: **Measured in a work package test**, footnote "Informal, one dev mac
 | 1G.01 mixer | Four overlapping tones against the analytical sum: max error 4.4e-8; 44.1 to 48 kHz 1 kHz sine THD+N -136.0 dB; offline mixdown equals real-time within 1e-6 (proptest); 8 sources, 256-frame buffers: 0 underruns, 0 heap operations in render | commit `f29f39f` |
 | 1G.02 audio output | Real WASAPI device, 48 kHz, 480-frame period, 10-minute soak of the 8-source mix: 0 underruns, 0 xruns, 0 callback heap operations, clock never went backwards, max residual 0.59 ms; drift against the system timer +6.6 ms (+10.9 ppm, the device crystal, as in Spike S2) | commit `444ed1f` |
 | 1B.07 property harness | Strategy coverage of every registered non-view entry (28/28 at merge, 32/32 after the job commands joined) | commits `a2f35d1`, `03ab87b` |
-| 1J.01 MCP | `/mcp`: 18 tools, about 3.6k tokens (P1 gate 19 tools / 5k); `/mcp/minimal`: 9 tools, about 1.2k (budget 12 / 3k); tokens = compact `tools/list` bytes / 4 | commit `787ce93` |
+| 1J.01 MCP (at its merge; the Phase 2 gate is 36 tools / 8k, R36) | `/mcp`: 18 tools, about 3.6k tokens (P1 gate 19 tools / 5k); `/mcp/minimal`: 9 tools, about 1.2k (budget 12 / 3k); tokens = compact `tools/list` bytes / 4 | commit `787ce93` |
 | 1L.03 supervision | 3 edits, engine SIGKILLed: recovered in under 5 s and each command applied once | commit `9fc82fe` |
 | 1B.03 stress | 8 writers submit 10,000 commands; revisions are exactly 1..10,000 and the final document equals a sequential replay | commit `f84b374` |
+| 1O.04 M1 exit suite (`just m1-gate`) | UI cut and a scripted MCP agent export byte-identical 12.000 s 1080p MP4s (5,907,413 bytes). 40 crash trials (20 engine kills, 20 app kills): 0 lost, 0 doubled commands; back online 0.9 to 1.9 s after an engine kill (median 0.9 s). 18 of 18 golden frames bit-identical; parity CLI = MCP = RPC 8 of 8; MCP conformance 7 of 7. Exported frames 30, 150, 255 against `cutweave render`: 48.9, 48.9, 47.7 dB PSNR in the export's BT.709 4:2:0 space (RGB round trip 37.5, 37.3, 35.3 dB). One Windows 11 machine, RTX 3080 laptop GPU, FFmpeg n8.1.3 | `docs/milestones/M1-exit.md`, `m1-evidence/report.md`, `compare.json`, `crash-*.json` |
+| 1D.03 frame-exact seek | 500 of 500 random seeks exact on every corpus file and generated edge clip (4K long-GOP H.264, HEVC 10-bit HDR and SDR, ProRes, VFR, open GOP) | merge `dcbc215` subject |
+| 1E.03b hardware export | 20 s of 1080p30 exported in 6.6 s with NVENC (3.0x realtime) and 7.0 s with AMF (2.9x), debug build, loaded machine; budget 2x. The encoders alone reach 6x (NVENC) and 5.7 to 7.6x (AMF); the blocking GPU readback limits the pipeline at about 75 to 90 fps | commit `b2093a8`, `arch §19` |
+| 2F.01 proxies | 2.0 to 3.3x realtime on 4K sources; resume after a hard kill; 502 of 502 VFR frames mapped; proxy scrub p95 1.8 ms | commit `9193749` |
+| 1I.05 engine wiring | Full engine cold start about 1.0 s (the GPU opens on its own thread); corpus scenario: import, analysis, `render.frame`, 2 s playback, 1 s export checked with ffprobe | commit `e2bb625` |
 
 
 Visual evidence available for free: S4 golden frames (`spikes/s4-compositor/tests/golden/<adapter>/`: `demo_f0000/f0150/f0299.png`, `blend_modes.png`, `text_caption_msdf_f0064.png`, `text_multiscript_msdf.png`), usable as "rendered by the Cutweave compositor spike" imagery.
@@ -551,13 +557,13 @@ Visual evidence available for free: S4 golden frames (`spikes/s4-compositor/test
 
 ## 10. Roadmap
 
-Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days across 482 work packages; about 14 months to 1.0 and about 7.5 months to Public Alpha, "rough" and re-estimated after Phase 0. Human review capacity is the stated bottleneck.
+Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days across 482 work packages; about 14 months to 1.0 and about 7.5 months to Public Alpha, "rough" and re-estimated after each phase. Human review capacity is the stated bottleneck.
 
 | Phase | Delivers | Milestone and exit |
 |---|---|---|
-| **P0 Foundations and spikes** (about 5 weeks) | Repo, CI, governance, design tokens and `packages/ui`, ADRs 0001–0017, spikes S1–S5 | M0 Go/No-Go: **GO with changes, signed off 2026-11-23**; S3 (FFmpeg) unblocked and running, not passed |
-| **P1 Walking skeleton** (about 10 weeks) | Model, command bus, persistence, media probe/decode, H.264 export, preview, MCP v0 (15 core tools), CLI, Electron shell and basic UI | **M1**: UI and an MCP agent both import, cut and export; byte-identical documents; recovery after engine kill (WP-1O.04) |
-| **P2 Core editor** (about 9 weeks) | Multi-track magnetic timeline, keyframes, speed, audio features, proxies, export presets and queue, dockable workspaces, ~30 MCP tools, perf benchmarks | **M2 Dogfood**: a non-developer edits a 10-min YouTube video and a 9:16 short; 20 forced crashes, no data loss |
+| **P0 Foundations and spikes** (about 5 weeks) | Repo, CI, governance, design tokens and `packages/ui`, ADRs 0001–0017, spikes S1–S5 | M0 Go/No-Go: **GO with changes, signed off 2026-11-23**; S3 (FFmpeg) passed on Windows 2026-11-24 |
+| **P1 Walking skeleton** (about 10 weeks) | Model, command bus, persistence, media probe/decode, H.264 export, preview, MCP v0, CLI, Electron shell and basic UI | **M1: GO, signed off 2026-11-25**, on Windows only (R34): UI and an MCP agent both import, cut and export with byte-identical exports; 40 crash trials with no lost commands; 18/18 golden frames; parity 8/8 (WP-1O.04) |
+| **P2 Core editor** (about 9 weeks, **in progress, 26 of 82 WPs**) | Multi-track magnetic timeline, keyframes, speed, audio features, proxies, export presets and queue, dockable workspaces, ~30 MCP tools, perf benchmarks | **M2 Dogfood**: a non-developer edits a 10-min YouTube video and a 9:16 short; 20 forced crashes, no data loss |
 | **P3 Text, captions, transcripts** (about 8 weeks) | Text engine, compositions, transcripts, >= 25 caption styles, text-based editing, sticker and music packs, Agent Kit v0, unsigned installers | **M3 Public Alpha**: new user makes a captioned, silence-cut 9:16 short in under 5 minutes; an agent does it from one instruction |
 | **P4 Effects, transitions, color** (about 9 weeks, parallel) | WGSL framework, >= 40 transitions, >= 50 effects, >= 40 filters, color tools and scopes, masks and keying, stabilization, tracking | **M4 Creative parity**: 10 "CapCut trend" recreations pass design review; preview equals export |
 | **P5 AI gateway and AI Studio** (about 12 weeks, parallel) | Gateway, signed catalog, first-wave adapters, AI Studio panel, background removal, reframe, TTS, dubbing, upscale, long-to-shorts, local AI plugin, stock search | **M5 AI Studio**: every listed AI feature runs end to end with cost up front and provenance; spending-authority security tests pass |
@@ -566,11 +572,12 @@ Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days a
 
 **After 1.0 (rough order):** browser "lite" editor; real-time collaboration (Loro CRDT); CLAP then VST3; HDR output; multicam; face and body effects; screen and webcam recording; region-prompt generative edits; node compositing view; distributed rendering; mobile companion; OFX bridge.
 
-### Where the project is now (HEAD `7728d7c`, 2026-11-23)
-- **P0:** built and merged (spikes S1, S2, S4, S4b, S5; scaffold; governance; design system). S3 decode is unblocked (2026-11-23) and running, not passed yet. M0 is GO with changes, signed off 2026-11-23.
-- **P1: in progress, 40 of 60 work packages merged** (28 of them since `6ca1af7`, all on 2026-11-22 and 2026-11-23). Merged: 1A.01–03, 1B.01–09, 1C.01–04, 1D.07, 1F.01–03, 1G.01–02, 1H.02–03, 1I.01, 1I.02, 1I.04, 1J.01, 1J.03, 1K.01, 1L.01–03, 1M.01–03, 1M.05–06, 1N.01–02. Not yet: real media (1D.01–1D.06, blocked on FFmpeg), export (1E.01–1E.03), transport and A/V sync (1H.01), media HTTP endpoints (1I.03), subsystem wiring (1I.05), `render_frame` over MCP (1J.02), preview panel (1M.04), inspector, save/open and recovery dialog (1M.07), export dialog (1M.08), and the M1 acceptance suite (1O.01–1O.04).
-- **FFmpeg-free path (R27–R31):** while S3 runs, work proceeds against existing seams: the engine's dev stub media backend (`--dev-stub-media`), generated audio sources, synthetic frames, and a core-only CLI and stdio MCP. These are not substitutes for the M1 exit, which needs real media.
-- README and `AGENTS.md` now say Phase 1 (fixed in `e653c75`).
+### Where the project is now (origin/main `e129848`, 2026-11-26)
+- **P0:** done. Spikes S1, S2, S4, S4b, S5 and S3 (S3 passed on Windows 2026-11-24). M0 is GO with changes, signed off 2026-11-23.
+- **P1: done.** M1 signed off as **GO on 2026-11-25** (`docs/milestones/M1-exit.md`), verified on Windows only (R34); macOS and Linux, and "CI green on 3 OSes", are deferred until those machines exist. A manual CI run of the M1 gate on `windows-latest` is approved and not yet dispatched (`.github/workflows/m1-gate.yml`). Findings: #145, #147, #148 fixed as P1 bugs; #146 fixed early in P2 (ADR-0028); two minor ones noted (the unsaved dot after a crash restore, a misleading drag notice).
+- **P2: in progress, 26 of 82 work packages merged** (counted from the merge history 981e5a2..e129848 and `docs/wbs/P2-core-editor.md`, 82 `### WP-` headings). Merged: 2A.01–2A.05, 2B.01, 2C.01–2C.04, 2E.01, 2F.01, 2F.07–2F.09, 2G.01, 2H.01, 2H.02, 2H.03a, 2H.04–2H.06, 2H.11–2H.13, 2I.03. ADRs 0023 to 0032 are accepted (0030 is not in the index). Not merged: 2A.06–2A.14, 2B.02–2B.05, 2C.05–2C.08, 2D.01–2D.02, 2E.02–2E.08, 2F.02–2F.06, 2G.02–2G.05, 2H.03b, 2H.07–2H.10, 2H.14–2H.15, 2I.01, 2I.02, 2I.04–2I.06, 2J.01–2J.09.
+- **Activity:** about 543 commits and 113 merges between `981e5a2` (2026-11-23) and `e129848` (2026-11-26).
+- The product repo's README and `AGENTS.md` "current stage" text, and its local `main`, lag this; use the M1 record and the merge history.
 
 ---
 
@@ -607,14 +614,14 @@ Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days a
 
 | Gap | State today | Produced by | Show in the meantime |
 |---|---|---|---|
-| **App screenshots** | None of the real editor. The shell renders but cannot edit. Storybook baselines exist: 86 PNGs under `packages/ui/__screenshots__/windows-chromium-sw/{dark,light}/` including timeline canvas (`stress-5000-clips`, `filmstrips`, `zoomed-waveform`, `states`) and components. | Editor visuals: WP-1M.\* (P1), WP-2H (P2). Auto-generated doc screenshots: WP-7E.02 from sample projects (WP-7G.02). | Component and timeline renders from Storybook, labelled "Design system, in development". Do not label as the app. A browser-pane screenshot of the current Electron shell could be captured by the site team if a labelled "early shell" image is wanted. |
-| **Demo video / GIF** | None. | M1 demo video of import, cut, export on each OS (WP-1O.04); sample projects for demos (WP-7G.02). | Silent, looping captures of the S4 golden frames and the S1 timeline stress run; a transcript-style code view of the S5 agent run (`spikes/s5-command-bus/agent-run/run-1.claude.jsonl`) rendered as text, not video. |
+| **App screenshots** | The real editor runs and is recorded by the M1 demo (`just m1-demo`): `E:\projects\cutweave-demo\videos\m1-demo.webm`, self-generated test clips. No designed screenshot set from a sample project. Storybook baselines exist: 86 PNGs under `packages/ui/__screenshots__/windows-chromium-sw/{dark,light}/`. | Editor visuals: WP-2H.07 review (P2). Auto-generated doc screenshots: WP-7E.02 from sample projects (WP-7G.02). | Real stills and the M1 recording, labelled "Real app, recorded by the M1 test run, pre-alpha, Windows". Keep design previews labelled. |
+| **Demo video / GIF** | The M1 UI run is recorded automatically (Playwright, `just m1-demo`, merge `b0d7281`); there is no recording of an agent run on the same project, and none per OS. | Sample projects for demos (WP-7G.02); scripted agent e2e (WP-2I.06). | The M1 recording; a transcript-style view of the real MCP run on `/agents/`. |
 | **Downloads and installers** | None. No release tags or artifacts. | Unsigned alpha installers WP-3I.01 (P3); signed installers WP-7A.02–05; download page WP-7G.01. | No download button. Use a "Follow development on GitHub" primary action (verb-first, honest). State status plainly: "Pre-alpha. Not ready to use." |
 | **Template gallery** | No templates exist. | WP-6D.06–12 (>= 30 templates), gallery page WP-7G.01. | Omit the gallery. Optionally show the real composition source from `arch §12` as "the kind of thing a template is made of". |
 | **Docs site** | Only the repo `docs/` folder; no site. | WP-7E.01 (infrastructure), 7E.02–03 (user guide, "Coming from CapCut", SDK, MCP, command reference). | Link to `docs/` on GitHub. Mirror the architecture overview and the ADR index (`docs/adr/README.md`) as a "How it works" page. |
-| **Command reference** | Generated and committed in the repo: `docs/reference/commands.md` (43 commands, from the registry), `docs/reference/cli.md`, `rpc.md`, `launch-protocol.md`, `mcp-clients.md`, `protocol.md`, plus `schema/`. Not yet on a docs site. | Published docs site: WP-7E.03. | Link to the reference files on GitHub. |
+| **Command reference** | Generated and committed in the repo: `docs/reference/commands.md` (115 commands and queries, from the registry), `docs/reference/cli.md`, `rpc.md`, `launch-protocol.md`, `mcp-clients.md`, `export-quality.md`, `settings.md`, `protocol.md`, plus `schema/`. Not yet on a docs site. | Published docs site: WP-7E.03. | Link to the reference files on GitHub. |
 | **Sample projects** | None. | WP-7G.02 (>= 5 samples). | None; do not imply any. |
-| **Real MCP tool listing** | Production v0: 14 core tools plus 4 generic (`schema/mcp-tools.json`). `render_frame` (WP-1J.02) and `export_start` (WP-1E.03) not in yet. | WP-1J.02, WP-2I. | Real names for the 14; the rest labelled planned. |
+| **Real MCP tool listing** | The standard list is derived from the registry (`schema/mcp-tools.json`); `render_frame` and `export_start` are in. The Phase 2 gate is 36 tools and 8k tokens (R36); the ~30-tool set completes in WP-2I.01. | WP-2I. | Real names for what is built; the rest labelled planned. |
 | **Community channels** | None beyond GitHub. | WP-7G.03 (Discussions plus one chat platform, human task). | GitHub repo, issues and security policy only. |
 | **Testimonials, user quotes, case studies** | None, and no external users exist. | M2 dogfood (non-developer edits), M3 Public Alpha, WP-3I.04 (5 first-time users). | None. Do not fabricate. |
 | **Logo** | Exists: `design/assets/logos/cutweave-mark.svg` (marigold `#f2b33d`, for dark grounds) and `cutweave-mark-ink.svg` (`#161616`, for light). README says the wordmark "Cutweave" in Bricolage Grotesque 700 with the mark left at cap height; min size 16 px; clear space one track height. | Refinement by a designer: P7 (`roadmap` P7 Design). | Use as is. Note the wordmark is a type rule, not a file. |
@@ -625,11 +632,11 @@ Source: `roadmap`, `docs/05-work-breakdown.md`. Effort: about 1,250 agent-days a
 | **Privacy page, accessibility statement, FAQ, changelog** | None. | WP-7F.04 (privacy), WP-7G.01. | Short privacy note drawn from `arch §18`: no account, no telemetry by default, keys in the OS keychain. Link `SECURITY.md`. |
 | **Real benchmark figures** | Informal single-machine numbers only; formal runs wait on hardware (issue #45), macOS and Linux unmeasured. | WP-0C.04, 0D.02, 0E.03, 0F.03 (formal); WP-7D (budget dashboard). | Show the informal numbers in section 9 with the caveat. |
 | **Press kit, trademark, domain, social handles** | Not done; listed as long-lead. | Roadmap long-lead table (start by P0). | None. |
-| **Roadmap page data** | Authoritative and current. | - | Build directly from section 10; update when `docs/milestones/` gains M1. |
-| **Status accuracy** | README and AGENTS.md lag the code. | - | Take stage from `git log` and `docs/milestones/`, not the README. |
+| **Roadmap page data** | Authoritative and current (M1 is in `docs/milestones/`). | - | Build directly from section 10; update when `docs/milestones/` gains M2. |
+| **Status accuracy** | README, `AGENTS.md` and the product repo's local `main` lag the code. | - | Take stage from the M1 record, `git log origin/main` and `docs/milestones/`, not the README. |
 
 ### Suggested site structure that fits the facts
-1. Home: pitch, three pillars (agents, ownership, familiar editing), a status strip ("Pre-alpha, Phase 1 in progress"), GitHub action.
+1. Home: pitch, three pillars (agents, ownership, familiar editing), a status strip ("Pre-alpha, Phase 2 in progress"), GitHub action.
 2. How it works: section 8 diagram, "one engine, many clients".
 3. For agents: sections 5.1–5.6 with the S5 evidence.
 4. AI models and costs: section 6.

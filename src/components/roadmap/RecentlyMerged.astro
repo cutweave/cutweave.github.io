@@ -3,28 +3,32 @@
 /**
  * RecentlyMerged: the work packages merged since Phase 0 closed, grouped by area, each with its merge date,
  * work package id and merge commit. Built is not the same as usable: the section that holds this component says so.
- * Data: src/data/roadmap.ts (RECENTLY_MERGED), from the product repo's first-parent merge history.
+ * Data: src/data/roadmap.ts (MERGED_P2, MERGED_P1_LATE, MERGED_P1_EARLY), from the product repo's first-parent merge history.
  * Props:
+ *  - set?: 'p2' | 'p1-late' | 'p1-early'   which list to show (default 'p2')
  *  - headingLevel?: 3 | 4   level for the area headings (default 3)
  */
 import '../../styles/area-s3.css';
 import '../../styles/area-progress.css';
-import { RECENTLY_MERGED } from '../../data/roadmap';
+import { MERGED_P2, MERGED_P1_LATE, MERGED_P1_EARLY } from '../../data/roadmap';
 import { LINKS } from '../../site';
 
 interface Props {
+  set?: 'p2' | 'p1-late' | 'p1-early';
   headingLevel?: 3 | 4;
 }
-const { headingLevel = 3 } = Astro.props;
+const { set = 'p2', headingLevel = 3 } = Astro.props;
+const lists = { p2: MERGED_P2, 'p1-late': MERGED_P1_LATE, 'p1-early': MERGED_P1_EARLY };
+const groups = lists[set];
 const Heading = `h${headingLevel}` as 'h3';
 
 const fmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 const day = (iso: string) => fmt.format(new Date(`${iso}T00:00:00Z`));
 ---
 <div class="merged">
-  {RECENTLY_MERGED.map((g) => (
-    <section aria-labelledby={`merged-${g.id}`} class="group">
-      <Heading id={`merged-${g.id}`} class="gtitle">{g.title} <span class="count">{g.items.length}</span></Heading>
+  {groups.map((g) => (
+    <section aria-labelledby={`merged-${set}-${g.id}`} class="group">
+      <Heading id={`merged-${set}-${g.id}`} class="gtitle">{g.title} <span class="count">{g.items.length}</span></Heading>
       <ol class="rows">
         {g.items.map((it) => (
           <li class="row">

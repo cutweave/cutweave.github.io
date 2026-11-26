@@ -3,7 +3,7 @@
 /**
  * Faq: eight questions as native <details>/<summary> (works without JS, keyboard accessible).
  * Answers are short and plain, from docs/content-inventory.md sections 2, 3, 5, 6, 10 and 11 (status as of product
- * HEAD 7728d7c, 2026-11-23). Nothing here claims a feature exists that does not. No props.
+ * origin/main e129848, 2026-11-26). Nothing here claims a feature exists that does not. No props.
  */
 import '../../styles/area-s4.css';
 import Icon from '../ui/Icon.astro';
@@ -12,7 +12,7 @@ import { LINKS } from '../../site';
 const items = [
   {
     q: 'Is it ready?',
-    a: 'No. Cutweave is pre-alpha, in Phase 1 of 7, and there is no download yet. The engine, an MCP server and the first editor panels are built and tested: 40 of 60 Phase 1 work packages are merged. But nothing can import, play or export a real video yet, because real decode starts with the FFmpeg spike (S3), which began on 23 November. The first working build is the Phase 1 milestone. The roadmap shows what is built and what is left.',
+    a: 'No. Cutweave is pre-alpha, in Phase 2 of 7, and there is no download or installer yet. Phase 1 is done: on 25 November the project owner signed off M1, in which the editor and a scripted agent each imported clips, cut and exported a 1080p MP4, and the two files were byte-identical. That was checked on Windows only; macOS and Linux are deferred, not dropped. Phase 2, the core editor, is 26 of 82 work packages in. You can run the editor from source today, but speed changes, compound clips, an export queue and captions are not built. The roadmap shows what is built and what is left.',
     link: { href: '/roadmap/', label: 'See the roadmap' },
   },
   {
@@ -21,7 +21,7 @@ const items = [
   },
   {
     q: 'Can an agent use it today?',
-    a: 'Partly, in the repo and not in an app you can install. The engine serves MCP over HTTP and over stdio, with 18 tools and one execute tool that reaches every command. A recorded session on the agent page shows an agent creating a project, importing stub media, inserting, splitting, undoing and reading the timeline. It cannot render a frame or export yet.',
+    a: 'Yes in the repo, no in an app you can install. The engine serves MCP over HTTP and over stdio, with one execute tool that reaches all 115 commands and queries. An agent can import real media, cut, get a rendered frame as an image, undo and start an export. In the M1 test a scripted agent, with no window open, made the same cut as the editor and the two exports were byte-identical. A recorded session on the agent page shows an earlier run on stub media. The tool set is still growing in Phase 2.',
     link: { href: '/agents/#real-run', label: 'Read a real run' },
   },
   {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
  * LifeOfEdit: steps one command, clip.split, from a client to the screen.
- * Facts: arch §5.1 (envelope, typed errors), §5.2 (Tx, patches, snapshots), §8 (render). Status as of product HEAD 7728d7c.
+ * Facts: arch §5.1 (envelope, typed errors), §5.2 (Tx, patches, snapshots), §8 (render). Status as of product origin/main e129848 (2026-11-26).
  * Without JS every step is shown. With JS, Previous and Next step through, one detail at a time.
  * Message shapes are real (docs/reference/rpc.md, schema/patch-fixtures.json in the product repo); IDs and revisions are invented.
  * Props: none.
@@ -52,9 +52,9 @@ else resync()                                          // project.snapshot`,
   },
   {
     title: 'Render',
-    status: 'in-progress',
-    chip: 'Wiring pending',
-    text: 'Rendering is a pure function of the snapshot, the sequence, the time and the quality. The same revision gives the same frame, so frames can be cached. The compositor and the frame readback are built and tested on synthetic test cards. They are not wired to the engine yet, and nothing decodes real video.',
+    status: 'built',
+    chip: 'Built · Windows only',
+    text: 'Rendering is a pure function of the snapshot, the sequence, the time and the quality. The same revision gives the same frame, so frames can be cached. The engine decodes real media, composites it on the GPU, and uses the same path for the preview, for an agent’s render_frame and for export. A test checks that an exported frame equals the rendered one.',
     code: `render(snapshot@42, sequence, t, quality) → frame`,
   },
 ];

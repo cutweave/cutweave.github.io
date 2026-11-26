@@ -1,6 +1,6 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
-// /compare/: an honest CapCut comparison. Facts come from docs/content-inventory.md section 4.
+// /compare/: an honest CapCut comparison. Facts come from docs/content-inventory.md section 4. Cutweave cells are as of product origin/main e129848 (2026-11-26).
 import '../../styles/area-s3.css';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
@@ -28,7 +28,7 @@ const chipFor = (d: (typeof DIFFERENCES)[number]): { status: 'built' | 'in-progr
         <p class="eyebrow">Compare</p>
         <h1>Cutweave and CapCut, honestly</h1>
         <p class="lede">
-          CapCut is a finished product. Cutweave is a plan and a growing codebase. This page says where each one stands,
+          CapCut is a finished product. Cutweave is a pre-alpha project whose core works and whose editor is still being built. This page says where each one stands,
           so you can decide for yourself.
         </p>
         <p class="stamp">
@@ -36,8 +36,8 @@ const chipFor = (d: (typeof DIFFERENCES)[number]): { status: 'built' | 'in-progr
           <span>As of <time datetime={AS_OF_ISO}>{AS_OF}</time>.</span>
         </p>
         <p class="note">
-          The Cutweave column is the <strong>1.0 plan</strong>, not what exists. Every cell shows its status, and nothing
-          here can be downloaded yet. CapCut statements come from the project&rsquo;s own feature research and are not
+          The Cutweave column is the <strong>1.0 plan</strong>, not what exists. Every cell shows its status, built cells
+          are tested on Windows only, and nothing here can be downloaded yet. CapCut statements come from the project&rsquo;s own feature research and are not
           independently verified; check CapCut&rsquo;s own terms and pricing before you decide.
         </p>
       </div>
@@ -58,12 +58,12 @@ const chipFor = (d: (typeof DIFFERENCES)[number]): { status: 'built' | 'in-progr
   <Section id="table" tone="raised" eyebrow="Side by side" title="The comparison" lede="Grouped by what you care about. Cutweave cells show where each item stands: built, in progress, planned with a phase, later, or not planned.">
     <CompareTable headingLevel={3} />
     <p class="foot">
-      Phases (P1 to P7) and milestones (M1) are on the <a href="/roadmap/">roadmap</a>. The plan is public in the{' '}
+      Phases (P0 to P7) and milestones (M1 is done, M2 is next) are on the <a href="/roadmap/">roadmap</a>. The plan is public in the{' '}
       <a href={LINKS.docs}>docs folder</a>, and dates are rough.
     </p>
   </Section>
 
-  <Section id="differ" eyebrow="On purpose" title="Where we differ on purpose" lede="These are design commitments. Each one carries its status. Some exist in the engine today, and none is ready to use.">
+  <Section id="differ" eyebrow="On purpose" title="Where we differ on purpose" lede="These are design commitments. Each one carries its status. Several are built and tested on Windows, and none is ready to install.">
     <ul class="cards">
       {DIFFERENCES.map((d) => {
         const chip = chipFor(d);

@@ -1,8 +1,8 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Landing page (docs/site-plan.md section 5, work package S4). One h1 (in HomeHero); every section has an id.
-// Sections alternate default and raised tones. Facts: docs/content-inventory.md (status as of product HEAD 7728d7c).
-// Gaps: GAP-01, GAP-02, GAP-03, GAP-09.
+// Sections alternate default and raised tones. Facts: docs/content-inventory.md (status as of product origin/main e129848, 2026-11-26).
+// Gaps: GAP-01 and GAP-02 (partly closed by the M1 recording), GAP-03, GAP-09.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Button from '../components/ui/Button.astro';
@@ -17,18 +17,29 @@ import Pillars from '../components/home/Pillars.astro';
 import CreatorVignettes from '../components/home/CreatorVignettes.astro';
 import AiLockIn from '../components/home/AiLockIn.astro';
 import Faq from '../components/home/Faq.astro';
+import RealEditor from '../components/home/RealEditor.astro';
 import { LINKS } from '../site';
-import { AS_OF, RECENTLY_MERGED } from '../data/roadmap';
+import { AS_OF, MERGED_P2 } from '../data/roadmap';
 
 // The five most recent merges, newest first, for the roadmap teaser. Order follows the product repo's merge history.
-const LATEST_IDS = ['WP-1G.02', 'WP-1M.03', 'WP-1G.01', 'WP-1J.03', 'WP-1M.06'];
-const allMerged = RECENTLY_MERGED.flatMap((g) => g.items);
+const LATEST_IDS = ['WP-2H.06', 'WP-2A.05', 'WP-2H.03a', 'WP-2C.04', 'WP-2B.01'];
+const allMerged = MERGED_P2.flatMap((g) => g.items);
 const latest = LATEST_IDS.map((id) => allMerged.find((m) => m.wp === id)).filter((m): m is NonNullable<typeof m> => Boolean(m));
 ---
 <BaseLayout
   description="Cutweave is an open-source video editor for creators and their AI agents, in pre-alpha. Every edit is a command, agents see rendered frames, and there is no account, no watermark and no paywall."
 >
   <HomeHero />
+
+  <Section
+    id="real-editor"
+    eyebrow="The real editor today"
+    title="This is the app, recorded by its own test"
+    lede="Cutweave imports three clips, cuts them and exports a 1080p MP4. The M1 test drives the real editor, and this recording comes from it. It runs from source on Windows, and there is no download yet."
+  >
+    <RealEditor stills={false} idPrefix="home" />
+    <div class="more"><Button href="/roadmap/#real-editor" iconEnd="arrow-right">See stills and what M1 proved</Button></div>
+  </Section>
 
   <Section
     id="features"
@@ -92,7 +103,7 @@ const latest = LATEST_IDS.map((id) => allMerged.find((m) => m.wp === id)).filter
     tone="raised"
     eyebrow="Compared with CapCut"
     title="What changes, and what is not built yet"
-    lede="Cutweave is pre-alpha. Every cell on the right shows how far along it is, and built means it exists in the code, not that you can use it."
+    lede="Cutweave is pre-alpha. Every cell on the right shows how far along it is, and built means it exists in the code and is tested on Windows, not that you can install it."
   >
     <CompareTable variant="teaser" headingLevel={3} />
   </Section>
@@ -110,8 +121,8 @@ const latest = LATEST_IDS.map((id) => allMerged.find((m) => m.wp === id)).filter
     id="roadmap"
     tone="raised"
     eyebrow="Roadmap"
-    title="Phase 1 of 7"
-    lede={`The work is in the open. Phase 1 builds the walking skeleton: import, cut and export, from the interface and from an agent. ${AS_OF.p1Done} of ${AS_OF.p1Total} work packages are merged, and real decode starts with the FFmpeg spike (S3).`}
+    title="Phase 2 of 7"
+    lede={`The work is in the open. Phase 1 is done: M1 was signed off on ${AS_OF.m1Label}, on Windows. Phase 2 builds the core editor, and ${AS_OF.p2Done} of ${AS_OF.p2Total} work packages are merged.`}
   >
     <RoadmapTimeline compact cta />
     <div class="latest">

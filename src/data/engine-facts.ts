@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Engineering facts for /how-it-works/. Source: docs/content-inventory.md §9 (which cites the main
 // repo's docs/01-architecture.md, ADRs, docs/milestones/M0-go-no-go.md and merge commits). Status is honest:
-// "built" means code and tests exist in the product repo as of HEAD 7728d7c (2026-11-23), not that you can use it.
+// "built" means code and tests exist in the product repo as of origin/main e129848 (2026-11-26), not that you can install it.
+// Verified on Windows only (R34): macOS and Linux are deferred until those machines exist.
 
 export type FactStatus = 'built' | 'in-progress' | 'planned';
 
@@ -72,7 +73,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Every edit is undoable and invertible',
     body: 'Undo applies stored inverse patch ops (RFC 6902). A property harness runs random command sequences over every registered command and checks undo(apply(doc)) == doc.',
     status: 'built',
-    note: '43 commands registered. Built in cutweave-commands and cutweave-ops.',
+    note: '115 commands and queries registered (43 on 23 November). Built in cutweave-commands and cutweave-ops.',
     source: 'arch §5.2, ADR-0005',
     href: ARCH,
   },
@@ -82,7 +83,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Per-actor history',
     body: 'Actors are user, agent:<label> and plugin:<id>. The actor comes from the credential, never from the client, so you can undo the agent’s last change without touching your own edits.',
     status: 'built',
-    note: 'Built in the engine: the editor is user and an MCP session is agent:mcp. Undo refuses when a later change touched the same fields.',
+    note: 'Built in the engine: the editor is user and an MCP session is agent:mcp. Undo refuses when a later change touched the same fields. The editor’s own Undo acts on anyone’s latest change and says who made it (ADR-0019), and a History panel lists every step.',
     source: 'arch §5.2, ADR-0016',
     href: ARCH,
   },
@@ -92,7 +93,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Soft locks while you drag',
     body: 'An open gesture locks the items it touches. An agent’s edit to the same clip is refused with a retry hint, and edits to other clips go through.',
     status: 'built',
-    note: 'Built in the engine. A gesture that goes idle for 30 s is rolled back.',
+    note: 'Built in the engine. A gesture that goes idle for 30 s is rolled back. Retry semantics and on-screen lock feedback are WP-2A.12, not merged yet.',
     source: 'arch §5.2, ADR-0017',
     href: ARCH,
   },
@@ -122,7 +123,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Deterministic rendering',
     body: 'render(snapshot, sequence, t, quality) is a pure function. Randomness is seeded from item IDs and there is no wall clock. That enables frame caching, parallel chunked export and golden tests.',
     status: 'built',
-    note: 'Built in the production compositor: each GPU reproduces its golden frames bit for bit. Caching and chunked export are not built.',
+    note: 'Built in the production compositor: each GPU reproduces its golden frames bit for bit, and in the M1 gate 18 of 18 golden frames were bit-identical. A frame cache serves scrubbing. Chunked parallel export is not built.',
     source: 'arch §8, WP-1F.02',
     href: ARCH,
   },
@@ -132,18 +133,38 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Linear-light, float rendering',
     body: 'Rgba16Float working space. PQ and HLG are tone-mapped to SDR.',
     status: 'built',
-    note: 'Built in the compositor. It renders synthetic test cards until media decoding lands.',
+    note: 'Built in the compositor, and fed by real decoded video since the engine wiring (WP-1I.05). Position, scale, rotation, crop, flip, opacity and eight blend modes are rendered (WP-2C.04).',
     source: 'arch §8, WP-1F.02',
     href: ARCH,
+  },
+  {
+    id: 'seek',
+    group: 'Rendering',
+    title: 'Frame-exact seek in real media',
+    body: 'Seeking starts at the packet index’s keyframe, decodes forward, and returns exactly the frame you asked for, on variable frame rate, open GOP and rotated clips too.',
+    status: 'built',
+    note: 'Built on FFmpeg, on Windows: 500 of 500 seeks exact on every corpus file. Hardware decode (NVDEC, D3D11VA) falls back to software. The macOS and Linux paths are written and not run.',
+    source: 'arch §7, ADR-0003, WP-1D.03, WP-1D.04',
+    href: `${REPO}/docs/adr/0003-media-backend-ffmpeg.md`,
+  },
+  {
+    id: 'proxies',
+    group: 'Rendering',
+    title: 'Proxies for heavy footage',
+    body: 'Long-GOP H.264 or HEVC over 1920 px, footage over 60 fps and 10-bit HEVC get a light copy in the background. Scrubbing uses it, and paused frames, agent frames and exports use the original.',
+    status: 'built',
+    note: 'Built (policy auto, all or off). Proxy-aware source selection in the UI, relinking and collect are WP-2F.02 to 2F.04, not merged.',
+    source: 'ADR-0027, WP-2F.01',
+    href: `${REPO}/docs/adr/0027-proxy-policy-in-the-project.md`,
   },
   {
     id: 'one-pipeline',
     group: 'Rendering',
     title: 'Preview and export share one pipeline',
     body: 'What you scrub is what you export.',
-    status: 'in-progress',
-    note: 'The compositor, the frame readback and the preview transport are built. Export is not.',
-    source: 'brief, principle 4',
+    status: 'built',
+    note: 'Built and tested: every exported frame is rendered like render.frame, a test checks the two are bit-identical before encoding, and transforms and blend modes render the same in preview and export (WP-2C.04). Audio fades, volume and pan mix the same in both (WP-2E.01).',
+    source: 'brief, principle 4, WP-1E.03, WP-2C.04',
     href: `${REPO}/docs/00-product-brief.md`,
   },
   {
@@ -152,7 +173,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Lock-free real-time audio thread',
     body: 'No allocation on the audio callback. The audio device clock is the master clock; video follows audio.',
     status: 'built',
-    note: 'Built for generated audio. The mixer render allocates and locks nothing, and an offline mixdown equals the real-time output.',
+    note: 'Built, and now playing decoded clip audio. The mixer render allocates and locks nothing, and an offline mixdown equals the real-time output.',
     source: 'arch §9, WP-1G.01, WP-1G.02',
     href: ARCH,
   },
@@ -162,7 +183,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Engine in its own process',
     body: 'A crash does not take the UI down. One Rust binary, cutweave, runs as GUI engine, MCP server, CLI or headless renderer.',
     status: 'built',
-    note: 'Built: the editor talks to the engine over a local WebSocket, and a supervisor restarts it and recovers from the journal. Decoder and plugin crashes are not exercised yet.',
+    note: 'Built: the editor talks to the engine over a local WebSocket, and a supervisor restarts it and recovers from the journal. In the M1 gate, 20 engine kills and 20 whole-app kills lost and doubled no commands. Decoder and plugin crashes are not exercised yet.',
     source: 'arch §2, ADR-0002, WP-1L.03',
     href: ARCH,
   },
@@ -172,7 +193,7 @@ export const ENGINE_FACTS: EngineFact[] = [
     title: 'Crash-safe saves',
     body: 'Temp file, fsync, rename. Autosave after 2 s idle or every 30 s, with the last ten backups. A journal is replayed on restart.',
     status: 'built',
-    note: 'Built in the engine. A kill test stops a 500-operation session at 20 random points and checks that recovery matches.',
+    note: 'Built. A kill test stops a 500-operation session at 20 random points and checks that recovery matches, and the M1 gate restores the editor after 20 whole-app kills. Opening a project never drops unsaved work unasked (ADR-0029).',
     source: 'arch §17, ADR-0006',
     href: ARCH,
   },
@@ -191,9 +212,9 @@ export const ENGINE_FACTS: EngineFact[] = [
     group: 'Process and safety',
     title: 'Agents get frames, not screenshots',
     body: 'Image tools carry structured metadata: time, items visible, captions on screen.',
-    status: 'in-progress',
-    note: 'render.frame and render.contact_sheet are built in the render crate. They are not on the MCP tool list until WP-1J.02.',
-    source: 'arch §14, WP-1F.03',
+    status: 'built',
+    note: 'render_frame returns an image block to the agent (up to 1 MB, with a resource link for larger frames). The contact sheet, filmstrip and waveform images as MCP tools are WP-2I.02, not merged yet.',
+    source: 'arch §14, WP-1F.03, WP-1J.02',
     href: ARCH,
   },
   {
@@ -223,14 +244,14 @@ export interface Budget {
 }
 
 export const BUDGETS: Budget[] = [
-  { what: 'App start', target: '< 2.5 s', measured: { text: 'Engine alone, cold start 64 ms (WP-1I.04)', kind: 'wp' } },
+  { what: 'App start', target: '< 2.5 s', measured: { text: 'Engine alone, cold start 64 ms (WP-1I.04). Full engine with GPU about 1.0 s (WP-1I.05)', kind: 'wp' } },
   { what: 'Open a 1-hour, 400-item project', target: '< 2 s' },
   { what: 'Command round trip', target: 'p95 < 16 ms', measured: { text: 'p95 0.81 ms over WebSocket, debug build (WP-1I.02)', kind: 'wp' } },
-  { what: 'Scrub, proxy media', target: 'p95 < 80 ms', measured: { text: 'p95 49.5 ms (S1)', kind: 'spike' } },
-  { what: 'Scrub, 4K long-GOP', target: 'p95 < 150 ms' },
+  { what: 'Scrub, proxy media', target: 'p95 < 80 ms', measured: { text: 'p95 49.5 ms (S1). A proxy scrubs at p95 1.8 ms (WP-2F.01)', kind: 'spike' } },
+  { what: 'Scrub, 4K long-GOP', target: 'p95 < 150 ms', measured: { text: 'Hardware decode p95 102 to 129 ms with a 1 s GOP, 518 to 768 ms with an 8 s GOP (S3). The CPU alone is 282 to 804 ms.', kind: 'spike' } },
   { what: 'Timeline with 5,000 items', target: '≥ 55 fps', measured: { text: '60 fps, hit-test under 0.1 ms (WP-1M.05)', kind: 'wp' } },
   { what: 'Audio/video sync', target: '< 40 ms; drift < 1 frame per 30 min' },
-  { what: '1080p H.264 export', target: '≥ 2× realtime' },
+  { what: '1080p H.264 export', target: '≥ 2× realtime', measured: { text: '3.0× with NVENC and 2.9× with AMF, debug build, loaded laptop (WP-1E.03b)', kind: 'wp' } },
   { what: 'Idle memory', target: '< 1.5 GB' },
 ];
 
@@ -241,6 +262,22 @@ export interface WpResult {
 }
 
 export const WP_RESULTS: WpResult[] = [
+  {
+    wp: 'WP-1O.04 M1 exit suite',
+    result: 'The M1 gate on a Windows 11 laptop: the UI cut and a scripted MCP agent export byte-identical 12 s 1080p MP4s (5,907,413 bytes). 40 crash trials (20 engine kills, 20 app kills) lost and doubled no commands. 18 of 18 golden frames were bit-identical, and parity CLI = MCP = RPC passed 8 of 8. Exported frames 30, 150 and 255 matched cutweave render at 48.9, 48.9 and 47.7 dB PSNR in the export’s color space (35.3 to 37.5 dB back in RGB).',
+  },
+  {
+    wp: 'WP-1D.03 frame-exact seek',
+    result: '500 of 500 random seeks returned the exact frame on every corpus file and generated edge clip: 4K long-GOP H.264, HEVC 10-bit HDR and SDR, ProRes, variable frame rate, open GOP.',
+  },
+  {
+    wp: 'WP-1E.03b hardware export',
+    result: '20 s of 1080p30 exported in 6.6 s with NVENC (3.0×) and 7.0 s with AMF (2.9×) on the reference laptop, in a debug build on a loaded machine. Budget 2×. A failed hardware encode restarts in software from frame 0.',
+  },
+  {
+    wp: 'WP-2F.01 proxies',
+    result: 'Proxies generate at 2.0 to 3.3× realtime on 4K sources, resume after a hard kill, and map 502 of 502 variable-frame-rate frames. Scrubbing a proxy: p95 1.8 ms.',
+  },
   {
     wp: 'WP-1B.03 document actor',
     result: 'A no-op command round trip on the actor: p95 26 µs. Eight writers submitted 10,000 commands, and the final document equals a sequential replay.',
@@ -274,8 +311,8 @@ export const WP_RESULTS: WpResult[] = [
     result: 'On a real WASAPI device at 48 kHz, a 10-minute soak of the eight-source mix: 0 underruns, 0 xruns, 0 heap operations in the callback, max clock residual 0.59 ms. Drift against the system timer is +10.9 ppm, the device crystal, as in S2.',
   },
   {
-    wp: 'WP-1J.01 MCP',
-    result: '/mcp lists 18 tools in about 3.6k tokens (gate: 19 tools, 5k). /mcp/minimal lists 9 tools in about 1.2k tokens (budget: 12 tools, 3k).',
+    wp: 'WP-1J.01 MCP, at its merge',
+    result: '/mcp listed 18 tools in about 3.6k tokens (gate then: 19 tools, 5k; the Phase 2 gate is 36 tools, 8k). /mcp/minimal lists 9 tools in about 1.2k tokens (budget: 12 tools, 3k).',
   },
   {
     wp: 'WP-1L.03 supervision',
@@ -320,13 +357,13 @@ export const SPIKE_RESULTS: SpikeResult[] = [
   },
   {
     spike: 'S3 decode, seek, hardware acceleration',
-    result: 'Not passed yet: unblocked and running since 2026-11-23, against generated test media.',
+    result: 'Passed on Windows, 2026-11-24: 500 random seeks frame-exact on 16 generated files on the CPU, and NVDEC and D3D11VA bit-exact with software on 18 files, except AMD D3D11VA on open-GOP H.264 after a seek. Cold 4K seek p95 with a 1 s GOP is 102 to 129 ms in hardware against 195 ms on the CPU. macOS and Linux are pending.',
   },
 ];
 
 export const SPIKE_FOOTNOTE = 'Informal, one Windows laptop. Formal runs pending.';
 
 export const STACK = {
-  engine: ['Rust (edition 2024)', 'wgpu and WGSL', 'FFmpeg (not yet in)', 'rmcp (official Rust MCP SDK)', 'wasmtime (planned)', 'axum', 'cpal'],
+  engine: ['Rust (edition 2024)', 'wgpu and WGSL', 'FFmpeg (ffmpeg-next)', 'rmcp (official Rust MCP SDK)', 'wasmtime (planned)', 'axum', 'cpal'],
   app: ['Electron', 'React 19', 'TypeScript (strict)'],
 } as const;
