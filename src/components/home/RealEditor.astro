@@ -1,0 +1,101 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * RealEditor: the real Cutweave editor today, from the M1 test run. A short recording (no autoplay, muted,
+ * controls, preload none, poster) and three stills cut from it, with the honest label
+ * "Real app, recorded by the M1 test run, pre-alpha, Windows".
+ * The clips in the recording are self-generated test media (testdata/corpus.toml, `self-generated`).
+ * Sources are in src/assets/README.md. Closes part of GAP-01 and GAP-02: it is a test recording, not a
+ * designed screenshot set, and there is no sample project yet.
+ * Props:
+ *  - stills?: boolean   show the three stills under the video (default true)
+ *  - idPrefix?: string  prefix for ids when the component is used twice on a page
+ */
+import '../../styles/area-s3.css';
+import '../../styles/area-progress.css';
+import editorPreview from '../../assets/app/editor-preview.webp';
+import exportProgress from '../../assets/app/export-progress.webp';
+import exportComplete from '../../assets/app/export-complete.webp';
+
+interface Props {
+  stills?: boolean;
+  idPrefix?: string;
+}
+const { stills = true, idPrefix = 'real' } = Astro.props;
+const LABEL = 'Real app, recorded by the M1 test run, pre-alpha, Windows';
+const DESCRIPTION =
+  'A 14-second silent screen recording of the Cutweave editor on Windows. Three self-generated test clips are imported into the media bin. Two are placed on the timeline, and a clip’s duration is typed into the inspector while the preview shows color bars. After a split and a move, the timeline holds four clips. The export dialog opens, a progress dialog counts to 100 percent, and the app reports Export complete: 360 frames, 12 seconds.';
+const shots = [
+  { img: editorPreview, label: 'Cutting', alt: 'The Cutweave editor with the media bin on the left holding three test clips, the preview in the middle showing color bars at 00:00:04:00, the inspector on the right with a duration being typed, and two clips on the timeline below.', cap: 'Importing and cutting: three test clips in the bin, two on the timeline, and a duration typed into the inspector.' },
+  { img: exportProgress, label: 'Exporting', alt: 'The editor with four clips on the video track and three audio clips below, and a dialog reading Exporting M1 cut.mp4 at 48 percent, 78.7 frames per second, about 2 seconds left.', cap: 'Exporting: four clips on the timeline, and the export dialog at 48%, 78.7 fps.' },
+  { img: exportComplete, label: 'Done', alt: 'The same timeline with a notice reading Export complete, M1 cut.mp4, exported 360 frames, 12 seconds, with libx264.', cap: 'Done: 360 frames, 12.00 s, encoded with libx264 in software.' },
+];
+---
+<div class="real">
+  <figure class="video">
+    <video
+      id={`${idPrefix}-video`}
+      controls
+      muted
+      playsinline
+      preload="none"
+      width="1280"
+      height="800"
+      poster="/media/m1-demo-poster.webp"
+      aria-describedby={`${idPrefix}-desc`}
+    >
+      <source src="/media/m1-demo.webm" type="video/webm" />
+      <p>Your browser cannot play this video. It is a silent 14-second recording of the editor: <a href="/media/m1-demo.webm">download the WebM file</a>.</p>
+    </video>
+    <figcaption>
+      <span class="label">{LABEL}</span>
+      <span id={`${idPrefix}-desc`} class="desc">{DESCRIPTION}</span>
+      <span class="foot">The clips are self-generated test media: color bars with a burned-in timecode. This is a test recording, not a sample project, and there is no download yet.</span>
+    </figcaption>
+  </figure>
+
+  {stills && (
+    <ul class="stills" aria-label="Stills from the recording">
+      {shots.map((s) => (
+        <li>
+          <figure class="still">
+            <img src={s.img.src} width={s.img.width} height={s.img.height} alt={s.alt} loading="lazy" decoding="async" />
+            <figcaption>
+              <span class="label">{LABEL}</span>
+              <span class="desc">{s.cap}</span>
+            </figcaption>
+          </figure>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+<style>
+  .real { display: flex; flex-direction: column; gap: var(--space-8); }
+  .video, .still { margin: 0; display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .video { max-width: var(--progress-video-max); }
+  video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 8 / 5;
+    border: var(--border-thin) solid var(--border-default);
+    border-radius: var(--radius-md);
+    background: var(--surface-0);
+  }
+  figcaption { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1-5); }
+  .label {
+    padding: 0 var(--space-2);
+    border: var(--border-thin) dashed var(--border-control);
+    border-radius: var(--radius-sm);
+    font-size: var(--progress-text-xs);
+    line-height: calc(var(--progress-text-xs-line) + var(--space-1-5));
+  }
+  .desc { max-width: var(--prose-max); color: var(--text-secondary); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .foot { max-width: var(--prose-max); color: var(--text-muted); font-size: var(--s3-text-sm); line-height: var(--s3-text-sm-line); }
+  .stills { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--space-6); }
+  .still { max-width: var(--progress-still-max); }
+  .still img { display: block; width: 100%; height: auto; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-md); }
+  video a { color: var(--text-primary); }
+</style>
