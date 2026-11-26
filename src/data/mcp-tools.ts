@@ -113,16 +113,10 @@ export const PLANNED_TOOL_GROUPS: McpToolGroup[] = [
     id: 'see',
     title: 'See the result',
     tools: [
-      { name: 'render_frame', does: 'Render one frame as an image plus metadata.', image: true, when: 'WP-1J.02' },
       { name: 'render_contact_sheet', does: 'Render a grid of frames as one image.', image: true, when: 'Phase 2' },
       { name: 'media_filmstrip', does: 'Filmstrip of a media file.', image: true, when: 'Phase 2' },
       { name: 'audio_waveform', does: 'Waveform of an audio source.', image: true, when: 'Phase 2' },
     ],
-  },
-  {
-    id: 'export',
-    title: 'Export',
-    tools: [{ name: 'export_start', does: 'Start an export job.', when: 'WP-1E.03' }],
   },
   {
     id: 'text',

@@ -40,11 +40,11 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
         <h1 id="agents-title">Agents see frames, not screenshots.</h1>
         <p class="lede">Every edit in Cutweave is a command. Every command is an MCP tool. The agent gets structured state, and rendered frames once <code>render_frame</code> lands, so it works on the same timeline you do without guessing at pixels.</p>
         <p class="status">
-          <StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" />
+          <StatusChip status="in-progress" label="Pre-alpha, Phase 2 of 7" />
           <StatusChip status="built" label="MCP server: built (v0)" />
-          <StatusChip status="planned" label="Frames: planned · WP-1J.02" />
+          <StatusChip status="built" label="Frames: built · Windows" />
         </p>
-        <p class="status-note">An agent can edit the timeline over MCP today. It cannot see a rendered frame yet.</p>
+        <p class="status-note">An agent can edit the timeline, get a rendered frame and start an export over MCP today, on Windows, built from source. The recorded run below is an earlier session without frames; a new recording with frames is on the way.</p>
         <div class="actions">
           <Button variant="primary" href="#demo" iconEnd="arrow-right">See an agent edit</Button>
           <Button href="#real-run">Read a real run</Button>
@@ -53,7 +53,7 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
       <ol class="chain" aria-label="From command to agent">
         <li><span class="k">Command</span><code>clip.split</code><span class="d">One registered command, applied through one transaction.</span></li>
         <li><span class="k">MCP tool</span><code>clip_split</code><span class="d">The same schema, reachable by any MCP client. A CI test checks parity.</span></li>
-        <li><span class="k">Agent gets</span><code>rev + state</code><span class="d">The new revision and what changed. A rendered frame joins it when <code>render_frame</code> lands (planned, WP-1J.02).</span></li>
+        <li><span class="k">Agent gets</span><code>state + frame</code><span class="d">The new revision and what changed, and a rendered frame as an image when it asks for one with <code>render_frame</code>.</span></li>
       </ol>
     </Container>
   </section>
@@ -65,7 +65,7 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
   <Section
     id="real-run"
     eyebrow="Built today"
-    title="A real run, no frames yet"
+    title="A real run from an earlier build, no frames"
     lede="This session was recorded from the MCP server in a headless engine, then trimmed for reading. An agent imports two clips, places them, cuts one, checks the timeline and undoes a delete."
   >
     <RealRun />
