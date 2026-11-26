@@ -47,6 +47,7 @@ WebP (`libwebp -quality 85`), so they are not byte copies. Labelled "Rendered by
 | File here | Source | Notes |
 |---|---|---|
 | `render/m1-f00030.webp` | `target/m1/validate/render/f00030.png` | Frame 30, from the H.264 1080p60 clip. 48.9 dB PSNR against the exported frame. |
+| `agents/render-frame-5s.jpg` | The `render_frame` image block (`t: "5s"`), base64-decoded as received, from the recorded MCP run `docs/captures/2026-11-26-real-media-run.jsonl` (`scripts/capture-mcp-run.mjs`, binary built from product commit `24a5c01`). It shows the self-generated corpus clip `hevc_10bit_sdr.mp4` (`testdata/corpus.toml`) | 768 x 432 JPEG, 19,004 bytes. Used on `/agents/#real-run`. |
 | `render/m1-f00255.webp` | `target/m1/validate/render/f00255.png` | Frame 255, from the rotated variable-frame-rate clip. 47.7 dB. |
 
 Frame 150 (`f00150.png`) was not used.
