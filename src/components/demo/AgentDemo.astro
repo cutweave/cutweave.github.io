@@ -15,8 +15,9 @@
  *
  * GAP-02: replace the scripted player with a captioned screen recording of an agent over MCP once
  *         WP-1O.04 / WP-7G.02 exist.
- * GAP-03: the script uses real or planned tool names with invented values (frames are still planned). A real
- *         recorded run is on /agents/ (RealRun). Regenerate src/data/agent-demo.ts once render_frame exists.
+ * GAP-03: the script uses real or planned tool names with invented values. render_frame and export_start are real now;
+ *         captions, silence removal, contact sheets and the proposal and cost flow are planned. A real recorded run with
+ *         real media and a rendered frame is on /agents/ (RealRun).
  * Honesty: carries an "Illustrative" chip and a footnote linking the real Phase 0 spike run
  *          (docs/site-plan.md section 3).
  *
@@ -258,7 +259,7 @@ const finalState = steps[last]?.timeline ?? { silences: 'none', captions: 'none'
 
   <!-- GAP-02, GAP-03: illustrative until a real recording and a real headless-run transcript exist. -->
   <p class="ad__note">
-    <strong>Illustrative.</strong> Tool names are real or planned; the values are invented, and rendered frames are still planned (<code>render_frame</code>, WP-1J.02). A <a href={realRunHref}>real run without frames</a> is recorded from the built MCP server. A Phase 0 spike ran a four-call version with frames (<code>media_import</code>, <code>timeline_insert</code>, <code>clip_split</code>, <code>render_frame</code>) in 3 of 3 runs, with no screenshots.{' '}
+    <strong>Illustrative.</strong> The values are invented. Built today: <code>project_info</code>, <code>media_list</code>, <code>cutweave_execute</code>, <code>render_frame</code> and <code>export_start</code>. Planned: silence and filler removal, captions, <code>render_contact_sheet</code>, and the proposal and cost flow. <code>render_frame</code> shows the committed document, so looking at an open proposal is planned too. A <a href={realRunHref}>real run with real media, a rendered frame and an export</a> is recorded from the built MCP server. An earlier Phase 0 spike ran a four-call version in 3 of 3 runs, with no screenshots.{' '}
     <a href={SPIKE_REPORT}>Read the spike run report<Icon name="external-link" size="sm" /></a>
   </p>
 

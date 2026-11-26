@@ -3,7 +3,8 @@
 /**
  * RealRun: a recorded MCP session, trimmed for reading (GAP-03).
  * Everything shown comes from src/data/mcp-real-run.json, which scripts/capture-mcp-run.mjs writes from a
- * real `cutweave mcp --headless` run. Values are verbatim; each cut is marked with an ellipsis and listed.
+ * real `cutweave mcp --headless` run on real media. Values are verbatim; each cut is marked with an ellipsis and listed.
+ * The frame is the image block of render_frame, saved from its base64 as the agent received it (src/assets/agents/).
  * Props: none.
  */
 import '../../styles/area-s2.css';
@@ -13,16 +14,19 @@ import Button from '../ui/Button.astro';
 import CodeBlock from '../ui/CodeBlock.astro';
 import run from '../../data/mcp-real-run.json';
 import { LINKS } from '../../site';
+import frameImage from '../../assets/agents/render-frame-5s.jpg';
 
 const captureUrl = `${LINKS.siteRepo}/blob/main/${run.capture_file}`;
+const oldCaptureUrl = `${LINKS.siteRepo}/blob/main/docs/captures/2026-11-23-headless-run.jsonl`;
 const steps = run.steps;
-// Stub media are 10 s; flicks are 705,600,000 per second.
+const FRAME_ALT = 'A synthetic test card from the second clip: six vertical colour bars (red, green, yellow, blue, magenta, cyan), a thin diagonal gradient line, a small checkerboard patch at lower right, and a tiny timecode readout burned in at the top left.';
+// Flicks are 705,600,000 per second.
 ---
 <div class="run">
   <p class="bar">
     <span class="real-chip"><Icon name="circle-check" size="sm" /> Real run</span>
     <StatusChip status="built" label="Built, pre-alpha" />
-    <span class="bar-note">{run.call_count} tool calls, {run.error_count} errors, {run.date}.</span>
+    <span class="bar-note">{run.call_count} tool calls, {run.error_count} errors, {run.date}. Real media, a rendered frame, an export.</span>
   </p>
 
   <CodeBlock label="Command" lang="sh" code={run.command} />
@@ -48,19 +52,28 @@ const steps = run.steps;
             <pre tabindex="0"><code>{s.result}</code></pre>
           </div>
         </div>
+        {s.image && (
+          <figure class="frame">
+            <img src={frameImage.src} width={frameImage.width} height={frameImage.height} alt={FRAME_ALT} loading="lazy" decoding="async" />
+            <figcaption>
+              <strong>The frame the agent saw.</strong> The image block of this result, {s.image.mime}, {s.image.bytes.toLocaleString('en-US')} bytes, as received. SHA-256 <code>{s.image.sha256.slice(0, 12)}…</code>
+            </figcaption>
+          </figure>
+        )}
         {s.trimmed.length > 0 && <p class="trim">Trimmed: {s.trimmed.join('; ')}.</p>}
       </li>
     ))}
   </ol>
 
   <p class="foot">
-    Recorded from <code>cutweave mcp --headless</code> at <code>{run.product_commit}</code>, with dev stub media (made-up probe data until the FFmpeg backend lands). No frames yet: <code>render_frame</code> arrives with WP-1J.02.
+    Recorded from <code>cutweave mcp --headless</code>, a debug build with <code>--features ffmpeg</code> from product commit <code>{run.product_commit}</code>, on a Windows 11 laptop with an NVIDIA GeForce RTX 3080 Laptop GPU. The media are three self-generated clips from the product’s M1 test corpus (synthetic test patterns, not footage), decoded by FFmpeg. <code>render_frame</code> drew the frame on the GPU. The export used the software encoder (<code>hw: off</code>), wrote {run.export_bytes.toLocaleString('en-US')} bytes to a local folder, and is not published.
   </p>
   <p class="foot small">
-    Times are integer flicks, 705,600,000 per second, so <code>2822400000</code> is 4 s. Ids are deterministic: the same script gives the same ids. Trimming only drops whole fields, cuts lists and shortens long text; nothing is reworded.
+    Times are integer flicks, 705,600,000 per second, so <code>2822400000</code> is 4 s. Job progress messages and import errors come from files, so the server wraps them as <code>{'{"untrusted": true, "text": …}'}</code> (a prompt-injection precaution). They are shown as returned. Ids are seeded, so the same script gives the same ids, except for the background analysis jobs, which race: two runs differed only there, and the frame and the export size were identical. Trimming only drops whole fields, cuts lists and shortens long text; nothing is reworded.
   </p>
   <p class="links">
-    <Button href={captureUrl} external iconEnd="external-link">Read the full capture</Button>
+    <Button href={captureUrl} external iconEnd="external-link">Read the full capture</Button>{' '}
+    <Button href={oldCaptureUrl} external iconEnd="external-link">Earlier capture, stub media</Button>
   </p>
 </div>
 
@@ -132,8 +145,14 @@ const steps = run.steps;
   }
   .step.setup pre { background: var(--surface-2); }
   pre code { font-family: var(--font-mono); font-size: var(--mono-small); line-height: 20px; }
+  .frame { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); max-width: 48rem; }
+  .frame img { display: block; width: 100%; height: auto; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-3); }
+  .frame figcaption { color: var(--text-secondary); font-size: 14px; line-height: 20px; }
+  .frame figcaption strong { color: var(--agent-text); }
+  .frame code { font-size: var(--mono-small); }
   .trim { color: var(--text-muted); font-size: 13px; line-height: 18px; }
 
+  .links { display: flex; flex-wrap: wrap; gap: var(--space-3); }
   .foot { color: var(--text-secondary); max-width: var(--prose-max); }
   .foot.small { font-size: 14px; color: var(--text-muted); }
   .foot code { font-size: var(--mono-small); color: var(--text-primary); }

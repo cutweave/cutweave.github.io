@@ -1,7 +1,7 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 // /agents/: "Built for agents". MCP and agent deep dive (docs/site-plan.md §4, work package S2).
-// Facts: docs/content-inventory.md §2.4, §5. Gaps: GAP-03 (real run recorded, frames still planned), GAP-05, GAP-07, GAP-08, GAP-18.
+// Facts: docs/content-inventory.md §2.4, §5. Product facts as of origin/main e129848 (2026-11-26). Gaps: GAP-03, GAP-05, GAP-07, GAP-08, GAP-18.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
 import Section from '../../components/ui/Section.astro';
@@ -14,37 +14,43 @@ import ProposalFlow from '../../components/agents/ProposalFlow.astro';
 import BudgetTiers from '../../components/agents/BudgetTiers.astro';
 import AgentKit from '../../components/agents/AgentKit.astro';
 import RealRun from '../../components/agents/RealRun.astro';
+import SameCut from '../../components/agents/SameCut.astro';
 import ConnectClients from '../../components/agents/ConnectClients.astro';
 import AgentDemo from '../../components/demo/AgentDemo.astro';
 import { LINKS } from '../../site';
 import { DOC_LINKS } from '../../data/engine-facts';
+import { CORE_TOOL_GROUPS } from '../../data/mcp-tools';
 
 // GAP-05: the per-client snippets are in ConnectClients (from the product repo's docs/reference/mcp-clients.md).
 // There is no installer and no agent-kit command yet, so the build step below is from source.
 const REPO_DOCS = `${LINKS.repo}/blob/main/docs`;
 const buildCmd = `git clone ${LINKS.repo}
 cd cutweave
-cargo build -p cutweave-cli
-# The binary is target/debug/cutweave. Put it on your PATH.`;
+just ffmpeg-fetch              # finds an FFmpeg 8.1 bundle you already unpacked; downloads nothing
+. scripts/ffmpeg/env.ps1       # PowerShell: sets FFMPEG_DIR and LIBCLANG_PATH (bash: . scripts/ffmpeg/env.sh)
+cargo build -p cutweave-cli --features ffmpeg
+# The binary is target/debug/cutweave.exe, with the FFmpeg DLLs next to it.`;
+const listedCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.length, 0);
 
 const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_frame'];
 ---
 <BaseLayout
   title="Built for agents"
-  description="Every Cutweave edit is a command and every command is an MCP tool. The MCP server is built (v0): an agent can edit the timeline today. Rendered frames and spending limits are planned. A recorded real run, the tool list and client setup."
+  description="Every Cutweave edit is a command and every command is an MCP tool. An agent can edit a timeline, see a rendered frame and export today, on Windows, built from source. A recorded real run with real media, the tool list and client setup. Spending limits are planned."
 >
   <section class="hero" aria-labelledby="agents-title">
     <Container>
       <div class="hero-copy">
         <p class="eyebrow">Built for agents</p>
         <h1 id="agents-title">Agents see frames, not screenshots.</h1>
-        <p class="lede">Every edit in Cutweave is a command. Every command is an MCP tool. The agent gets structured state, and rendered frames once <code>render_frame</code> lands, so it works on the same timeline you do without guessing at pixels.</p>
+        <p class="lede">Every edit in Cutweave is a command. Every command is an MCP tool. The agent gets structured state and, from <code>render_frame</code>, the rendered frame itself, so it works on the same timeline you do without guessing at pixels.</p>
         <p class="status">
-          <StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" />
-          <StatusChip status="built" label="MCP server: built (v0)" />
-          <StatusChip status="planned" label="Frames: planned · WP-1J.02" />
+          <StatusChip status="in-progress" label="Pre-alpha, Phase 2 of 7" />
+          <StatusChip status="built" label="MCP server: built" />
+          <StatusChip status="built" label="Frames: built" />
+          <StatusChip status="built" label="Export: built" />
         </p>
-        <p class="status-note">An agent can edit the timeline over MCP today. It cannot see a rendered frame yet.</p>
+        <p class="status-note">An agent can edit a timeline over MCP, see a rendered frame and export an MP4 today. Windows only for now, built from source, no installer. Spending limits, captions and AI tools are planned.</p>
         <div class="actions">
           <Button variant="primary" href="#demo" iconEnd="arrow-right">See an agent edit</Button>
           <Button href="#real-run">Read a real run</Button>
@@ -53,22 +59,23 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
       <ol class="chain" aria-label="From command to agent">
         <li><span class="k">Command</span><code>clip.split</code><span class="d">One registered command, applied through one transaction.</span></li>
         <li><span class="k">MCP tool</span><code>clip_split</code><span class="d">The same schema, reachable by any MCP client. A CI test checks parity.</span></li>
-        <li><span class="k">Agent gets</span><code>rev + state</code><span class="d">The new revision and what changed. A rendered frame joins it when <code>render_frame</code> lands (planned, WP-1J.02).</span></li>
+        <li><span class="k">Agent gets</span><code>rev + state</code><span class="d">The new revision and what changed. <code>render_frame</code> adds the picture, as an MCP image block.</span></li>
       </ol>
     </Container>
   </section>
 
-  <Section id="demo" tone="raised" eyebrow="Watch it work" title="Watch an agent edit" lede="A scripted session about the plan: tool names are real or planned, values are invented, frames are not built yet.">
+  <Section id="demo" tone="raised" eyebrow="Watch it work" title="Watch an agent edit" lede="A scripted session about the plan: tool names are real or planned, values are invented. Captions, silence removal and the proposal flow are planned.">
     <AgentDemo id="agents-demo" />
   </Section>
 
   <Section
     id="real-run"
     eyebrow="Built today"
-    title="A real run, no frames yet"
-    lede="This session was recorded from the MCP server in a headless engine, then trimmed for reading. An agent imports two clips, places them, cuts one, checks the timeline and undoes a delete."
+    title="A real run: edit, see a frame, export"
+    lede="Recorded from the MCP server on real media, then trimmed for reading. An agent imports three clips, waits for their analysis, places and trims them, splits one and moves a piece, reads the timeline, looks at the frame at 5 s, and exports an MP4."
   >
     <RealRun />
+    <SameCut />
   </Section>
 
   <Section
@@ -84,7 +91,7 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
     id="tools"
     tone="raised"
     eyebrow="The tool surface"
-    title="14 tools listed today, and four for everything else"
+    title={`${listedCount} tools listed today, and four for everything else`}
     lede="Every non-view command is reachable over MCP with an identical schema. The core tools are always listed. The rest are one search away."
   >
     <ToolCatalog />
@@ -123,17 +130,17 @@ const spikeSteps = ['media_import', 'timeline_insert', 'clip_split', 'render_fra
     tone="raised"
     eyebrow="Connect your client"
     title="Point your agent at Cutweave"
-    lede="The MCP server works today, over stdio. There is no installer yet, so you build the binary from source."
+    lede="The MCP server works today, over stdio, on Windows. There is no installer yet, so you build the binary from source."
   >
     <div class="connect">
       <p class="status"><StatusChip status="built" label="Built, pre-alpha" /> <span>Tested in the product repository. Nothing is packaged or signed.</span></p>
-      <p class="caveat"><strong>No installer yet.</strong> Build <code>cutweave</code> from source and put the binary on your PATH, or put its full path in your client’s <code>command</code>. Setup for Rust and the other tools is in the <a href={`${REPO_DOCS}/06-dev-process.md`}>dev process doc</a>.</p>
+      <p class="caveat"><strong>No installer yet.</strong> Build <code>cutweave</code> from source and put the binary on your PATH, or put its full path in your client’s <code>command</code>. The build needs an FFmpeg 8.1 bundle, MSVC Build Tools and LLVM; the first build takes 6 to 13 minutes. It is verified on Windows 11 only. macOS and Linux are expected to work and have not been run. Setup is in the <a href={`${REPO_DOCS}/dev/ffmpeg.md`}>FFmpeg dev doc</a> and the <a href={`${REPO_DOCS}/06-dev-process.md`}>dev process doc</a>.</p>
       <CodeBlock label="Build from source" lang="sh" code={buildCmd} />
       <ConnectClients />
       <ul class="notes">
         <li><strong>Attach</strong> proxies to a running engine, so you watch the agent edit your open project. The desktop app is not released, so today that means running <code>cutweave engine</code> yourself.</li>
-        <li><strong>Headless</strong> runs an engine inside the MCP process. The agent can only import from the <code>--allow-root</code> folders. Until the FFmpeg backend lands, add <code>--dev-stub-media</code> to import files with made-up probe data (dev only).</li>
-        <li><strong>Profiles.</strong> <code>--profile minimal</code> lists fewer tools for small context windows. The default is <code>standard</code>.</li>
+        <li><strong>Headless</strong> runs an engine inside the MCP process. The agent can only import from the <code>--allow-root</code> folders and the project folder. For real media and export, build with <code>--features ffmpeg</code> as above. Without it the engine has no decoder. <code>--deterministic-ids &lt;seed&gt;</code> makes a scripted run repeatable.</li>
+        <li><strong>Profiles.</strong> <code>--profile minimal</code> lists at most 12 tools for small context windows, <code>full</code> lists every tool. The default is <code>standard</code>.</li>
         <li><StatusChip status="planned" label="Planned" />{' '}<code>cutweave agent-kit install --client …</code> would write the config and install skills for you. That command does not exist yet (Agent Kit, Phase 3 and 6).</li>
       </ul>
       <p><Button href={`${REPO_DOCS}/reference/mcp-clients.md`} external iconEnd="external-link">Read the client setup doc</Button></p>

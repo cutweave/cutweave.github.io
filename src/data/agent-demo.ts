@@ -3,14 +3,16 @@
  * Script for the "Watch an agent edit" demo (components/demo/AgentDemo.astro).
  *
  * ILLUSTRATIVE. The tool names are real or planned (the MCP catalog in src/data/mcp-tools.ts): project_info,
- * media_list, cutweave_execute and its edit.checkpoint step exist today; caption_generate, caption_style,
- * render_contact_sheet and the silence.remove, filler.remove and caption.generate steps are planned. Every value
+ * media_list, cutweave_execute, render_frame and export_start exist today; caption_generate, caption_style,
+ * render_contact_sheet and the silence.remove, filler.remove and caption.generate steps are planned. The contact sheet
+ * here is "of the proposed cut": render_frame renders the committed document only, so previewing an open proposal is planned. Every value
  * (ids, counts, durations, costs) is invented, and the proposal flow is the plan. Costs use the brand format
  * "~$0.04 · <model> via <provider>" with provider names from the inventory (section 6.2).
  *
- * GAP-03: the frames story is still planned (render_frame is WP-1J.02), so this stays illustrative. A real
- * recorded session without frames is in src/data/mcp-real-run.json (scripts/capture-mcp-run.mjs). Replace this
- * file with a generated transcript when frames exist. Keep the shape below and the component needs no change:
+ * GAP-03: this stays illustrative because captions, silence removal and the proposal and cost flow are planned.
+ * A real recorded session with real media, a rendered frame and an export is in src/data/mcp-real-run.json
+ * (scripts/capture-mcp-run.mjs). Replace this file with a generated transcript when those exist. Keep the shape
+ * below and the component needs no change:
  * a run recorder only has to emit `DemoScript` (steps of transcript entries, each with the timeline state after it).
  * The Phase 0 spike ran a real four-call version with frames: 3 of 3 runs, no screenshots
  * (spikes/s5-command-bus/AGENT-RUN-REPORT.md in the main repo).
