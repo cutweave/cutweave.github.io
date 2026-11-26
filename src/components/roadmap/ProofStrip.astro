@@ -7,12 +7,12 @@
  * GAP-09: informal numbers; replace with the formal, multi-OS budget dashboard (WP-0C.04, 0D.02, 0E.03, 0F.03, WP-7D).
  * Props:
  *  - variant?: 'full' | 'four' | 'wp' | 'both'
- *        full = every number, work-package group first, then spikes, plus the plain note that the S3 FFmpeg decode
- *               spike is running and has not passed (default).
+ *        full = every number, work-package group first, then spikes, plus the plain note on what has not been
+ *               measured yet: macOS, Linux, reference machines and the Phase 2 benchmarks (default).
  *        four = the four featured spike numbers (scrub p95, 5,000 clips, 35/35 sandbox escapes, 3/3 agent runs).
  *        wp   = the four featured work-package numbers.
  *        both = wp then four, for the landing page.
- *  - showBlocked?: boolean       show the "S3 has not passed yet" note (default: true for full, false otherwise)
+ *  - showBlocked?: boolean       show the "not measured yet" note (default: true for full, false otherwise)
  *  - headingLevel?: 2 | 3 | 4    level of the visually small label heading (default 3)
  * Data: src/data/proof.ts.
  */
