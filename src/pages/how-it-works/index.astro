@@ -1,13 +1,15 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 // /how-it-works/: "One engine, many clients". Architecture for developers (docs/site-plan.md §4, work package S2).
-// Facts: docs/content-inventory.md §8, §9 (status as of product HEAD 7728d7c, 2026-11-23).
-// Gaps: GAP-09 (measured numbers are informal; see EngineFacts), GAP-19 (golden frames from the production compositor
-// are real renders, but of synthetic test cards; sources in src/assets/README.md), GAP-08 (generated references are
+// Facts: docs/content-inventory.md §8, §9 (status as of product origin/main e129848, 2026-11-26).
+// Gaps: GAP-09 (measured numbers are informal; see EngineFacts), GAP-19 (partly closed: the golden frames are synthetic test
+// cards, and the M1 frames are renders of self-generated test clips, not footage; sources in src/assets/README.md), GAP-08 (generated references are
 // linked on GitHub, not on a docs site).
 import '../../styles/area-progress.css';
 import contactSheet from '../../assets/render/contact-sheet.png';
 import pipRotated from '../../assets/render/pip-rotated-cropped.png';
+import m1Frame30 from '../../assets/render/m1-f00030.webp';
+import m1Frame255 from '../../assets/render/m1-f00255.webp';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/ui/Container.astro';
 import Section from '../../components/ui/Section.astro';
@@ -29,7 +31,7 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
         <p class="eyebrow">How it works</p>
         <h1 id="how-title">One engine, many clients.</h1>
         <p class="lede">The desktop UI is not special. It uses the same command API as AI agents over MCP, the command line and plugins. Every edit is a registered command, applied to one project document by one Rust engine.</p>
-        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 1 of 7" /> <span>This page describes the design. Each fact below says what is built, and built is not the same as usable: nothing decodes real video yet.</span></p>
+        <p class="status"><StatusChip status="in-progress" label="Pre-alpha, Phase 2 of 7" /> <span>This page describes the design. Each fact below says what is built, and built is not the same as usable: it runs from source, has been verified on Windows only, and has no installer.</span></p>
       </div>
       <div class="diagram">
         <ArchitectureDiagram />
@@ -67,17 +69,17 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
       <li>
         <h3>Preview and export share one pipeline</h3>
         <p>There is no separate, faster preview renderer to drift from the export. Preview frames are downscaled into a shared-memory ring and drawn on a WebGPU canvas. Export goes to the encoder. An agent&rsquo;s frame goes to JPEG or PNG.</p>
-        <p class="chip"><StatusChip status="in-progress" /> <span>The compositor, the readback and the preview transport are built. Export is not.</span></p>
+        <p class="chip"><StatusChip status="built" label="Built · Windows only" /> <span>Every exported frame is rendered like <code>render.frame</code>, and a test checks they are bit-identical before encoding.</span></p>
       </li>
       <li>
         <h3>Deterministic by construction</h3>
         <p>A frame is a pure function of the snapshot, the sequence, the time and the quality. Randomness is seeded from item IDs, and nothing reads the wall clock. That makes frame caching, parallel chunked export and golden tests possible.</p>
-        <p class="chip"><StatusChip status="built" /> <span>In the production compositor, which renders test cards for now.</span></p>
+        <p class="chip"><StatusChip status="built" /> <span>In the production compositor. In the M1 gate, 18 of 18 golden frames were bit-identical.</span></p>
       </li>
       <li>
         <h3>Linear light, in float</h3>
         <p>The working space is <code>Rgba16Float</code> in linear light. PQ and HLG sources are tone-mapped to SDR.</p>
-        <p class="chip"><StatusChip status="built" /> <span>In the production compositor.</span></p>
+        <p class="chip"><StatusChip status="built" /> <span>In the production compositor, on real decoded video.</span></p>
       </li>
       <li>
         <h3>Same pixels across GPU vendors</h3>
@@ -88,8 +90,30 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
     </ul>
 
     <div class="renders">
-      <h3 class="renders-title">Real frames from the production compositor</h3>
-      <p class="renders-lede">These are the compositor’s own test goldens, drawn on an RTX 3080 laptop GPU. The sources are synthetic test cards, because nothing decodes video yet.</p>
+      <h3 class="renders-title">Frames from decoded clips, in the M1 gate</h3>
+      <p class="renders-lede">The M1 gate decodes the exported MP4 and compares frames 30, 150 and 255 with the same frames rendered from the saved project by <code>cutweave render</code>. These are two of those renders. The clips are self-generated test media, so this is still color bars with a timecode, not footage. Frame 255 is the phone-style clip, rotated 90 degrees by its metadata.</p>
+      <div class="figs">
+        <figure class="fig">
+          <img src={m1Frame30.src} width={m1Frame30.width} height={m1Frame30.height} alt="Color bars with a gradient sweep and a checkerboard patch, a small timecode block in the top-left corner." loading="lazy" decoding="async" />
+          <figcaption>
+            <span class="measured">Rendered by cutweave render from decoded test clips (M1 gate)</span>
+            <span class="cap">Frame 30 of the 12 s M1 cut, at 30 fps. Exported and rendered frames agree at 48.9 dB PSNR in the export’s color space.</span>
+          </figcaption>
+        </figure>
+        <figure class="fig">
+          <img src={m1Frame255.src} width={m1Frame255.width} height={m1Frame255.height} alt="Horizontal color bands with a gradient sweep, the rotated clip, rendered at 1920 by 1080." loading="lazy" decoding="async" />
+          <figcaption>
+            <span class="measured">Rendered by cutweave render from decoded test clips (M1 gate)</span>
+            <span class="cap">Frame 255, from the rotated variable-frame-rate clip: 47.7 dB against the exported frame.</span>
+          </figcaption>
+        </figure>
+      </div>
+      <p class="foot-note">Source: the M1 gate run, WP-1O.04. Informal, one dev machine. Formal runs pending.</p>
+    </div>
+
+    <div class="renders">
+      <h3 class="renders-title">Frames from the production compositor’s test goldens</h3>
+      <p class="renders-lede">These are the compositor’s own test goldens, drawn on an RTX 3080 laptop GPU. The sources are synthetic test cards, not footage.</p>
       <div class="figs">
         <figure class="fig fig-wide">
           <img src={contactSheet.src} width={contactSheet.width} height={contactSheet.height} alt="A grid of six frames with timecodes burned in from 00:00:00:00 to 00:00:06:20. Color bars and a gradient sweep are layered with a solid blue clip." loading="lazy" decoding="async" />
@@ -209,6 +233,8 @@ import { STACK, DOC_LINKS } from '../../data/engine-facts';
   .fig :global(img) { display: block; width: 100%; height: auto; border: var(--border-thin) solid var(--border-default); border-radius: var(--radius-md); }
   .fig figcaption { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1-5); }
   .cap { color: var(--text-secondary); font-size: 14px; line-height: 21px; }
+  .foot-note { color: var(--text-muted); font-size: 14px; line-height: 21px; max-width: var(--prose-max); }
+  .renders code { font-size: var(--mono-small); color: var(--text-primary); }
   .refs { margin-top: var(--space-4); color: var(--text-secondary); max-width: var(--prose-max); }
   .refs a { color: var(--text-primary); text-decoration: underline; text-underline-offset: var(--space-0-5); }
 
