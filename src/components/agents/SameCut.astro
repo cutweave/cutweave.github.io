@@ -1,0 +1,50 @@
+---
+// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * SameCut: a short callout from the product's M1 exit criterion 2 (docs/milestones/M1-exit.md at origin/main e129848).
+ * The UI and a scripted MCP agent made the same cut, and the two exports were byte-identical.
+ * Props: none.
+ */
+import '../../styles/area-s2.css';
+import Icon from '../ui/Icon.astro';
+import StatusChip from '../ui/StatusChip.astro';
+import { LINKS } from '../../site';
+
+const m1Exit = `${LINKS.repo}/blob/main/docs/milestones/M1-exit.md`;
+---
+<aside class="same" aria-labelledby="same-cut-title">
+  <p class="head">
+    <StatusChip status="built" label="Measured, M1 exit 2" />
+    <span class="when">Signed off 2026-11-25, Windows</span>
+  </p>
+  <h3 id="same-cut-title">Same cut, two ways</h3>
+  <p>
+    The product’s first milestone checked this: import three clips, arrange, trim, split, then export a 1080p MP4. A person did it in the app. A scripted agent did it over MCP, headless, with the same commands. The two timelines were equal, and the two exports were <strong>byte-identical</strong>, 5,907,413 bytes.
+  </p>
+  <p class="fine">
+    The agent was a fixed script, not a language model, so this shows that the agent and the UI drive the same engine, not that a model edits well. One Windows laptop.{' '}
+    <a href={m1Exit}>Read the M1 exit report<Icon name="external-link" size="sm" /></a>
+  </p>
+</aside>
+
+<style>
+  .same {
+    margin-block-start: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: var(--prose-max);
+    padding: var(--space-4) var(--space-6);
+    border: var(--border-thin) solid var(--border-default);
+    border-inline-start: var(--border-thick) solid var(--border-control);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    color: var(--text-secondary);
+  }
+  .head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .when { font-size: 14px; color: var(--text-muted); }
+  h3 { font-family: var(--font-display); font-size: 20px; line-height: 28px; color: var(--text-primary); }
+  strong { color: var(--text-primary); }
+  .fine { font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  a { text-decoration: underline; text-underline-offset: 2px; color: var(--text-secondary); }
+</style>

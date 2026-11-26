@@ -1,10 +1,9 @@
 ---
 // SPDX-License-Identifier: GPL-3.0-or-later
 /**
- * ToolCatalog: the MCP surface, from src/data/mcp-tools.ts. The listed tools are what the engine's
- * tools/list returns today; planned names carry the work package that adds them.
+ * ToolCatalog: the MCP surface, from src/data/mcp-tools.ts, which scripts/gen-mcp-tools.mjs generates from the
+ * product repo's schema/mcp-tools.json and docs/reference/commands.md. Planned names carry the work package that adds them.
  * Props: none. Includes a text filter (vanilla TS; the full list is visible without JS).
- * GAP-08: hand-kept lists. Replace with a link to the generated command reference when it is published.
  */
 import '../../styles/area-s2.css';
 import StatusChip from '../ui/StatusChip.astro';
@@ -15,8 +14,11 @@ import {
   CATALOG_COMMAND_GROUPS,
   PLANNED_TOOL_GROUPS,
   MCP_RESOURCES,
+  MCP_RESOURCES_PLANNED,
   MCP_PROMPTS,
   MCP_TRANSPORTS,
+  CATALOG_COMMIT,
+  REGISTERED_COMMANDS,
 } from '../../data/mcp-tools';
 import { LINKS } from '../../site';
 
@@ -25,11 +27,10 @@ const minimalCount = CORE_TOOL_GROUPS.reduce((n, g) => n + g.tools.filter((t) =>
 const catalogCount = CATALOG_COMMAND_GROUPS.reduce((n, g) => n + g.commands.length, 0);
 const COMMANDS_DOC = `${LINKS.repo}/blob/main/docs/reference/commands.md`;
 ---
-{/* GAP-08: hand-kept lists; the listed tools match tools/list from the build, not a generated reference yet. */}
 <div class="catalog" data-catalog>
   <div class="bar">
     <StatusChip status="built" label="Built, v0" />
-    <p class="bar-note">Listed tools are what <code>tools/list</code> returns from the engine today. Planned names are marked with the work package that adds them.</p>
+    <p class="bar-note">Generated from the product repository at <code>{CATALOG_COMMIT}</code>: the tools <code>tools/list</code> returns, and the commands behind <code>cutweave_execute</code>. Planned names are marked with the work package that adds them.</p>
   </div>
 
   <div class="filter" data-filter-wrap hidden>
@@ -38,8 +39,8 @@ const COMMANDS_DOC = `${LINKS.repo}/blob/main/docs/reference/commands.md`;
     <p class="count" role="status" aria-live="polite" data-count></p>
   </div>
 
-  <h3 class="h" id="core-tools">Listed today <span class="muted">({coreCount} tools on the standard profile)</span></h3>
-  <p class="blurb">Always visible to the agent. Each carries annotations for read-only, destructive and idempotent. The <span class="tag">minimal</span> mark means the tool is also on the minimal profile, which lists {minimalCount} tools in all for small context windows.</p>
+  <h3 class="h" id="core-tools">Listed today <span class="muted">({coreCount} tools, plus the four generic ones, on the standard profile)</span></h3>
+  <p class="blurb">Always visible to the agent. Each carries annotations for read-only, destructive and idempotent. The <span class="tag">minimal</span> mark means the tool is also on the minimal profile, which lists {minimalCount} tools in all for small context windows. <code>render_frame</code> returns an image block with structured metadata.</p>
   <div class="groups">
     {CORE_TOOL_GROUPS.map((g) => (
       <section class="group" data-group aria-labelledby={`g-${g.id}`}>
@@ -71,7 +72,7 @@ const COMMANDS_DOC = `${LINKS.repo}/blob/main/docs/reference/commands.md`;
   </section>
 
   <h3 class="h" id="via-execute">Reached through <code>cutweave_execute</code> <span class="muted">({catalogCount} commands)</span></h3>
-  <p class="blurb">Registered commands that are not listed as tools. Find one with <code>cutweave_search_commands</code>, read its schema with <code>cutweave_describe_command</code>, then run it as a step. Several steps in one call are one transaction and one undo step. The full list is in the <a href={COMMANDS_DOC}>command reference</a>.</p>
+  <p class="blurb">The engine registers {REGISTERED_COMMANDS} commands and queries; these {catalogCount} are not listed as tools. Find one with <code>cutweave_search_commands</code>, read its schema with <code>cutweave_describe_command</code>, then run it as a step. Several steps in one call are one transaction and one undo step. The full list is in the <a href={COMMANDS_DOC}>command reference</a>.</p>
   <div class="groups">
     {CATALOG_COMMAND_GROUPS.map((g) => (
       <section class="group" data-group aria-labelledby={`c-${g.id}`}>
@@ -86,7 +87,7 @@ const COMMANDS_DOC = `${LINKS.repo}/blob/main/docs/reference/commands.md`;
   </div>
 
   <h3 class="h" id="planned-tools">Planned <span class="muted">(not listed yet)</span></h3>
-  <p class="blurb"><StatusChip status="planned" label="Planned" /> More tools arrive with their work packages. <code>render_frame</code> and <code>export_start</code> are built now and will join the list above with the next update. The long tail is named in the architecture and may change.</p>
+  <p class="blurb"><StatusChip status="planned" label="Planned" /> Named in the architecture or the work breakdown, not in <code>tools/list</code> yet. Rendered frames and export are built; contact sheets, filmstrips, waveforms, text, captions and AI are not. The list may change.</p>
   <div class="groups">
     {PLANNED_TOOL_GROUPS.map((g) => (
       <section class="group" data-group aria-labelledby={`p-${g.id}`}>
@@ -107,11 +108,14 @@ const COMMANDS_DOC = `${LINKS.repo}/blob/main/docs/reference/commands.md`;
 
   <div class="two">
     <div>
-      <h3 class="h" id="resources">Resources <span class="muted">(planned)</span></h3>
+      <h3 class="h" id="resources">Resources <span class="muted">(built)</span></h3>
       <section class="group" data-group aria-labelledby="resources">
         <ul>
           {MCP_RESOURCES.map((r) => (
             <li data-item data-text={r.toLowerCase()}><code class="name">{r}</code></li>
+          ))}
+          {MCP_RESOURCES_PLANNED.map((r) => (
+            <li data-item data-text={r.toLowerCase()}><code class="name">{r}</code> <span class="tag when">planned</span></li>
           ))}
         </ul>
       </section>

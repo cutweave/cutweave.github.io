@@ -17,7 +17,7 @@ const screen = [
 const state = [
   { step: 'Query state', note: 'timeline_get returns clips, tracks, times and the revision.', tool: 'timeline_get' },
   { step: 'Send a command', note: 'clip_split with an item ID and a time. The reply says what changed.', tool: 'clip_split' },
-  { step: 'Render a frame', note: 'An image plus metadata: time, items visible, captions on screen.', tool: 'render_frame', image: true },
+  { step: 'Render a frame', note: 'An image plus metadata: time, revision, items visible and hidden.', tool: 'render_frame', image: true },
 ];
 ---
 <div class="vs">
@@ -104,8 +104,6 @@ const state = [
   }
   /* Image-returning tool: agent blue marks content an agent consumes. */
   .tool-image { background: var(--agent-subtle); border-color: var(--agent); color: var(--agent-text); }
-
-  .planned { color: var(--text-muted); font-size: 13px; line-height: 18px; }
 
   .loopback {
     display: flex;
